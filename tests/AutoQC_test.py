@@ -1,60 +1,35 @@
-#!/usr/bin/env python
+import unittest
+import sys
+import os
+from ddt import ddt, file_data
 
-import numpy as np
-
-dummy = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-
-
-def by_2():
-    ll = []
-    for i in dummy:
-        if i % 2 == 0:
-            ll.append(1)
-        else:
-            ll.append(0)
-
-    assert [1, 0, 1, 0, 1, 0, 1, 0, 1, 0] == ll
+dir = os.path.dirname(__file__)
+datafile = os.path.join(dir, '../data/demo.json')
+print datafile
 
 
-def greater_five():
-    ll = []
-    for i in dummy:
-        if i > 5:
-            ll.append(1)
-        else:
-            ll.append(0)
+@ddt
+class TestName(unittest.TestCase):
 
-    assert [0, 0, 0, 0, 0, 0, 1, 1, 1, 1] == ll
+    @file_data(datafile)
+    def test_by_2(self, value):
+        self.assertEqual(value % 2, 0)
 
+    @file_data(datafile)
+    def test_greater_five(self, value):
+        self.assertTrue(value > 5)
 
-def by_3():
-    ll = []
-    for i in dummy:
-        if i % 3 == 1:
-            ll.append(1)
-        else:
-            ll.append(0)
+    @file_data(datafile)
+    def test_by_3(self, value):
+        self.assertEqual(value % 3, 1)
 
-    assert [0, 1, 0, 0, 1, 0, 0, 1, 0, 0] == ll
+    @file_data(datafile)
+    def test_equal_seven(self, value):
+        self.assertTrue(value == 7)
 
+    @file_data(datafile)
+    def test_less_zero(self, value):
+        self.assertTrue(value < 0)
 
-def equal_seven():
-    ll = []
-    for i in dummy:
-        if i == 7:
-            ll.append(1)
-        else:
-            ll.append(0)
-
-    assert [0, 0, 0, 0, 0, 0, 0, 1, 0, 0] == ll
-
-
-def less_zero():
-    ll = []
-    for i in dummy:
-        if i < 0:
-            ll.append(1)
-        else:
-            ll.append(0)
-
-    assert [0, 0, 0, 0, 0, 0, 0, 0, 0] == ll
+suite = unittest.TestLoader().loadTestsFromTestCase(TestName)
+results = unittest.TextTestRunner(stream=sys.stdout, verbosity=2).run(suite)
