@@ -17,7 +17,7 @@ class TestName(unittest.TestCase):
 
     @file_data(datafile)
     def test_greater_five(self, value):
-        self.assertEqual(value > 5, 0)
+        self.assertTrue(value > 5)
 
     @file_data(datafile)
     def test_by_3(self, value):
