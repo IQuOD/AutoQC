@@ -25,11 +25,11 @@ class TestName(unittest.TestCase):
 
     @file_data(datafile)
     def test_equal_seven(self, value):
-        self.assertEqual(value == 7, 0)
+        self.assertTrue(value == 7)
 
     @file_data(datafile)
     def test_less_zero(self, value):
-        self.assertEqual(value < 0, 0)
+        self.assertTrue(value < 0)
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestName)
 results = unittest.TextTestRunner(stream=sys.stdout, verbosity=2).run(suite)
