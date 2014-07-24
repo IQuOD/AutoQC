@@ -17,7 +17,7 @@ class TestName(unittest.TestCase):
 
     @file_data(datafile)
     def test_greater_five(self, value):
-        self.assertEqual(value > 5, 0)
+        self.assertTrue(value > 5)
 
     @file_data(datafile)
     def test_by_3(self, value):
@@ -25,11 +25,11 @@ class TestName(unittest.TestCase):
 
     @file_data(datafile)
     def test_equal_seven(self, value):
-        self.assertEqual(value == 7, 0)
+        self.assertTrue(value == 7)
 
     @file_data(datafile)
     def test_less_zero(self, value):
-        self.assertEqual(value < 0, 0)
+        self.assertTrue(value < 0)
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestName)
 results = unittest.TextTestRunner(stream=sys.stdout, verbosity=2).run(suite)
