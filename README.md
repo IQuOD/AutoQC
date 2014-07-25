@@ -9,11 +9,9 @@ Recently, an international team of researchers has decided to work together to b
 
 The IQuOD proposal is to set up an open quality control benchmarking system.  Work will begin by using python's `unittest` module to implement a battery of simple tests to run on some test data, and producing summary statistics and visualizations of the results.  Later goals include helping researchers either wrap their existing C, Fortran and Matlab test functions in Python for use in this test suite, or re-implementing those tests in native Python.
 
-##Current Goals
-There are two main goals that can be worked on right now: setting up the testing pipeline, and preparing to pipe in IQuOD data.  Corresponding milestones exist for each - please discuss there!
+##Setup
+AutoQC relies on [ddt](https://github.com/txels/ddt) to run over datasets:
+`sudo pip install ddt`
 
-###Testing Pipeline
-Current Goal: set up some dummy tests using `unittest`, and parse the results into a piechart of tests passed / failed.  Should include an example of several sub-groups of tests, each with their own piechart.
-
-###Parsing IQuOD data
-Current Goal: Write a python module to read in an IQuOD dataset as specified here[TBD], and make it available for running tests over.  A sample dataset is available here[TBD].
+To execute the test suite,
+`python demo.py`
