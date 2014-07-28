@@ -5,9 +5,10 @@ import os
 from ddt import ddt, FILE_ATTR
 import tests
 
+testResults = []
+
 dir = os.path.dirname(__file__)
 datafile = os.path.join(dir, '../data/demo.json')
-print datafile
 
 # Find all QC subroutines.
 testFiles = glob.glob('tests/[!_]*.py')
@@ -29,5 +30,10 @@ def include_tests(cls):
 class TestName(unittest.TestCase):
     pass
 
+    def tearDown(self):
+        testResults.append(sys.exc_info() == (None, None, None))
+
 suite = unittest.TestLoader().loadTestsFromTestCase(TestName)
 results = unittest.TextTestRunner(stream=sys.stdout, verbosity=2).run(suite)
+
+print testResults
