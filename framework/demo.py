@@ -4,6 +4,7 @@ import sys
 import os
 from ddt import ddt, FILE_ATTR
 import tests
+import numpy as np
 
 dir = os.path.dirname(__file__)
 datafile = os.path.join(dir, '../data/demo.json')
@@ -31,3 +32,23 @@ class TestName(unittest.TestCase):
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestName)
 results = unittest.TextTestRunner(stream=sys.stdout, verbosity=2).run(suite)
+
+failures = [failure[0].id() for failure in results.failures]
+nTests = len(testNames)
+nData  = results.testsRun / nTests
+
+testNameIndices = dict.fromkeys(testNames)
+for iName, name in enumerate(testNames): testNameIndices[name] = iName
+print testNameIndices
+table = np.ndarray([nTests, nData], dtype=bool)
+table[:, :] = False
+for failure in failures:
+    pos = failure.find('TestName.test_')
+    failure = failure[pos + 14:]
+    pos = failure.rfind('_')
+    failureName = failure[:pos]
+    failureData = failure[pos+1:]
+    table[testNameIndices[failureName], failureData] = True
+
+for i, name in enumerate(testNames):
+    print name, table[i, :]
