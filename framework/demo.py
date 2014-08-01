@@ -4,7 +4,6 @@ import sys
 import os
 from ddt import ddt, FILE_ATTR
 import tests
-import numpy as np
 
 dir = os.path.dirname(__file__)
 datafile = os.path.join(dir, '../data/demo.json')
@@ -15,18 +14,6 @@ testFiles = glob.glob('tests/[!_]*.py')
 print testFiles
 testNames = [testFile[6:-3] for testFile in testFiles]
 print testNames
-
-# monkey patch ddt to not suffix data onto test names
-def mk_test_name(name, value, index=0):
-    try:
-        value = str(value)
-    except UnicodeEncodeError:
-        # fallback for python2
-        value = value.encode('ascii', 'backslashreplace')
-    test_name = "{0}_{1}".format(name, index + 1)
-    return re.sub('\W|^(?=\d)', '_', test_name)
-
-ddt.mk_test_name = mk_test_name
 
 # Define a decorator to convert the QC tests to the TestName class.
 def include_tests(cls):
@@ -39,35 +26,8 @@ def include_tests(cls):
 
 @ddt
 @include_tests
-class TestClass(unittest.TestCase):
+class TestName(unittest.TestCase):
     pass
 
-suite = unittest.TestLoader().loadTestsFromTestCase(TestClass)
+suite = unittest.TestLoader().loadTestsFromTestCase(TestName)
 results = unittest.TextTestRunner(stream=sys.stdout, verbosity=2).run(suite)
-
-# Generate a table of results. The table contains True if the test was
-# failed for a data point (consistent with how a mask is defined in 
-# numpy masked arrays).
-nTests = len(testNames)
-nData  = results.testsRun / nTests
-table = np.ndarray([nTests, nData], dtype=bool)
-table[:, :] = False
-
-testNameIndices = {}
-for iName, name in enumerate(testNames): 
-    testNameIndices[name] = iName
-
-failedTests = [failure[0].id() for failure in results.failures]
-
-
-for failedTest in failedTests:
-    pos = failedTest.find('TestClass.test_')
-    failedTest = failedTest[pos + 15:]
-    pos = failedTest.rfind('_')
-    failureName = failedTest[:pos]
-    failureIndex = failedTest[pos+1:]
-    failureIndex = int(failureIndex)-1
-    table[testNameIndices[failureName], int(failureIndex)] = True
-
-for i, name in enumerate(testNames):
-    print name, table[i, :]
