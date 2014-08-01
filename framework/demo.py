@@ -61,8 +61,8 @@ for failedTest in failedTests:
     failedTest = failedTest[pos + 15:]
     pos = failedTest.rfind('_')
     failureName = failedTest[:pos]
-    failureData = failedTest[pos+1:]
-    table[testNameIndices[failureName], int(failureData)-1] = True
+    failureIndex = failedTest[pos+1:]
+    table[testNameIndices[failureName], int(failureIndex)-1] = True
 
 for i, name in enumerate(testNames):
     print name, table[i, :]
