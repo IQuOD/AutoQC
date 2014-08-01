@@ -10,6 +10,16 @@ dir = os.path.dirname(__file__)
 datafile = os.path.join(dir, '../data/demo.json')
 print datafile
 
+# monkey patch ddt to not suffix data onto test names
+def mk_test_name(name, value, index=0):
+    try:
+        value = str(value)
+    except UnicodeEncodeError:
+        # fallback for python2
+        value = value.encode('ascii', 'backslashreplace')
+    test_name = "{0}_{1}".format(name, index + 1)
+    return re.sub('\W|^(?=\d)', '_', test_name)
+
 # Find all QC subroutines.
 testFiles = glob.glob('tests/[!_]*.py')
 print testFiles
@@ -52,7 +62,7 @@ for failedTest in failedTests:
     pos = failedTest.rfind('_')
     failureName = failedTest[:pos]
     failureData = failedTest[pos+1:]
-    table[testNameIndices[failureName], int(failureData)] = True
+    table[testNameIndices[failureName], int(failureData)-1] = True
 
 for i, name in enumerate(testNames):
     print name, table[i, :]
