@@ -2,9 +2,10 @@ import glob
 import unittest
 import sys
 import os
-from ddt import ddt, FILE_ATTR
+import ddt
 import tests
 import numpy as np
+import re
 
 dir = os.path.dirname(__file__)
 datafile = os.path.join(dir, '../data/demo.json')
@@ -19,6 +20,7 @@ def mk_test_name(name, value, index=0):
         value = value.encode('ascii', 'backslashreplace')
     test_name = "{0}_{1}".format(name, index + 1)
     return re.sub('\W|^(?=\d)', '_', test_name)
+ddt.mk_test_name = mk_test_name
 
 # Find all QC subroutines.
 testFiles = glob.glob('tests/[!_]*.py')
@@ -31,11 +33,11 @@ def include_tests(cls):
     for testName in testNames:
         exec('import tests.' + testName)
         exec('def test_' + testName + '(self, value): self.assertTrue(tests.' + testName + '.test(value))')
-        exec('setattr(test_' + testName + ', FILE_ATTR, datafile)')
+        exec('setattr(test_' + testName + ', ddt.FILE_ATTR, datafile)')
         exec('cls.test_' + testName + ' = test_' + testName)
     return cls
 
-@ddt
+@ddt.ddt
 @include_tests
 class TestClass(unittest.TestCase):
     pass

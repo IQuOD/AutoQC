@@ -10,7 +10,7 @@ Recently, an international team of researchers has decided to work together to b
 The IQuOD proposal is to set up an open quality control benchmarking system.  Work will begin by using python's `unittest` module to implement a battery of simple tests to run on some test data, and producing summary statistics and visualizations of the results.  Later goals include helping researchers either wrap their existing C, Fortran and Matlab test functions in Python for use in this test suite, or re-implementing those tests in native Python.
 
 ##Setup
-AutoQC relies on [ddt](https://github.com/txels/ddt) to run over datasets:
+AutoQC relies on [ddt](https://github.com/txels/ddt) (v0.8.0) to run over datasets:
 `sudo pip install ddt`
 
 To execute the test suite,
