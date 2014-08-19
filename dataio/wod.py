@@ -3,7 +3,7 @@ import copy
 import numpy as np
 import os
 
-class wod_profile(object):
+class WodProfile(object):
     """ Main class to parse a WOD ASCII file
 
         Input:
@@ -18,7 +18,7 @@ class wod_profile(object):
 
         Example:
             fid = open("XBTO1966") 
-            profile = wod_profile(fid) # Reads a single profile.
+            profile = WodProfile(fid) # Reads a single profile.
             profile.latitude()  # Return the latitude of the profile.
             profile.z()         # Return the depths of the observations.
             profile2 = wod_profile(fid) # Read the next profile.
@@ -27,7 +27,7 @@ class wod_profile(object):
     """
     def __init__(self, fid):
 
-        # Record of where the profile occurs in the file.
+        # Record of where the profile occurs.
         self.file_name = fid.name
         self.file_position = fid.tell()
 
@@ -38,6 +38,8 @@ class wod_profile(object):
         self._read_secondary_or_biological_header(fid, bio=True)
         if self.biological_header['Total bytes'] > 0:
             self._read_taxonomic_data(fid)
+        else:
+            self.taxa = {}
         self._read_profile_data(fid)
 
         # Wind forward to the next profile in the file.
@@ -249,15 +251,14 @@ class wod_profile(object):
                    ['Total digits',        1, int],
                    ['Precision',           1, int],
                    ['Value',               0, float],
-                   ['Quality control flag', 0, int],
-                   ['Originator flag',     0, int]]
+                   ['Quality control flag', 1, int],
+                   ['Originator flag',     1, int]]
         self._interpret_data(fid, format1, taxa)
         if 'Number of taxa sets' in taxa:
             taxa['sets'] = []
             for i in range(taxa['Number of taxa sets']):
                 taxa['sets'] += [{}]
                 self._interpret_data(fid, copy.deepcopy(format2), taxa['sets'][i])
-                print i, taxa['sets'][i]
                 taxa['sets'][i]['entries'] = []
                 for j in range(taxa['sets'][i]['Number of entries']):
                     taxa['sets'][i]['entries'] += [{}]
@@ -491,16 +492,14 @@ class wod_profile(object):
         index = self.var_index(s=True)
         return self.var_profile_qc(index, originator=originator)    
 
-datafile = '../demo/data/XBTO1966'
-f = open(datafile)
-eof = False
-profiles = []
-index = 0
-while eof == False:
-    index += 1
-    profiles += [wod_profile(f)]
-    eof = profiles[-1].is_last_profile_in_file(f)
-f.close()
+def read_test_profile():
+    # Read in a sample profile file. The profile is from 
+    # Page 137 of http://data.nodc.noaa.gov/woa/WOD/DOC/wodreadme.pdf.
+    datafile = '../demo/data/sampledata.wodascii'
+    f = open(datafile)
+    p = WodProfile(f)
+    f.close()
+    return p
 
 
 
