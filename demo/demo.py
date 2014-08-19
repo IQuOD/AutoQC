@@ -8,7 +8,7 @@ import numpy as np
 import re
 
 dir = os.path.dirname(__file__)
-datafile = os.path.join(dir, '../data/demo.json')
+datafile = os.path.join(dir, 'data/demo.json')
 print datafile
 
 # monkey patch ddt to not suffix data onto test names
