@@ -491,7 +491,7 @@ class wod_profile(object):
         index = self.var_index(s=True)
         return self.var_profile_qc(index, originator=originator)    
 
-datafile = '../data/XBTO1966'
+datafile = '../demo/data/XBTO1966'
 f = open(datafile)
 eof = False
 profiles = []
