@@ -16,6 +16,9 @@ AutoQC relies on [ddt](https://github.com/txels/ddt) (v0.8.0) to run over datase
 To execute the test suite,
 `python demo.py`
 
+To execute the real quality control checks,
+`python AutoQC.py`
+
 
 ##Notes
  - `ddt` is patched here to not append data serializations to the ends of test names.
