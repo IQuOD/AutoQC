@@ -299,9 +299,9 @@ class WodProfile(object):
                 self._interpret_data(fid, copy.deepcopy(vFormat1), data[i]['variables'][j])
                 if ('Value' in data[i]['variables'][j]):
                     data[i]['variables'][j]['Missing'] = False
+                    self._interpret_data(fid, copy.deepcopy(vFormat2), data[i]['variables'][j])
                 else:
                     data[i]['variables'][j]['Missing'] = True
-                self._interpret_data(fid, copy.deepcopy(vFormat2), data[i]['variables'][j])
 
         self.profile_data = data
         return None
