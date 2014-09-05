@@ -30,6 +30,15 @@ class WodProfile(object):
         # Record of where the profile occurs.
         self.file_name = fid.name
         self.file_position = fid.tell()
+        
+        # Record if CR+LF characters are being used at the end of lines.
+        fid.seek(self.file_position + 80)
+        char = fid.read(1)
+        if char == '\r': 
+            self.cr = True 
+        else:
+            self.cr = False
+        fid.seek(self.file_position)
 
         # Read the various sections of the profile record.
         self._read_primary_header(fid)
@@ -50,7 +59,7 @@ class WodProfile(object):
         # Read characters from the file. If the section
         # includes a line feed then an extra character
         # is read and the line feed is deleted. Has to cope
-        # with files with Windows or DOS line endings.
+        # with files with Windows or Linux line endings.
         chars = fid.read(nChars)
         lfError = True
         while lfError:
@@ -308,10 +317,14 @@ class WodProfile(object):
 
     # FILE POSITIONING
     def _calculate_next_profile_position(self):
-        # Returns the file position of the next profile.
+        # Returns the file position of the next profile. 
         nLines = self.primary_header['Bytes in profile'] // 80
         if (self.primary_header['Bytes in profile'] % 80) > 0: nLines += 1
-        return self.file_position + nLines * 81
+        if self.cr:
+            mult = 82
+        else:
+            mult = 81
+        return self.file_position + nLines * mult
 
     def advance_file_position_to_next_profile(self, fid):
         """ Advance to the next profile in the current file. """
