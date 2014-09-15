@@ -19,7 +19,7 @@ for filename in filenames:
 # sent to the quality control programs for testing.
 for profile in profiles:
     index = profile.var_index()
-    assert index is not None, 'No temperature data in profile %s' % profile.uid()
+    assert index is not None, 'No temperatures in profile %s' % profile.uid()
     for i in range(profile.n_levels()):
         if profile.profile_data[i]['variables'][index]['Missing']: 
             continue
@@ -27,7 +27,7 @@ for profile in profiles:
             profile.profile_data[i]['variables'][index]['Missing'] = True
 
 # Placeholder for a section of code that 
-#  - detects all quality control checks in dataio.
+#  - detects all quality control checks in qctests.
 #  - uses ddt to run all quality control checks on all profiles.
 #  - saves the overall result for each in a numpy array. The overall result
 #      is simply whether any level in the profile was rejected by the 
