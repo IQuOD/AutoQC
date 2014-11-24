@@ -9,13 +9,25 @@ Recently, an international team of researchers has decided to work together to b
 
 The IQuOD proposal is to set up an open quality control benchmarking system.  Work will begin by using python's `unittest` module to implement a battery of simple tests to run on some test data, and producing summary statistics and visualizations of the results.  Later goals include helping researchers either wrap their existing C, Fortran and Matlab test functions in Python for use in this test suite, or re-implementing those tests in native Python.
 
-##Setup
-AutoQC relies on [ddt](https://github.com/txels/ddt) (v0.8.0) to run over datasets:
-`sudo pip install ddt`
-
 ##Usage
 To execute the quality control checks,
 `python AutoQC.py`
+
+##Structure
+`AutoQC.py` performs the following:
+ - automatically detects all quality control tests found in `/qctests`
+ - takes the list of raw data files from `datafiles.json`, and decodes their contents into an array of profile objects
+ - runs all the automatically detected tests over each of these profiles
+ - return an array for each each test indicating which profiles excpetions were raised for, and an array indicating the expected result for each profile
+
+###Testing
+Each quality control test must be written as its own file in `/qctests`, of the form `def test(p)`, where `p` is a profile object; each test returns a bool, where `True` indicates the test has *failed*.
+
+###Data
+Each data file listed in `datafiles.json` is of the format [TBD]
+
+###Profile Objects Specification
+[TBD]
 
 ##Notes
  - `ddt` is patched here to not append data serializations to the ends of test names.
