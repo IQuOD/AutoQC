@@ -13,12 +13,11 @@ The IQuOD proposal is to set up an open quality control benchmarking system.  Wo
 AutoQC relies on [ddt](https://github.com/txels/ddt) (v0.8.0) to run over datasets:
 `sudo pip install ddt`
 
-To execute the test suite,
-`python demo.py`
-
-To execute the real quality control checks,
+##Usage
+To execute the quality control checks,
 `python AutoQC.py`
-
 
 ##Notes
  - `ddt` is patched here to not append data serializations to the ends of test names.
+
+ - `/demo` contains a simple demo of the testing pattern, with toy tests and data; not required for production code.

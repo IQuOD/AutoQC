@@ -45,8 +45,9 @@ class TestClass(unittest.TestCase):
 suite = unittest.TestLoader().loadTestsFromTestCase(TestClass)
 results = unittest.TextTestRunner(stream=sys.stdout, verbosity=2).run(suite)
 
+
 # Generate a table of results. The table contains True if the test was
-# failed for a data point (consistent with how a mask is defined in 
+# failed for a data point (consistent with how a mask is defined in
 # numpy masked arrays).
 nTests = len(testNames)
 nData  = results.testsRun / nTests
@@ -54,7 +55,7 @@ table = np.ndarray([nTests, nData], dtype=bool)
 table[:, :] = False
 
 testNameIndices = {}
-for iName, name in enumerate(testNames): 
+for iName, name in enumerate(testNames):
     testNameIndices[name] = iName
 
 failedTests = [failure[0].id() for failure in results.failures]
