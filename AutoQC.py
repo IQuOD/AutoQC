@@ -2,41 +2,53 @@ from dataio import wod
 import json, glob, time
 import numpy as np
 
-# Read the list of data files.
-filenames = json.loads(open('datafiles.json').read())
+# Create a list of data file names from a json array.
+def readInput(JSONlist):
+    return json.loads(open(JSONlist).read())
+
+filenames = readInput('datafiles.json')
 
 # Read all profiles from the files and store in a list.
-profiles = []
-for filename in filenames:
-    with open(filename) as f:
-        profiles.append(wod.WodProfile(f))
-        while profiles[-1].is_last_profile_in_file(f) == False:
-            profiles.append(wod.WodProfile(f))
+def extractProfiles(filenames):
+  profiles = []
+  for filename in filenames:
+      with open(filename) as f:
+          profiles.append(wod.WodProfile(f))
+          while profiles[-1].is_last_profile_in_file(f) == False:
+              profiles.append(wod.WodProfile(f))
+  return profiles
+
+profiles = extractProfiles(filenames)
 
 # In some IQuOD datasets temperature values of 99.9 are special values to
 # signify not to use the data value. These are flagged here so they are not
 # sent to the quality control programs for testing.
+def catchFlags(profile):
+  index = profile.var_index()
+  assert index is not None, 'No temperatures in profile %s' % profile.uid()
+  for i in range(profile.n_levels()):
+      if profile.profile_data[i]['variables'][index]['Missing']:
+          continue
+      if profile.profile_data[i]['variables'][index]['Value'] == 99.9:
+          profile.profile_data[i]['variables'][index]['Missing'] = True
+
 for profile in profiles:
-    index = profile.var_index()
-    assert index is not None, 'No temperatures in profile %s' % profile.uid()
-    for i in range(profile.n_levels()):
-        if profile.profile_data[i]['variables'][index]['Missing']:
-            continue
-        if profile.profile_data[i]['variables'][index]['Value'] == 99.9:
-            profile.profile_data[i]['variables'][index]['Missing'] = True
+    catchFlags(profile)
 
-# Find all QC subroutines.
-testFiles = glob.glob('qctests/[!_]*.py')
-testNames = [testFile[8:-3] for testFile in testFiles]
+# return a list of names of tests foundin <dir>:
+def importQC(dir):
+  testFiles = glob.glob(dir+'/[!_]*.py')
+  testNames = [testFile[len(dir)+1:-3] for testFile in testFiles]
 
+  return testNames
+
+testNames = importQC('qctests')
 for testName in testNames:
     exec('from qctests import ' + testName)
 
 # Run every test on every profile;
 # Summarize how many profiles fail each test.
-nFailedQC  = []
-for test in testNames:
-    nFailedQC.append(0)
+nFailedQC  = [0] * len(testNames)
 nFailedRef = 0
 logfile = open('AutoQClog.' + time.strftime("%H%M%S"), 'w')
 for profile in profiles:
@@ -47,6 +59,10 @@ for profile in profiles:
 
     # Extract the reference result for each level.
     qcRefs    = profile.t_level_qc(originator=True) >= 3
+
+
+
+
 
     # Print out a verbose log of the results.
     logfile.write('Profile ID: %i\n' % profile.uid())
