@@ -30,6 +30,4 @@ Each data file listed in `datafiles.json` is of the format [TBD]
 [TBD]
 
 ##Notes
- - `ddt` is patched here to not append data serializations to the ends of test names.
-
  - `/demo` contains a simple demo of the testing pattern, with toy tests and data; not required for production code.
