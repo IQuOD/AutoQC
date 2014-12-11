@@ -1,5 +1,6 @@
 from dataio import wod
 import json, glob, time
+import matplotlib.pyplot as plt
 import numpy as np
 
 # Create a list of data file names from a json array.
@@ -146,3 +147,21 @@ print('Number of profiles that should have been failed was %i' % np.sum(trueResu
 
 #logfile
 generateLogfile(verbose, trueVerbose, profiles, testNames)
+
+# Example of plot output.
+testResults = np.array(testResults)
+trueResults = np.array(trueResult)
+TT = np.sum(testResults & trueResults, dtype=float)
+TF = np.sum(testResults & ~trueResults, dtype=float)
+FT = np.sum(~testResults & trueResults, dtype=float)
+FF = np.sum(~testResults & ~trueResults, dtype=float)
+falsePositiveRate = TF / (TF + FF)
+truePositiveRate  = TT / (TT + FT)
+plt.plot(falsePositiveRate, truePositiveRate, 'x')
+plt.gca().set_xlim(0.0, 1.0)
+plt.gca().set_ylim(0.0, 1.0)
+plt.gca().set_xlabel('False positive rate')
+plt.gca().set_ylabel('True positive rate')
+plt.show()
+
+
