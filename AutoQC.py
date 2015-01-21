@@ -2,10 +2,18 @@ from dataio import wod
 import json, glob, time
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 def readInput(JSONlist):
     '''Create a list of data file names from a json array.'''
-    return json.loads(open(JSONlist).read())
+    datafiles = json.loads(open(JSONlist).read())
+
+    # assert that a list of data files is found, and all those files exist:
+    assert type(datafiles) is list, 'Failed to read a list from datafiles.json'
+    for i in datafiles:
+      assert os.path.isfile(i), 'datafile ' + i + ' is not found.'
+
+    return datafiles
 
 def extractProfiles(filenames):
   '''Read all profiles from the files and store in a list.'''
@@ -15,6 +23,11 @@ def extractProfiles(filenames):
           profiles.append(wod.WodProfile(f))
           while profiles[-1].is_last_profile_in_file(f) == False:
               profiles.append(wod.WodProfile(f))
+
+  # assert all elements of profiles are WodProfiles
+  for i in profiles:
+    assert isinstance(i, wod.WodProfile), i + ' is not a WodProfile'
+
   return profiles
 
 def catchFlags(profile):
@@ -33,7 +46,7 @@ def catchFlags(profile):
 
 def importQC(dir):
   '''
-  return a list of names of tests foundin <dir>:
+  return a list of names of tests found in <dir>:
   '''
   testFiles = glob.glob(dir+'/[!_]*.py')
   testNames = [testFile[len(dir)+1:-3] for testFile in testFiles]
@@ -48,6 +61,11 @@ def run(test, profiles):
   verbose = []
   for profile in profiles:
     exec('result = ' + test + '.test(profile)')
+
+    #demand tests returned bools:
+    for i in result:
+      assert isinstance(i, np.bool_), str(i) + ' in test result list is of type ' + str(type(i))
+
     qcResults.append(np.any(result))
     verbose.append(result)
   return [qcResults, verbose]
@@ -60,6 +78,11 @@ def referenceResults(profiles):
   verbose = []
   for profile in profiles:
     refAssessment = profile.t_level_qc(originator=True) >= 3
+
+    #demand reference results returned bools:
+    for i in refAssessment:
+      assert isinstance(i, np.bool_), str(i) + ' in reference result list is of type ' + str(type(i))
+
     refResult.append(np.ma.any(refAssessment))
     verbose.append(refAssessment)
   return [refResult, verbose]
