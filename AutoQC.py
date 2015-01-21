@@ -3,12 +3,12 @@ import json, glob, time
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Create a list of data file names from a json array.
 def readInput(JSONlist):
+    '''Create a list of data file names from a json array.'''
     return json.loads(open(JSONlist).read())
 
-# Read all profiles from the files and store in a list.
 def extractProfiles(filenames):
+  '''Read all profiles from the files and store in a list.'''
   profiles = []
   for filename in filenames:
       with open(filename) as f:
@@ -17,10 +17,12 @@ def extractProfiles(filenames):
               profiles.append(wod.WodProfile(f))
   return profiles
 
-# In some IQuOD datasets temperature values of 99.9 are special values to
-# signify not to use the data value. These are flagged here so they are not
-# sent to the quality control programs for testing.
 def catchFlags(profile):
+  '''
+  In some IQuOD datasets temperature values of 99.9 are special values to
+  signify not to use the data value. These are flagged here so they are not
+  sent to the quality control programs for testing.
+  '''
   index = profile.var_index()
   assert index is not None, 'No temperatures in profile %s' % profile.uid()
   for i in range(profile.n_levels()):
@@ -29,15 +31,19 @@ def catchFlags(profile):
       if profile.profile_data[i]['variables'][index]['Value'] == 99.9:
           profile.profile_data[i]['variables'][index]['Missing'] = True
 
-# return a list of names of tests foundin <dir>:
 def importQC(dir):
+  '''
+  return a list of names of tests foundin <dir>:
+  '''
   testFiles = glob.glob(dir+'/[!_]*.py')
   testNames = [testFile[len(dir)+1:-3] for testFile in testFiles]
 
   return testNames
 
-# run <test> on a list of <profiles>, return an array summarizing when exceptions were raised
 def run(test, profiles):
+  '''
+  run <test> on a list of <profiles>, return an array summarizing when exceptions were raised
+  '''
   qcResults = []
   verbose = []
   for profile in profiles:
@@ -46,8 +52,10 @@ def run(test, profiles):
     verbose.append(result)
   return [qcResults, verbose]
 
-# extract the summary reference result for each profile:
 def referenceResults(profiles):
+  '''
+  extract the summary reference result for each profile:
+  '''
   refResult = []
   verbose = []
   for profile in profiles:
@@ -56,11 +64,13 @@ def referenceResults(profiles):
     verbose.append(refAssessment)
   return [refResult, verbose]
 
-# verbose[i][j][k] == result of test i on profile j at depth k
-# trueVerbose[i][j] == true result for profile i at depth j
-# <profiles> == array of profiles per `extractProfiles`
-# <testNames> == array of names returned by `importQC`
 def generateLogfile(verbose, trueVerbose, profiles, testNames):
+  '''
+  verbose[i][j][k] == result of test i on profile j at depth k
+  trueVerbose[i][j] == true result for profile i at depth j
+  <profiles> == array of profiles per `extractProfiles`
+  <testNames> == array of names returned by `importQC`
+  '''
   # open a logfile
   logfile = open('AutoQClog.' + time.strftime("%H%M%S"), 'w')
 
@@ -107,6 +117,23 @@ def generateLogfile(verbose, trueVerbose, profiles, testNames):
 
     logfile.write('-----------------------------------------\n')
 
+def plotSummary(testResults, trueResults):
+  '''Example of plot output.'''
+  testResults = np.array(testResults)
+  trueResults = np.array(trueResult)
+  TT = np.sum(testResults & trueResults, dtype=float)
+  TF = np.sum(testResults & ~trueResults, dtype=float)
+  FT = np.sum(~testResults & trueResults, dtype=float)
+  FF = np.sum(~testResults & ~trueResults, dtype=float)
+  falsePositiveRate = TF / (TF + FF)
+  truePositiveRate  = TT / (TT + FT)
+  plt.plot(falsePositiveRate, truePositiveRate, 'x')
+  plt.gca().set_xlim(0.0, 1.0)
+  plt.gca().set_ylim(0.0, 1.0)
+  plt.gca().set_xlabel('False positive rate')
+  plt.gca().set_ylabel('True positive rate')
+  plt.show()
+
 ########################################
 # main
 ########################################
@@ -147,21 +174,3 @@ print('Number of profiles that should have been failed was %i' % np.sum(trueResu
 
 #logfile
 generateLogfile(verbose, trueVerbose, profiles, testNames)
-
-# Example of plot output.
-testResults = np.array(testResults)
-trueResults = np.array(trueResult)
-TT = np.sum(testResults & trueResults, dtype=float)
-TF = np.sum(testResults & ~trueResults, dtype=float)
-FT = np.sum(~testResults & trueResults, dtype=float)
-FF = np.sum(~testResults & ~trueResults, dtype=float)
-falsePositiveRate = TF / (TF + FF)
-truePositiveRate  = TT / (TT + FT)
-plt.plot(falsePositiveRate, truePositiveRate, 'x')
-plt.gca().set_xlim(0.0, 1.0)
-plt.gca().set_ylim(0.0, 1.0)
-plt.gca().set_xlabel('False positive rate')
-plt.gca().set_ylabel('True positive rate')
-plt.show()
-
-
