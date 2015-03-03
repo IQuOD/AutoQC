@@ -79,9 +79,9 @@ def referenceResults(profiles):
   for profile in profiles:
     refAssessment = profile.t_level_qc(originator=True) >= 3
 
-    #demand reference results returned bools:
+    #demand reference results returned bools, or masked constants for missing values:
     for i in refAssessment:
-      assert isinstance(i, np.bool_), str(i) + ' in reference result list is of type ' + str(type(i))
+      assert isinstance(i, np.bool_) or isinstance(i, np.ma.core.MaskedConstant), str(i) + ' in reference result list is of type ' + str(type(i))
 
     refResult.append(np.ma.any(refAssessment))
     verbose.append(refAssessment)
@@ -90,7 +90,7 @@ def referenceResults(profiles):
 def generateLogfile(verbose, trueVerbose, profiles, testNames):
   '''
   verbose[i][j][k] == result of test i on profile j at depth k
-  trueVerbose[i][j] == true result for profile i at depth j
+  trueVerbose[j][k] == true result for profile j at depth k
   <profiles> == array of profiles per `extractProfiles`
   <testNames> == array of names returned by `importQC`
   '''
