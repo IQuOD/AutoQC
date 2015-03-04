@@ -140,16 +140,40 @@ def generateLogfile(verbose, trueVerbose, profiles, testNames):
 
     logfile.write('-----------------------------------------\n')
 
-def plotSummary(testResults, trueResults):
-  '''Example of plot output.'''
+def summarize(testResults, trueResults):
+  '''
+  Summarizes the performance of a single test across a set of profiles, compared to expectation.
+  Input:  testResults[i] == bool indicating if exception raised by test on profile i
+          trueResults[i] == bool inidicating if exception is expected for profile i
+  Return: list indicating: (
+    number of exceptions raised by test when they were expected (correctly identified exceptions),
+    number of exceptions raised by test when they were not expected (false positives),
+    number of profiles passed by test when an exception was expected (false negatives),
+    number of profiles passed when they were expected to pass (correctly identified passing profiles)
+  )
+  '''
+
+  assert len(testResults) == len(trueResults), 'must provide same number of test results as true results.'
+
   testResults = np.array(testResults)
-  trueResults = np.array(trueResult)
+  trueResults = np.array(trueResults)
   TT = np.sum(testResults & trueResults, dtype=float)
   TF = np.sum(testResults & ~trueResults, dtype=float)
   FT = np.sum(~testResults & trueResults, dtype=float)
   FF = np.sum(~testResults & ~trueResults, dtype=float)
-  falsePositiveRate = TF / (TF + FF)
-  truePositiveRate  = TT / (TT + FT)
+
+  return (TT, TF, FT, FF)
+
+def plotSummary(testResults, trueResults):
+  '''
+  Example of plot output.
+  Input:  testResults[i] == bool indicating if exception raised by test on profile i
+          trueResults[i] == bool inidicating if exception is expected for profile i
+  '''
+  performance = summarize(testResults, trueResults)
+
+  falsePositiveRate = performance[1] / (performance[1] + performance[3])
+  truePositiveRate  = performance[0] / (performance[0] + performance[2])
   plt.plot(falsePositiveRate, truePositiveRate, 'x')
   plt.gca().set_xlim(0.0, 1.0)
   plt.gca().set_ylim(0.0, 1.0)
