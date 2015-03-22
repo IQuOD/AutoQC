@@ -154,10 +154,168 @@ def combineTests(logicTable):
 
     return results
 
+def incrementPlaceCounter(counter, maxima):
+    '''
+    treats the list <counter> like a multi-digit counter with 'places';
+    (like a digital clock or an ordinary number)
+    max values for each place are in the list <maxima>.
+    Increments counter to the next 'tick', and returns the incremented list.
+    loops around to 0 at overflow.
+    big-endian.
+    '''
+
+    counter[-1] = counter[-1] + 1
+    copy = counter[:]
+    i = 1
+
+    while i <= len(counter):
+        if copy[-1*i] == maxima[-1*i]:
+            copy[-1*i] = 0
+            if (-1*i - 1) >= -1*len(copy):
+                copy[-1*i - 1] = copy[-1*i - 1] + 1
+            else:
+                copy = [0]*len(copy)
+        i = i+1
+
+    return copy
+
+def generateSubsets(superset, subsetSize):
+    '''
+    from the list <superset>, generate all the possible subsets without replacement
+    of size <subsetSize>
+    '''
+
+    subsets = []
+    maxima = [len(superset)]*subsetSize
+    counter = range(subsetSize)
+
+    while True:
+        if isAscending(counter):
+            newSet = []
+            for elt in counter:
+                newSet.append(superset[elt])
+            subsets.append(newSet)
+        counter = incrementPlaceCounter(counter, maxima)
+        if counter == [0]*subsetSize:
+            break
+
+    return subsets
+
+def isAscending(lst):
+    '''
+    are the elements in <lst> strictly ascending?
+    '''
+
+    for i in range(len(lst)-1):
+        if lst[i] >= lst[i+1]:
+            return False
+
+    return True
+
+def remElts(lst, elts):
+    '''
+    remove the list of elements <elts> from the list <lst>,
+    and return the result
+    '''
+
+    copy = lst[:]
+    for i in elts:
+        del copy[copy.index(i)]
+
+    return copy
+
+def uniqify(lst):
+   '''
+   returns a unique list of objects drawn from <lst>
+   adopted from http://www.peterbe.com/plog/uniqifiers-benchmark
+   '''
+   noDupes = []
+   [noDupes.append(i) for i in lst if not noDupes.count(i)]
+   return noDupes
+
+def generatePermutations(superset, partition):
+    '''
+    generate all possible ways to split <superset> up into subsets of sizes
+    listed in <parition>
+    '''
+
+    permutations = generateSubsets(superset, partition[-1])
+    for j in range(len(permutations)):
+        permutations[j] = [[permutations[j]], remElts(superset[:], permutations[j])]
+
+    i = 2
+    while (i<=len(partition)):
+        previousStep = permutations[:]
+        permutations = []
+
+        for partialPart in previousStep:
+            nextPart = generateSubsets(partialPart[1], partition[-1*i])
+
+            for np in nextPart:
+                nextStepPart = partialPart[0][:]
+                nextStepPart.append(np)
+                permutations.append([nextStepPart, remElts(partialPart[1], np)])
+
+        i = i+1
+
+    #dump leftovers & double counting
+    for i in range(len(permutations)):
+        permutations[i] = sorted(permutations[i][0])
+    permutations = uniqify(permutations)
+
+    return permutations
+
+
+def generateCombinations(superset):
+    '''
+    enumerate all ways to combine subsets of <superset> without replacement
+    '''
+
+    combos = []
+    partitions = []
+
+    for i in range(1,len(superset)+1):
+        partitions += partition(i)
+
+    for part in partitions:
+        combos += generatePermutations(superset, part)
+
+    return combos
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 table = [[True, True],[False, True],[False, False], [False, False]]
 
-res = combineTests(table)
+#res = combineTests(table)
+
+# test = partition(5)
+# for i in test:
+#     print i
+
+
+
+# subsets = generateSubsets(['A','B','C','D','E'], 2)
+# for i in subsets:
+#     print i
+
+
+
+# permutes = generatePermutations(['A','B','C','D','E','F','G'], [1,2,3])
+#
+# for perm in permutes:
+#     print perm
+
+combos = generateCombinations(['A','B','C','D'])
+for i in combos:
+    print i
