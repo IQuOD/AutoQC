@@ -3,6 +3,7 @@ import json, glob, time
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import util.combineTests as combinatorics
 
 def readInput(JSONlist):
     '''Create a list of data file names from a json array.'''
@@ -206,6 +207,9 @@ for test in testNames:
   testResults.append(result[0])
   verbose.append(result[1])
 # testResults[i][j] now contains a flag indicating the exception raised by test i on profile j
+
+# generate a set of logical combinations of tests
+combos = combinatorics.combineTests(testResults)
 
 # extract the summary of which profiles should have passed / failed
 truth = referenceResults(profiles)

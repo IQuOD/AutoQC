@@ -1,4 +1,4 @@
-import itertools
+import itertools, numpy
 from copy import deepcopy
 
 def partition(n):
@@ -27,52 +27,12 @@ def partition(n):
         y = x + y - 1
         yield a[:k + 1]
 
-def slice_by_lengths(lengths, the_list):
-    '''
-    adopted from http://stackoverflow.com/questions/19368375/set-partitions-in-python
-    takes <the_list> and breaks it up into sublists, of the lengths listed in <lengths>
-    '''
-
-    assert sum(lengths) == len(the_list), 'must break list up into sublist with nothing missing and no left-overs'
-
-    for length in lengths:
-        new = []
-        for i in range(length):
-            new.append(the_list.pop(0))
-        yield new
-
-def subgrups(my_list):
-    '''
-    adopted from http://stackoverflow.com/questions/19368375/set-partitions-in-python
-    forms all subgroups of elements in a list, without reordering
-    '''
-    partitions = partition(len(my_list))
-    permed = []
-    for each_partition in partitions:
-        permed.append(set(itertools.permutations(each_partition, len(each_partition))))
-
-    for each_tuple in itertools.chain(*permed):
-        yield list(slice_by_lengths(each_tuple, deepcopy(my_list)))
-
-def subsetter(nItems, subSize):
-    '''
-    returns a list containing every possible partition of the set of size <subSize> drawn
-    without replacement from the list of integers 0..nItems-1
-    '''
-
-    subs = []
-
-    for i in itertools.combinations(range(nItems), subSize):
-        for j in subgrups(list(i)):
-            subs.append(j)
-
-    return subs
-
-def combineLogic(logicTable, partition):
+def combineLogic(logicTable, partition, a=True):
     '''
     logicTable[i][j]: list of lists of boolean values reflecting the decision made by the ith test on the jth dataset.
     partition: list containing a partition of a subset of the rows of logicTable; partition syntax ANDs
-    together elements in a sublist, and ORs together elements in partition. For example,
+    together elements in a sublist, and ORs together elements in partition if <a>=True, or with AND and OR reversed
+    if <a>=False. For example, wit <a>=True
 
     partition = [[0,3], [1], [7]] means
 
@@ -85,7 +45,7 @@ def combineLogic(logicTable, partition):
     #all entries in logicTable are bool
     for i in logicTable:
         for j in i:
-            assert isinstance(j, bool)
+            assert isinstance(j, bool) or isinstance(j, numpy.bool_)
     #all rows reffed in partition are present in logicTable
     for i in partition:
         for j in i:
@@ -101,22 +61,33 @@ def combineLogic(logicTable, partition):
 
     subpartitions = []
 
-    for andGroup in partition:
-        subpartitions.append(andRows(logicTable, andGroup))
+    if a:
+        for andGroup in partition:
+            subpartitions.append(combineRows(logicTable, andGroup))
 
-    result = [False]*len(subpartitions[0])
+        result = [False]*len(subpartitions[0])
 
-    for i in range(len(subpartitions)):
-        for j in range(len(subpartitions[0])):
-            result[j] = result[j] or subpartitions[i][j]
+        for i in range(len(subpartitions)):
+            for j in range(len(subpartitions[0])):
+                result[j] = result[j] or subpartitions[i][j]
+
+    else:
+        for andGroup in partition:
+            subpartitions.append(combineRows(logicTable, andGroup, False))
+
+        result = [True]*len(subpartitions[0])
+
+        for i in range(len(subpartitions)):
+            for j in range(len(subpartitions[0])):
+                result[j] = result[j] and subpartitions[i][j]
 
     return result
 
-def andRows(logicTable, rows):
+def combineRows(logicTable, rows, a=True):
     '''
     logicTable[i][j]: list of lists of boolean values.
-    rows: list of rows of logicTable to and together
-
+    rows: list of rows of logicTable to and or or together
+    a: should rows be ANDed together? Otherwise, OR them together.
     returns: list of result of above operation
     '''
 
@@ -128,7 +99,10 @@ def andRows(logicTable, rows):
 
     for i in range(1, len(rows)):
         for j in range(cols):
-            result[j] = result[j] and logicTable[rows[i]][j]
+            if a:
+                result[j] = result[j] and logicTable[rows[i]][j]
+            else:
+                result[j] = result[j] or logicTable[rows[i]][j]
 
     return result
 
@@ -137,20 +111,27 @@ def combineTests(logicTable):
     Generate all possible paritions of tests into AND / OR combinations, and return the result
 
     logicTable[i][j]: list of lists of boolean values reflecting the decision made by the ith test on the jth dataset.
+
+    returns a list of lists; each sub-list contains three elements:
+     - the partition in question
+     - the result of combining rows in <logicTable> per that partition
+     - are elements of sublists in a partition ANDed together? (otherwise ORed together, corresponds to <a> in combineRows)
     '''
 
     totalTests = len(logicTable)
 
     results = []
 
-    #consider combining every possible number of tests, from a single test to all of them
-    for nTests in range(1,totalTests+1):
-         parts = subsetter(totalTests, nTests)
+    partitions = generateCombinations( range(totalTests) )
 
-         for each_part in parts:
-             combo = combineLogic(logicTable, each_part)
-             print combo, each_part
-             results.append([each_part, combo])
+    for each_partition in partitions:
+        combo = combineLogic(logicTable, each_partition)
+        #print combo, each_partition
+        results.append([each_partition, combo, True])
+        if not unitRows(each_partition):
+            combo = combineLogic(logicTable, each_partition, False)
+            #print combo, each_partition, 'Logic Switched'
+            results.append([each_partition, combo, False])
 
     return results
 
@@ -282,40 +263,21 @@ def generateCombinations(superset):
 
     return combos
 
+def unitRows(table):
+    '''
+    table: list of lists
 
+    returns: is there only one list in <table> OR are all the rows in <table> of length 1?
+    '''
 
+    if len(table) == 1:
+        return True
 
+    for row in table:
+        if len(row) != 1:
+            return False
 
+    return True
 
-
-
-
-
-
-
-
-
-table = [[True, True],[False, True],[False, False], [False, False]]
-
-#res = combineTests(table)
-
-# test = partition(5)
-# for i in test:
-#     print i
-
-
-
-# subsets = generateSubsets(['A','B','C','D','E'], 2)
-# for i in subsets:
-#     print i
-
-
-
-# permutes = generatePermutations(['A','B','C','D','E','F','G'], [1,2,3])
-#
-# for perm in permutes:
-#     print perm
-
-combos = generateCombinations(['A','B','C','D'])
-for i in combos:
-    print i
+#table = [[True, True],[False, True],[False, False], [False, False]]
+#combineTests(table)
