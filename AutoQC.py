@@ -3,6 +3,7 @@ import json, glob, time
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import util.combineTests as combinatorics
 
 def readInput(JSONlist):
     '''Create a list of data file names from a json array.'''
@@ -140,16 +141,40 @@ def generateLogfile(verbose, trueVerbose, profiles, testNames):
 
     logfile.write('-----------------------------------------\n')
 
-def plotSummary(testResults, trueResults):
-  '''Example of plot output.'''
+def summarize(testResults, trueResults):
+  '''
+  Summarizes the performance of a single test across a set of profiles, compared to expectation.
+  Input:  testResults[i] == bool indicating if exception raised by test on profile i
+          trueResults[i] == bool inidicating if exception is expected for profile i
+  Return: list indicating: (
+    number of exceptions raised by test when they were expected (correctly identified exceptions),
+    number of exceptions raised by test when they were not expected (false positives),
+    number of profiles passed by test when an exception was expected (false negatives),
+    number of profiles passed when they were expected to pass (correctly identified passing profiles)
+  )
+  '''
+
+  assert len(testResults) == len(trueResults), 'must provide same number of test results as true results.'
+
   testResults = np.array(testResults)
-  trueResults = np.array(trueResult)
+  trueResults = np.array(trueResults)
   TT = np.sum(testResults & trueResults, dtype=float)
   TF = np.sum(testResults & ~trueResults, dtype=float)
   FT = np.sum(~testResults & trueResults, dtype=float)
   FF = np.sum(~testResults & ~trueResults, dtype=float)
-  falsePositiveRate = TF / (TF + FF)
-  truePositiveRate  = TT / (TT + FT)
+
+  return (TT, TF, FT, FF)
+
+def plotSummary(testResults, trueResults):
+  '''
+  Example of plot output.
+  Input:  testResults[i] == bool indicating if exception raised by test on profile i
+          trueResults[i] == bool inidicating if exception is expected for profile i
+  '''
+  performance = summarize(testResults, trueResults)
+
+  falsePositiveRate = performance[1] / (performance[1] + performance[3])
+  truePositiveRate  = performance[0] / (performance[0] + performance[2])
   plt.plot(falsePositiveRate, truePositiveRate, 'x')
   plt.gca().set_xlim(0.0, 1.0)
   plt.gca().set_ylim(0.0, 1.0)
@@ -182,6 +207,9 @@ for test in testNames:
   testResults.append(result[0])
   verbose.append(result[1])
 # testResults[i][j] now contains a flag indicating the exception raised by test i on profile j
+
+# generate a set of logical combinations of tests
+combos = combinatorics.combineTests(testResults)
 
 # extract the summary of which profiles should have passed / failed
 truth = referenceResults(profiles)
