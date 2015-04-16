@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import util.combineTests as combinatorics
+import util.benchmarks as benchmarks
 
 def readInput(JSONlist):
     '''Create a list of data file names from a json array.'''
@@ -222,6 +223,12 @@ print('Number of profiles tested was %i' % len(profiles))
 for i in range (0, len(testNames)):
   print('Number of profiles that failed ' + testNames[i] + ' was %i' % np.sum(testResults[i]))
 print('Number of profiles that should have been failed was %i' % np.sum(trueResult))
+
+# Compare the combinations to the truth.
+bmResults = benchmarks.compare_to_truth(combos, trueResult)
+
+# Plot the results.
+benchmarks.plot_roc(bmResults)
 
 #logfile
 generateLogfile(verbose, trueVerbose, profiles, testNames)

@@ -278,6 +278,43 @@ def unitRows(table):
             return False
 
     return True
+    
+def combinationStr(partition, a=True):
+    '''
+    Returns a string showing the logic expressed by the partition.
+    a=True means that items in a sublist are ANDed together and list items ORed.
+      False means the reverse.
+    '''
+    text = ''
+    start = True
+    for item in partition:
+        if start:
+            start = False
+        else:
+            if a:
+                text += ' OR '
+            else:
+                text += ' AND '
+
+        if len(item) > 1 and len(partition) > 1:
+            text += '('
+            
+        subStart = True
+        for subitem in item:
+            if subStart:
+                text += str(subitem)
+                subStart = False
+            else:
+                if a:
+                    text += ' AND ' 
+                else:
+                    text += ' OR '
+                text += str(subitem)
+        
+        if len(item) > 1 and len(partition) > 1:
+            text += ')'
+            
+    return text
 
 #table = [[True, True],[False, True],[False, False], [False, False]]
 #combineTests(table)
