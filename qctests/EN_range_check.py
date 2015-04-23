@@ -16,7 +16,7 @@ def test(p):
     # Make the quality control decisions. This should
     # return true if the temperature is outside -4 deg C
     # and 40 deg C.
-    qc = (t.mask == False) & ((t.data < -4.0) | (t.data > 40.0))
+    qc = (t.mask == False) & ((t.data < -4.0) | (t.data > 28.0))
 
     return qc
 
