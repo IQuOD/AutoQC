@@ -16,6 +16,9 @@ def compare_to_truth(combos, trueResult):
 
     benchmarks = []
     for combo in combos:
+
+        assert len(combo[1]) == len(trueResult), 'Different number of true results and estimated results reported.'
+
         tt = 0.0
         tf = 0.0
         ft = 0.0
