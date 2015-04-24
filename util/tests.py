@@ -61,3 +61,13 @@ def test_combineTests_spotcheck():
     assert result[1][0:2] == [[[1]], [False, True]]
     assert result[2][0:2] == [[[0], [1]], [True, True]]
     assert result[3][0:2] == [[[0, 1]], [False, True]]
+
+def test_combinationStr_spotcheck():
+    '''
+    check a few examples
+    '''
+
+    assert combineTests.combinationStr([]) == ''
+    assert combineTests.combinationStr([['x', 32]]) == 'x AND 32'
+    assert combineTests.combinationStr([['x', 32]], False) == 'x OR 32'
+    assert combineTests.combinationStr([[0,1], [12]]) == '(0 AND 1) OR 12'

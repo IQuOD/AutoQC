@@ -278,7 +278,7 @@ def unitRows(table):
             return False
 
     return True
-    
+
 def combinationStr(partition, a=True):
     '''
     Returns a string showing the logic expressed by the partition.
@@ -298,7 +298,7 @@ def combinationStr(partition, a=True):
 
         if len(item) > 1 and len(partition) > 1:
             text += '('
-            
+
         subStart = True
         for subitem in item:
             if subStart:
@@ -306,15 +306,12 @@ def combinationStr(partition, a=True):
                 subStart = False
             else:
                 if a:
-                    text += ' AND ' 
+                    text += ' AND '
                 else:
                     text += ' OR '
                 text += str(subitem)
-        
+
         if len(item) > 1 and len(partition) > 1:
             text += ')'
-            
-    return text
 
-#table = [[True, True],[False, True],[False, False], [False, False]]
-#combineTests(table)
+    return text
