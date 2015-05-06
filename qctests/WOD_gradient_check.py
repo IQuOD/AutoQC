@@ -30,7 +30,7 @@ def test(p):
     for i in range(0,len(t.data)-1):
         if isData[i] & isData[i+1] & (d.data[i+1] - d.data[i] > 0):
 
-          gradient = (t.data[i+1] - t.data[i]) / (d.data[i+1] - d.data[i])
+          gradient = (t.data[i+1] - t.data[i]) / max([ (d.data[i+1] - d.data[i]) , 3.0])
 
           # gradient check
           qc[i] = (gradient > 0.3) or (gradient < -0.7) or qc[i] # in case qc[i] was set true by the zero sensitivity indicator in the previous step
