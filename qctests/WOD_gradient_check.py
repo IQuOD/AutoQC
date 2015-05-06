@@ -33,12 +33,13 @@ def test(p):
           gradient = (t.data[i+1] - t.data[i]) / (d.data[i+1] - d.data[i])
 
           # gradient check
-          qc[i] = (gradient > 0.3) or (gradient < -0.7)
+          qc[i] = (gradient > 0.3) or (gradient < -0.7) or qc[i] # in case qc[i] was set true by the zero sensitivity indicator in the previous step
+          qc[i+1] = (gradient > 0.3) or (gradient < -0.7)
 
           # zero sensitivity indicator
           # flags data if temperature drops to 0 too abruptly, indicating a missing value.
-          if t.data[i] == 0:
+          if t.data[i+1] == 0:
               if -1.0 * gradient > 5.0 * 0.7:
-                  qc[i] = True
+                  qc[i+1] = True
 
     return qc
