@@ -34,7 +34,23 @@ def test_Argo_global_range_check_temperature():
     truth[0] = True
     assert numpy.array_equal(qc, truth), 'failed to flag temperature slightly warmer than 40 C'        
 
+def test_Argo_global_range_check_pressure():
+    '''
+    Make sure AGRC is flagging pressure excursions
+    '''
 
+    # should fail despite rounding
+    p = util.testingProfile.fakeProfile([5], [-5.00000001]) 
+    qc = qctests.Argo_global_range_check.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True
+    assert numpy.array_equal(qc, truth), 'failed to flag pressure slightly below -5 '
+
+    # -5 OK
+    p = util.testingProfile.fakeProfile([5], [-5]) 
+    qc = qctests.Argo_global_range_check.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging pressure of -5'
 
 def test_EN_range_check_spotcheck():
     '''
