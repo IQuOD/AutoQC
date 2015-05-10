@@ -3,6 +3,7 @@ import qctests.Argo_gradient_test
 import qctests.Argo_pressure_increasing_test
 import qctests.Argo_spike_test
 import qctests.EN_range_check
+import qctests.WOD_gradient_check
 
 import util.testingProfile
 import numpy
@@ -320,3 +321,60 @@ def test_EN_range_check_temperature():
     assert numpy.array_equal(qc, truth), 'failed to flag temperature slightly warmer than 40 C'
 
 
+##### WOD_gradient_check ---------------------------------------------------
+
+def test_WOD_gradient_check_temperature_gradient():
+    '''
+    validate temperaure gradient behavior
+    '''
+
+    # should just barely pass; gradient exactly at threshold
+    p = util.testingProfile.fakeProfile([100, 130], [100, 200]) 
+    qc = qctests.WOD_gradient_check.test(p)
+    truth = numpy.zeros(2, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'flagged temperature gradient at threshold'    
+
+    # should just barely fail; gradient slightly over threshold
+    p = util.testingProfile.fakeProfile([100, 130.00001], [100, 200]) 
+    qc = qctests.WOD_gradient_check.test(p)
+    truth = numpy.zeros(2, dtype=bool)
+    truth[0] = True
+    truth[1] = True 
+    assert numpy.array_equal(qc, truth), 'failed to flag slight excess temperature gradient' 
+
+def test_WOD_gradient_check_temperature_inversion():
+    '''
+    validate temperaure inversion behavior
+    '''
+
+    # should just barely pass; inversion exactly at threshold
+    p = util.testingProfile.fakeProfile([100, 30], [100, 200]) 
+    qc = qctests.WOD_gradient_check.test(p)
+    truth = numpy.zeros(2, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'flagged temperature inversion at threshold'    
+
+    # should just barely fail; inversion slightly over threshold
+    p = util.testingProfile.fakeProfile([100, 29.9999], [100, 200]) 
+    qc = qctests.WOD_gradient_check.test(p)
+    truth = numpy.zeros(2, dtype=bool)
+    truth[0] = True
+    truth[1] = True 
+    assert numpy.array_equal(qc, truth), 'failed to flag slight excess temperature inversion' 
+
+# def test_WOD_gradient_check_zero_indicator():
+#     '''
+#     validate WOD_gc zero indicator behavior
+#     '''
+
+#     # should just barely pass; gradient to 0 exactly at threshold
+#     p = util.testingProfile.fakeProfile([350, 0], [100, 200]) 
+#     qc = qctests.WOD_gradient_check.test(p)
+#     truth = numpy.zeros(2, dtype=bool)
+#     assert numpy.array_equal(qc, truth), 'flagged acceptable drop to 0 temperature'    
+
+#     # should just barely fail; gradient to 0 slightly over threshold
+#     p = util.testingProfile.fakeProfile([350.0001, 0], [100, 200]) 
+#     qc = qctests.WOD_gradient_check.test(p)
+#     truth = numpy.zeros(2, dtype=bool)
+#     truth[1] = True 
+#     assert numpy.array_equal(qc, truth), 'failed to flag fast drop to 0 temperature' 

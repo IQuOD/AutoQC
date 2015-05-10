@@ -32,7 +32,7 @@ def test(p):
 
           gradient = (t.data[i+1] - t.data[i]) / max([ (d.data[i+1] - d.data[i]) , 3.0])
 
-          # gradient check
+          # gradient & inversion check
           qc[i] = (gradient > 0.3) or (gradient < -0.7) or qc[i] # in case qc[i] was set true by the zero sensitivity indicator in the previous step
           qc[i+1] = (gradient > 0.3) or (gradient < -0.7)
 
