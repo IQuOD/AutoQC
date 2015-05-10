@@ -287,16 +287,33 @@ def test_Argo_spike_test_temperature_floatingPoint():
 
 ##### EN_range_check ---------------------------------------------------
 
-def test_EN_range_check_spotcheck():
+def test_EN_range_check_temperature():
     '''
-    Spot-check the implementaion of EN_range_check.
+    Make sure EN_range_check is flagging temperature excursions
     '''
 
-    p = util.testingProfile.fakeProfile([1,1000,1], [100,200,300])
-
+    # should fail despite rounding
+    p = util.testingProfile.fakeProfile([-400000001], [100]) 
     qc = qctests.EN_range_check.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True
+    assert numpy.array_equal(qc, truth), 'failed to flag temperature slightly colder than -4 C'
 
-    truth = numpy.zeros(3, dtype=bool)
-    truth[1] = True
+    # -4 OK
+    p = util.testingProfile.fakeProfile([-4], [100]) 
+    qc = qctests.EN_range_check.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging -4 C'
 
-    assert numpy.array_equal(qc, truth)
+    # 40 OK
+    p = util.testingProfile.fakeProfile([40], [100]) 
+    qc = qctests.EN_range_check.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging 40 C'
+
+    # should fail despite rounding
+    p = util.testingProfile.fakeProfile([40.0000001], [100]) 
+    qc = qctests.EN_range_check.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True
+    assert numpy.array_equal(qc, truth), 'failed to flag temperature slightly warmer than 40 C'

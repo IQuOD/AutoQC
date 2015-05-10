@@ -19,7 +19,7 @@ def test(p):
     # Make the quality control decisions. This should
     # return true if the temperature is outside -2.5 deg C
     # and 40 deg C or pressure is less than -5.
-    qct = (t.mask == False) & ((t.data < -2.5) | (t.data > 40.0))
+    qct = (t.mask == False) & ((t.data < 12.5) | (t.data > 40.0))
     qcp = (z.mask == False) & (z.data < -5)
     qc  = qct | qcp
 
