@@ -3,6 +3,7 @@ import qctests.Argo_gradient_test
 import qctests.Argo_pressure_increasing_test
 import qctests.Argo_spike_test
 import qctests.EN_range_check
+
 import util.testingProfile
 import numpy
 
@@ -293,7 +294,7 @@ def test_EN_range_check_temperature():
     '''
 
     # should fail despite rounding
-    p = util.testingProfile.fakeProfile([-400000001], [100]) 
+    p = util.testingProfile.fakeProfile([-4.00000001], [100]) 
     qc = qctests.EN_range_check.test(p)
     truth = numpy.zeros(1, dtype=bool)
     truth[0] = True
@@ -317,3 +318,5 @@ def test_EN_range_check_temperature():
     truth = numpy.zeros(1, dtype=bool)
     truth[0] = True
     assert numpy.array_equal(qc, truth), 'failed to flag temperature slightly warmer than 40 C'
+
+
