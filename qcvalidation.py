@@ -1,17 +1,362 @@
+import qctests.Argo_global_range_check
+import qctests.Argo_gradient_test
+import qctests.Argo_pressure_increasing_test
+import qctests.Argo_spike_test
 import qctests.EN_range_check
+import qctests.WOD_gradient_check
+
 import util.testingProfile
 import numpy
 
-def test_EN_range_check_spotcheck():
+##### Argo_global_range_check ---------------------------------------------------
+
+def test_Argo_global_range_check_temperature():
     '''
-    Spot-check the implementaion of EN_range_check.
+    Make sure AGRC is flagging temperature excursions
     '''
 
-    p = util.testingProfile.fakeProfile([1,1000,1], [100,200,300])
+    # should fail despite rounding
+    p = util.testingProfile.fakeProfile([-2.500000001], [100]) 
+    qc = qctests.Argo_global_range_check.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True
+    assert numpy.array_equal(qc, truth), 'failed to flag temperature slightly colder than -2.5 C'
 
-    qc = qctests.EN_range_check.test(p)
+    # -2.5 OK
+    p = util.testingProfile.fakeProfile([-2.5], [100]) 
+    qc = qctests.Argo_global_range_check.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging -2.5 C'
 
+    # 40 OK
+    p = util.testingProfile.fakeProfile([40], [100]) 
+    qc = qctests.Argo_global_range_check.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging 40 C'
+
+    # should fail despite rounding
+    p = util.testingProfile.fakeProfile([40.0000001], [100]) 
+    qc = qctests.Argo_global_range_check.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True
+    assert numpy.array_equal(qc, truth), 'failed to flag temperature slightly warmer than 40 C'        
+
+def test_Argo_global_range_check_pressure():
+    '''
+    Make sure AGRC is flagging pressure excursions
+    '''
+
+    # should fail despite rounding
+    p = util.testingProfile.fakeProfile([5], [-5.00000001]) 
+    qc = qctests.Argo_global_range_check.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True
+    assert numpy.array_equal(qc, truth), 'failed to flag pressure slightly below -5 '
+
+    # -5 OK
+    p = util.testingProfile.fakeProfile([5], [-5]) 
+    qc = qctests.Argo_global_range_check.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging pressure of -5'
+
+##### Argo_gradient_test ---------------------------------------------------
+
+def test_Argo_gradient_test_temperature_shallow():
+    '''
+    Make sure AGT is flagging postive and negative temperature spikes at shallow depths
+    '''
+
+    ###
+    # shallow - depth < 500 m
+    ###
+
+    # pass a marginal positive spike (criteria exactly 9 C):
+    p = util.testingProfile.fakeProfile([2,11,2], [100,200,300]) 
+    qc = qctests.Argo_gradient_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging a positive spike exactly at threshold (shallow).'    
+
+    # pass a marginal negative spike (criteria exactly 9 C):
+    p = util.testingProfile.fakeProfile([2,-7,2], [100,200,300]) 
+    qc = qctests.Argo_gradient_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging a negative spike exactly at threshold (shallow).' 
+
+    # fail a marginal positive spike (criteria > 9 C):
+    p = util.testingProfile.fakeProfile([2,11.0001,2], [100,200,300]) 
+    qc = qctests.Argo_gradient_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    truth[1] = True 
+    assert numpy.array_equal(qc, truth), 'failing to flag a positive spike just above threshold (shallow).'    
+
+    # fail a marginal negative spike (criteria > 9 C):
+    p = util.testingProfile.fakeProfile([2,-7.0001,2], [100,200,300]) 
+    qc = qctests.Argo_gradient_test.test(p)
     truth = numpy.zeros(3, dtype=bool)
     truth[1] = True
+    assert numpy.array_equal(qc, truth), 'failing to flag a negative spike just above threshold (shallow).'
 
-    assert numpy.array_equal(qc, truth)
+def test_Argo_gradient_test_temperature_deep():
+    '''
+    Make sure AGT is flagging postive and negative temperature spikes at deep depths
+    '''
+
+    ###
+    # deep - depth > 500 m
+    ###
+
+    # pass a marginal positive spike (criteria exactly 9 C):
+    p = util.testingProfile.fakeProfile([2,5,2], [1000,2000,3000]) 
+    qc = qctests.Argo_gradient_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging a positive spike exactly at threshold. (deep)'    
+
+    # pass a marginal negative spike (criteria exactly 9 C):
+    p = util.testingProfile.fakeProfile([2,-1,2], [1000,2000,3000]) 
+    qc = qctests.Argo_gradient_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging a negative spike exactly at threshold. (deep)' 
+
+    # fail a marginal positive spike (criteria > 9 C):
+    p = util.testingProfile.fakeProfile([2,5.0001,2], [1000,2000,3000]) 
+    qc = qctests.Argo_gradient_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    truth[1] = True 
+    assert numpy.array_equal(qc, truth), 'failing to flag a positive spike just above threshold. (deep)'    
+
+    # fail a marginal negative spike (criteria > 9 C):
+    p = util.testingProfile.fakeProfile([2,-1.0001,2], [1000,2000,3000]) 
+    qc = qctests.Argo_gradient_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    truth[1] = True
+    assert numpy.array_equal(qc, truth), 'failing to flag a negative spike just above threshold. (deep)'
+
+def test_Argo_gradient_test_temperature_threshold():
+    '''
+    check AGT temperature behavior exactly at depth threshold (500m)
+    '''
+    # middle value should fail the deep check but pass the shallow check;
+    # at threshold, use deep criteria
+    p = util.testingProfile.fakeProfile([2,5.0001,2], [400,500,600]) 
+    qc = qctests.Argo_gradient_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    truth[1] = True 
+    assert numpy.array_equal(qc, truth), 'failing to flag a positive spike just above threshold. (threshold)'      
+
+    # as above, but passes just above 500m
+    p = util.testingProfile.fakeProfile([2,5.0001,2], [400,499,600]) 
+    qc = qctests.Argo_gradient_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'flagged a spike using deep criteria when shallow should have been used. (threshold)' 
+
+def test_Argo_gradient_test_temperature_floatingPoint():
+    '''
+    check AGT temperature check for floating point errors
+    '''
+
+    #should just barely pass, but bad fp can push it over the threshold
+    p = util.testingProfile.fakeProfile([8.1, 11.15, 8.2], [1000,2000,3000]) 
+    qc = qctests.Argo_gradient_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'floating point error'
+
+##### Argo_pressure_increasing_test ---------------------------------------------------
+
+def test_Argo_pressure_increasing_test_constantPressure():
+    '''
+    API test should flag only the subsequent levels of constant pressure.
+    '''
+
+    p = util.testingProfile.fakeProfile([2,2,2], [100,100,100]) 
+    qc = qctests.Argo_pressure_increasing_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    truth[1] = True
+    truth[2] = True
+    assert numpy.array_equal(qc, truth), 'must flag only subsequent levels of constant pressure.'    
+
+def test_Argo_pressure_increasing_test_pressureInversion():
+    '''
+    API test should flag only the subsequent levels of constant pressure.
+    '''
+
+    p = util.testingProfile.fakeProfile([2,2,2], [100,200,100]) 
+    qc = qctests.Argo_pressure_increasing_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    truth[1] = True
+    truth[2] = True
+    assert numpy.array_equal(qc, truth), 'must flag all levels corresponding to pressure inversion.' 
+
+##### Argo_spike_test ---------------------------------------------------
+
+def test_Argo_spike_test_temperature_shallow():
+    '''
+    Make sure AST is flagging postive and negative temperature spikes at shallow depths
+    '''
+
+    ###
+    # shallow - depth < 500 m
+    ###
+
+    # pass a marginal positive spike (criteria exactly 6 C):
+    p = util.testingProfile.fakeProfile([5,11,5], [100,200,300]) 
+    qc = qctests.Argo_spike_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging a positive spike exactly at threshold (shallow).'    
+
+    # pass a marginal negative spike (criteria exactly 6 C):
+    p = util.testingProfile.fakeProfile([5,-1,5], [100,200,300]) 
+    qc = qctests.Argo_spike_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging a negative spike exactly at threshold (shallow).' 
+
+    # fail a marginal positive spike (criteria > 6 C):
+    p = util.testingProfile.fakeProfile([5,11.0001,5], [100,200,300]) 
+    qc = qctests.Argo_spike_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    truth[1] = True 
+    assert numpy.array_equal(qc, truth), 'failing to flag a positive spike just above threshold (shallow).'    
+
+    # fail a marginal negative spike (criteria > 6 C):
+    p = util.testingProfile.fakeProfile([5,-1.0001,5], [100,200,300]) 
+    qc = qctests.Argo_spike_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    truth[1] = True
+    assert numpy.array_equal(qc, truth), 'failing to flag a negative spike just above threshold (shallow).'
+
+def test_Argo_spike_test_temperature_deep():
+    '''
+    Make sure AST is flagging postive and negative temperature spikes at deep depths
+    '''
+
+    ###
+    # deep - depth > 500 m
+    ###
+
+    # pass a marginal positive spike (criteria exactly 2 C):
+    p = util.testingProfile.fakeProfile([5,7,5], [1000,2000,3000]) 
+    qc = qctests.Argo_spike_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging a positive spike exactly at threshold. (deep)'    
+
+    # pass a marginal negative spike (criteria exactly 2 C):
+    p = util.testingProfile.fakeProfile([5,3,5], [1000,2000,3000]) 
+    qc = qctests.Argo_spike_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging a negative spike exactly at threshold. (deep)' 
+
+    # fail a marginal positive spike (criteria > 2 C):
+    p = util.testingProfile.fakeProfile([5,7.0001,5], [1000,2000,3000]) 
+    qc = qctests.Argo_spike_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    truth[1] = True 
+    assert numpy.array_equal(qc, truth), 'failing to flag a positive spike just above threshold. (deep)'    
+
+    # fail a marginal negative spike (criteria > 2 C):
+    p = util.testingProfile.fakeProfile([5,2.999,5], [1000,2000,3000]) 
+    qc = qctests.Argo_spike_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    truth[1] = True
+    assert numpy.array_equal(qc, truth), 'failing to flag a negative spike just above threshold. (deep)'
+
+def test_Argo_spike_test_temperature_threshold():
+    '''
+    check AST temperature behavior exactly at depth threshold (500m)
+    '''
+    # middle value should fail the deep check but pass the shallow check;
+    # at threshold, use deep criteria
+    p = util.testingProfile.fakeProfile([5,7.0001,5], [400,500,600]) 
+    qc = qctests.Argo_spike_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    truth[1] = True 
+    assert numpy.array_equal(qc, truth), 'failing to flag a positive spike just above threshold. (threshold)'      
+
+    # as above, but passes just above 500m
+    p = util.testingProfile.fakeProfile([5,7.0001,5], [400,499,600]) 
+    qc = qctests.Argo_spike_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'flagged a spike using deep criteria when shallow should have been used. (threshold)' 
+
+def test_Argo_spike_test_temperature_floatingPoint():
+    '''
+    check AST temperature check for floating point errors
+    '''
+
+    #should just barely pass, but bad fp can push it over the threshold
+    p = util.testingProfile.fakeProfile([8.1, 10.2, 8.2], [1000,2000,3000]) 
+    qc = qctests.Argo_spike_test.test(p)
+    truth = numpy.zeros(3, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'floating point error'
+
+##### EN_range_check ---------------------------------------------------
+
+def test_EN_range_check_temperature():
+    '''
+    Make sure EN_range_check is flagging temperature excursions
+    '''
+
+    # should fail despite rounding
+    p = util.testingProfile.fakeProfile([-4.00000001], [100]) 
+    qc = qctests.EN_range_check.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True
+    assert numpy.array_equal(qc, truth), 'failed to flag temperature slightly colder than -4 C'
+
+    # -4 OK
+    p = util.testingProfile.fakeProfile([-4], [100]) 
+    qc = qctests.EN_range_check.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging -4 C'
+
+    # 40 OK
+    p = util.testingProfile.fakeProfile([40], [100]) 
+    qc = qctests.EN_range_check.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging 40 C'
+
+    # should fail despite rounding
+    p = util.testingProfile.fakeProfile([40.0000001], [100]) 
+    qc = qctests.EN_range_check.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True
+    assert numpy.array_equal(qc, truth), 'failed to flag temperature slightly warmer than 40 C'
+
+
+##### WOD_gradient_check ---------------------------------------------------
+
+def test_WOD_gradient_check_temperature_inversion():
+    '''
+    validate temperaure inversion behavior
+    '''
+
+    # should just barely pass; gradient exactly at threshold
+    p = util.testingProfile.fakeProfile([100, 130], [100, 200]) 
+    qc = qctests.WOD_gradient_check.test(p)
+    truth = numpy.zeros(2, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'flagged temperature inversion at threshold'    
+
+    # should just barely fail; gradient slightly over threshold
+    p = util.testingProfile.fakeProfile([100, 130.00001], [100, 200]) 
+    qc = qctests.WOD_gradient_check.test(p)
+    truth = numpy.zeros(2, dtype=bool)
+    truth[0] = True
+    truth[1] = True 
+    assert numpy.array_equal(qc, truth), 'failed to flag slight excess temperature inversion' 
+
+def test_WOD_gradient_check_temperature_gradient():
+    '''
+    validate temperaure gradient behavior
+    '''
+
+    # should just barely pass; gradient exactly at threshold
+    p = util.testingProfile.fakeProfile([100, 30], [100, 200]) 
+    qc = qctests.WOD_gradient_check.test(p)
+    truth = numpy.zeros(2, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'flagged temperature gradient at threshold'    
+
+    # should just barely fail; inversion slightly over threshold
+    p = util.testingProfile.fakeProfile([100, 29.9999], [100, 200]) 
+    qc = qctests.WOD_gradient_check.test(p)
+    truth = numpy.zeros(2, dtype=bool)
+    truth[0] = True
+    truth[1] = True 
+    assert numpy.array_equal(qc, truth), 'failed to flag slight excess temperature gradient' 

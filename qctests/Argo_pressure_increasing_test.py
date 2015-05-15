@@ -2,7 +2,8 @@
 Implements the pressure increasing check used in the Argo quality control 
 system. 
 
-See Argo quality control manual (based on version 2.5).
+See Argo quality control manual (based on version 2.5),
+http://w3.jcommops.org/FTPRoot/Argo/Doc/argo-quality-control-manual.pdf page 8.
 """
 
 import numpy as np

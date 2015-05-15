@@ -10,6 +10,9 @@ class fakeProfile:
         self.temperatures = temperatures
         self.depths = depths
 
+        self.primary_header = {}
+        self.primary_header['Number of levels'] = len(depths)
+
     def t(self):
         """ Returns a numpy masked array of temperatures. """
         return self.var_data(self.temperatures)
@@ -17,6 +20,10 @@ class fakeProfile:
     def z(self):
         """ Returns a numpy masked array of depths. """
         return self.var_data(self.depths)
+
+    def n_levels(self):
+        """ Returns the number of levels in the profile. """
+        return self.primary_header['Number of levels']
 
     def var_data(self, dat):
         """ Returns the data values for a variable given the variable index. """

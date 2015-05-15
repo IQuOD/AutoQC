@@ -228,7 +228,7 @@ print('Number of profiles that should have been failed was %i' % np.sum(trueResu
 bmResults = benchmarks.compare_to_truth(combos, trueResult)
 
 # Plot the results.
-benchmarks.plot_roc(bmResults)
+#benchmarks.plot_roc(bmResults)
 
 #logfile
-generateLogfile(verbose, trueVerbose, profiles, testNames)
+#generateLogfile(verbose, trueVerbose, profiles, testNames)
