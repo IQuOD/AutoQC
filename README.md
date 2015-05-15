@@ -7,7 +7,7 @@ Recent studies suggest that changes to global climate as have been seen at the E
 
 Recently, an international team of researchers has decided to work together to break down the barriers between the various groups and countries through the formation of the IQuOD (International Quality Controlled Dataset) initiative. One of the key aims is to intercompare the performance of the various automatic quality control tests that are presently being run to determine a best performing set. This work has started. However, it currently involves individuals running test datasets through their own systems and is being confounded by complications associated with the differences in the file formats and systems that are in use in the various labs and countries.
 
-The IQuOD proposal is to set up an open quality control benchmarking system.  Work will begin by using python's `unittest` module to implement a battery of simple tests to run on some test data, and producing summary statistics and visualizations of the results.  Later goals include helping researchers either wrap their existing C, Fortran and Matlab test functions in Python for use in this test suite, or re-implementing those tests in native Python.
+The IQuOD proposal is to set up an open quality control benchmarking system.  Work will begin by implementing a battery of simple tests to run on some test data, and producing summary statistics and visualizations of the results.  Later goals include helping researchers either wrap their existing C, Fortran and Matlab test functions in Python for use in this test suite, or re-implementing those tests in native Python.
 
 ##Usage
 To execute the quality control checks,
@@ -24,10 +24,10 @@ To execute the quality control checks,
 Each quality control test must be written as its own file in `/qctests`, of the form `def test(p)`, where `p` is a profile object; each test returns a bool, where `True` indicates the test has *failed*.
 
 ###Data
-Each data file listed in `datafiles.json` is of the format [TBD]
+Each data file listed in `datafiles.json` is in the World Ocean Database (WOD; http://www.nodc.noaa.gov/OC5/WOD/pr_wod.html) ASCII format.
 
 ###Profile Objects Specification
 [TBD]
 
-##Notes
- - `/demo` contains a simple demo of the testing pattern, with toy tests and data; not required for production code.
+##Contributing
+Quality control checks waiting to be implemented are listed in the Issues. If you would like to work on coding up a check, please assign yourself to the issue to avoid others duplicating the effort.
