@@ -2,6 +2,7 @@ import qctests.Argo_global_range_check
 import qctests.Argo_gradient_test
 import qctests.Argo_pressure_increasing_test
 import qctests.Argo_spike_test
+import qctests.EN_constant_value_check
 import qctests.EN_range_check
 import qctests.WOD_gradient_check
 import qctests.EN_spike_and_step_check
@@ -150,7 +151,6 @@ def test_Argo_gradient_test_temperature_threshold():
     truth = numpy.zeros(3, dtype=bool)
     assert numpy.array_equal(qc, truth), 'flagged a spike using deep criteria when shallow should have been used. (threshold)' 
 
-
 ##### Argo_pressure_increasing_test ---------------------------------------------------
 
 def test_Argo_pressure_increasing_test_constantPressure():
@@ -267,6 +267,32 @@ def test_Argo_spike_test_temperature_threshold():
     truth = numpy.zeros(3, dtype=bool)
     assert numpy.array_equal(qc, truth), 'flagged a spike using deep criteria when shallow should have been used. (threshold)' 
 
+#### EN_constant_value_check -------------------------------------------
+
+def test_EN_constant_value_threshold():
+    '''
+    check EN_constant_value is flagging 90% and above.
+    '''
+
+    p = util.testingProfile.fakeProfile([0,0,0,0,0,0,0,0,0,10], [100,200,300,400,500,600,700,800,900,1000])
+    qc = qctests.EN_constant_value_check.test(p)
+    truth = numpy.ones(10, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'failing to flag when exactly 90% of measurements are identical'
+
+    p = util.testingProfile.fakeProfile([0,0,0,0,0,0,0,0,10,10], [100,200,300,400,500,600,700,800,900,1000])
+    qc = qctests.EN_constant_value_check.test(p)
+    truth = numpy.zeros(10, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging when less than 90% of measurements are identical'    
+
+def test_EN_constant_value_spacing():
+    '''
+    check EN_constant_value is requiring identical values to cover at least 100 m range
+    '''
+
+    p = util.testingProfile.fakeProfile([0,0,0,0,0,0,0,0,0,10], [1,2,3,4,5,6,7,8,9,10])
+    qc = qctests.EN_constant_value_check.test(p)
+    truth = numpy.zeros(10, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging identical measurements that do not span 100 m of depth.' 
 
 ##### EN_range_check ---------------------------------------------------
 
@@ -446,5 +472,3 @@ def test_WOD_gradient_check_temperature_gradient():
     truth[0] = True
     truth[1] = True 
     assert numpy.array_equal(qc, truth), 'failed to flag slight excess temperature gradient' 
-    
-    
