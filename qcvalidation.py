@@ -292,7 +292,17 @@ def test_EN_constant_value_spacing():
     p = util.testingProfile.fakeProfile([0,0,0,0,0,0,0,0,0,10], [1,2,3,4,5,6,7,8,9,10])
     qc = qctests.EN_constant_value_check.test(p)
     truth = numpy.zeros(10, dtype=bool)
-    assert numpy.array_equal(qc, truth), 'incorrectly flagging identical measurements that do not span 100 m of depth.' 
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging identical measurements that do not span 100 m of depth.'
+
+def test_EN_constant_value_missing_depth():
+    '''
+    Ensures EN_constant_value is not getting thrown by missing depths
+    '''
+
+    p = util.testingProfile.fakeProfile([0,0,0,0,0,0,0,0,0,0], [100,200,300,400,500,600,700,800,900,None])
+    qc = qctests.EN_constant_value_check.test(p)
+    truth = numpy.ones(10, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'failing to flag when the deepest depth in a run of constant temperature is missing.'
 
 ##### EN_range_check ---------------------------------------------------
 

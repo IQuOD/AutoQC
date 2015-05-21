@@ -20,19 +20,31 @@ def test(p):
     # initialize qc as a bunch of falses (pass by default)
     qc = numpy.zeros(len(t.data), dtype=bool)
 
+    # check for gaps in data
+    isTemperature = (t.mask==False)
+    isDepth = (d.mask==False)
+
     #dictionary counts instances of each temperature value
     for i in range(len(t.data)):
-        if t.data[i] in temperatures:
-            temperatures[t.data[i]] += 1
-        else:
-            temperatures[t.data[i]] = 1
+        if isTemperature[i]:
+            if t.data[i] in temperatures:
+                temperatures[t.data[i]] += 1
+            else:
+                temperatures[t.data[i]] = 1
 
     for key in temperatures:
 
         if float(temperatures[key]) / float(len(t.data)) >= 0.9:
             repeats = numpy.where(t.data == key)[0]
-            first  = repeats[0]
-            last = repeats[-1]
+            #drop the entries that don't have a depth associated with them;
+            #this triggers the 90% rule regardless of the presence of depth data, but
+            #ensures that depths are available to assess the range over which constant temps were observed.
+            repeatsWithDepth = []
+            for j in range(len(repeats)):
+                if isDepth[repeats[j]]:
+                    repeatsWithDepth.append(repeats[j])
+            first = repeatsWithDepth[0]
+            last = repeatsWithDepth[-1]
 
             if d.data[last] - d.data[first] >= 100:
                 qc = numpy.ones(len(t.data), dtype=bool) #note everyhing is flagged by this test.

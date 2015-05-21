@@ -36,6 +36,7 @@ class fakeProfile:
         data = np.ma.array(np.zeros(len(dat)), mask=True)
 
         for i in range(len(dat)):
-            data[i] = dat[i]
+            if dat[i] is not None:
+                data[i] = dat[i]
         return data
 
