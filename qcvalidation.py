@@ -4,6 +4,7 @@ import qctests.Argo_pressure_increasing_test
 import qctests.Argo_spike_test
 import qctests.EN_range_check
 import qctests.WOD_gradient_check
+import qctests.EN_spike_and_step_check
 
 import util.testingProfile
 import numpy
@@ -360,3 +361,16 @@ def test_WOD_gradient_check_temperature_gradient():
     truth[0] = True
     truth[1] = True 
     assert numpy.array_equal(qc, truth), 'failed to flag slight excess temperature gradient' 
+    
+##### EN_spike_and_step_check
+
+def test_EN_spike_and_step_check_spike():
+    '''
+    test EN spike checking
+    '''
+    p = util.testingProfile.fakeProfile([20, 24, 18, 17], [0, 10, 20, 30], latitude=20.0)
+    qc = qctests.EN_spike_and_step_check.test(p)
+    truth = numpy.zeros(4, dtype=bool)
+    truth[1] = True
+    assert numpy.array_equal(qc, truth), 'failed to flag spike'
+    
