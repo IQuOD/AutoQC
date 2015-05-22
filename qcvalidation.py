@@ -150,16 +150,6 @@ def test_Argo_gradient_test_temperature_threshold():
     truth = numpy.zeros(3, dtype=bool)
     assert numpy.array_equal(qc, truth), 'flagged a spike using deep criteria when shallow should have been used. (threshold)' 
 
-def test_Argo_gradient_test_temperature_floatingPoint():
-    '''
-    check AGT temperature check for floating point errors
-    '''
-
-    #should just barely pass, but bad fp can push it over the threshold
-    p = util.testingProfile.fakeProfile([8.1, 11.15, 8.2], [1000,2000,3000]) 
-    qc = qctests.Argo_gradient_test.test(p)
-    truth = numpy.zeros(3, dtype=bool)
-    assert numpy.array_equal(qc, truth), 'floating point error'
 
 ##### Argo_pressure_increasing_test ---------------------------------------------------
 
@@ -277,16 +267,6 @@ def test_Argo_spike_test_temperature_threshold():
     truth = numpy.zeros(3, dtype=bool)
     assert numpy.array_equal(qc, truth), 'flagged a spike using deep criteria when shallow should have been used. (threshold)' 
 
-def test_Argo_spike_test_temperature_floatingPoint():
-    '''
-    check AST temperature check for floating point errors
-    '''
-
-    #should just barely pass, but bad fp can push it over the threshold
-    p = util.testingProfile.fakeProfile([8.1, 10.2, 8.2], [1000,2000,3000]) 
-    qc = qctests.Argo_spike_test.test(p)
-    truth = numpy.zeros(3, dtype=bool)
-    assert numpy.array_equal(qc, truth), 'floating point error'
 
 ##### EN_range_check ---------------------------------------------------
 
@@ -321,6 +301,111 @@ def test_EN_range_check_temperature():
     truth[0] = True
     assert numpy.array_equal(qc, truth), 'failed to flag temperature slightly warmer than 40 C'
 
+##### EN_spike_and_step_check ----------------------------------------------
+
+def test_EN_spike_and_step_check_tropics_prelim():
+    '''
+    test preliminary tropical rejection
+    '''
+    p = util.testingProfile.fakeProfile([0, 0, 0, 0], [0, 10, 20, 30], latitude=0.0)
+    qc = qctests.EN_spike_and_step_check.test(p)
+    truth = numpy.zeros(4, dtype=bool)
+    truth[:] = True
+    assert numpy.array_equal(qc, truth), 'failed to flag cold temperatures in the tropics'
+
+def test_EN_spike_and_step_check_composeDT():
+    assert True
+
+def test_EN_spike_and_step_check_determineDepthTolerance():
+    assert True
+
+def test_EN_spike_and_step_check_conditionA():
+    '''
+    test independent implementation of condition A (large spikes)
+    '''
+
+    p = util.testingProfile.fakeProfile([20, 24, 18, 17], [0, 10, 20, 30], latitude=20.0)
+    dt, gt = qctests.EN_spike_and_step_check.composeDT(p.t(), p.z(), 4)
+    qc = numpy.zeros(4, dtype=bool)
+    wt1 = 0  
+    for i in range(1,4):
+        dTTol = qctests.EN_spike_and_step_check.determineDepthTolerance(p.z()[i-1], numpy.abs(p.latitude()))
+        qc, dt = qctests.EN_spike_and_step_check.conditionA(dt, dTTol, qc, wt1, i)
+
+    truth = numpy.zeros(4, dtype=bool)
+    truth[1] = True
+    assert numpy.array_equal(qc, truth), 'condition A failed to flag a large spike'
+
+def test_EN_spike_and_step_check_spike_A_nominal():
+    '''
+    test condition A spike check in context
+    '''
+    p = util.testingProfile.fakeProfile([20, 24, 18, 17], [0, 10, 20, 30], latitude=20.0)
+    qc = qctests.EN_spike_and_step_check.test(p)
+    truth = numpy.zeros(4, dtype=bool)
+    truth[1] = True
+    assert numpy.array_equal(qc, truth), 'failed to flag spike identified by condiion A'
+
+def test_EN_spike_and_step_check_conditionA_small_spike():
+    '''
+    make sure condition A isn't flagging spikes that are too small for it but big enough for A.
+    '''
+
+    p = util.testingProfile.fakeProfile([22.5, 24, 22.5, 22], [500, 510, 520, 530], latitude=20.0)
+    dt, gt = qctests.EN_spike_and_step_check.composeDT(p.t(), p.z(), 4)
+    qc = numpy.zeros(4, dtype=bool)
+    wt1 = 0
+    for i in range(1,4):
+        dTTol = qctests.EN_spike_and_step_check.determineDepthTolerance(p.z()[i-1], numpy.abs(p.latitude()))
+        qc, dt = qctests.EN_spike_and_step_check.conditionA(dt, dTTol, qc, wt1, i)
+
+    truth = numpy.zeros(4, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'condition A flagged a spike that should only have been flagged by B.'
+
+def test_EN_spike_and_step_check_spike_A_depth_constraint_shallow():
+    '''
+    condition A spike *except* measurements too far apart to count as spike (shallow) 
+    '''
+    p = util.testingProfile.fakeProfile([21, 24, 18, 17], [0, 10, 70, 80], latitude=20.0)
+    qc = qctests.EN_spike_and_step_check.test(p)
+    truth = numpy.zeros(4, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'flagged a type A temperature spike spread out too far in depth (shallow)'
+
+def test_EN_spike_and_step_check_spike_A_depth_constraint_deep():
+    '''
+    condition A spike *except* measurements too far apart to count as spike (deep). 
+    '''
+    p = util.testingProfile.fakeProfile([20, 21, 18, 17], [500, 510, 670, 680], latitude=20.0)
+    qc = qctests.EN_spike_and_step_check.test(p)
+    truth = numpy.zeros(4, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'flagged a type A temperature spike spread out too far in depth (deep)'
+
+def test_EN_spike_and_step_check_conditionB():
+    '''
+    test independent implementation of condition B (small spikes)
+    '''
+
+    p = util.testingProfile.fakeProfile([22.5, 24, 22.5, 22], [500, 510, 520, 530], latitude=20.0)
+    dt, gt = qctests.EN_spike_and_step_check.composeDT(p.t(), p.z(), 4)
+    qc = numpy.zeros(4, dtype=bool)
+    gTTol = 0.05
+    for i in range(1,4):
+        dTTol = qctests.EN_spike_and_step_check.determineDepthTolerance(p.z()[i-1], numpy.abs(p.latitude()))
+        qc, dt = qctests.EN_spike_and_step_check.conditionB(dt, dTTol, gTTol, qc, gt, i)
+
+    truth = numpy.zeros(4, dtype=bool)
+    truth[1] = True
+    assert numpy.array_equal(qc, truth), 'condition B failed to flag a small spike'
+
+def test_EN_spike_and_step_check_spike_B_nominal():
+    '''
+    test condition B spike check in context
+    '''
+    p = util.testingProfile.fakeProfile([22.5, 24, 22.5, 22], [500, 510, 520, 530], latitude=20.0)
+    qc = qctests.EN_spike_and_step_check.test(p)
+    truth = numpy.zeros(4, dtype=bool)
+    truth[1] = True
+    assert numpy.array_equal(qc, truth), 'failed to flag spike identified by condition B'
 
 ##### WOD_gradient_check ---------------------------------------------------
 
@@ -362,15 +447,4 @@ def test_WOD_gradient_check_temperature_gradient():
     truth[1] = True 
     assert numpy.array_equal(qc, truth), 'failed to flag slight excess temperature gradient' 
     
-##### EN_spike_and_step_check
-
-def test_EN_spike_and_step_check_spike():
-    '''
-    test EN spike checking
-    '''
-    p = util.testingProfile.fakeProfile([20, 24, 18, 17], [0, 10, 20, 30], latitude=20.0)
-    qc = qctests.EN_spike_and_step_check.test(p)
-    truth = numpy.zeros(4, dtype=bool)
-    truth[1] = True
-    assert numpy.array_equal(qc, truth), 'failed to flag spike'
     
