@@ -6,12 +6,18 @@ class fakeProfile:
     implementations of qc-tests.
     '''
 
-    def __init__(self, temperatures, depths):
+    def __init__(self, temperatures, depths, latitude=None):
         self.temperatures = temperatures
         self.depths = depths
 
         self.primary_header = {}
         self.primary_header['Number of levels'] = len(depths)
+        self.primary_header['Latitude'] = latitude
+        
+    def latitude(self):
+        """ Returns the latitude of the profile. """
+        assert self.primary_header['Latitude'] is not None, 'Latitude has not been set'
+        return self.primary_header['Latitude']
 
     def t(self):
         """ Returns a numpy masked array of temperatures. """
