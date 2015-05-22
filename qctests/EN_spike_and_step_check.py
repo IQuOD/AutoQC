@@ -1,6 +1,6 @@
 """ 
 Implements the spike and step check used in the EN quality control 
-system. 
+system, pages 20-21 of http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 
 The EN quality control system is actually more complicated than is represented
 here. Rather than directly reject levels that are marked as steps, it 
@@ -36,9 +36,7 @@ def test(p, *args, **kwargs):
     isData = isTemperature & isDepth
 
     # Array to hold temperature differences between levels and gradients.
-    dt = np.ma.zeros(p.n_levels())
-    dt.mask = True
-    gt = dt.copy()
+    dt, gt = composeDT(t, z, p.n_levels())
         
     # Spikes and steps detection.
     for i in range(1, p.n_levels()):
@@ -52,28 +50,8 @@ def test(p, *args, **kwargs):
                 continue
             wt1 = 0.5
         
-        # Define tolerance for use later.
-        if (np.abs(p.latitude()) < 20.0): 
-            depthTol = 300.0
-        else:
-            depthTol = 200.0
-        if z[i-1] > 600.0:
-            tTolFactor = 0.3
-        elif z[-1] > 500.0:
-            tTolFactor = 0.4
-        elif z[i-1] > depthTol + 100.0:
-            tTolFactor = 0.5
-        elif z[i-1] > depthTol:
-            tTolFactor = 1.0 - 0.005 * (z[i-1] - depthTol)
-        else:
-            tTolFactor = 1.0
-        dTTol = tTolFactor * 5.0
+        dTTol = determineDepthTolerance(z[i-1], np.abs(p.latitude()))
         gTTol = 0.05
-
-        if ((z[i] - z[i-1]) <= 50.0 or 
-            (z[i] >= 350.0 and (z[i] - z[i-1]) <= 100.0)):
-            dt[i] = t[i] - t[i-1]
-            gt[i] = dt[i] / np.max([10.0, z[i] - z[i-1]])
 
         # Check for low temperatures in the Tropics.
         # This might be more appropriate to appear in a separate EN regional
@@ -85,31 +63,9 @@ def test(p, *args, **kwargs):
                qc[i-1] = True
                continue
                
-        # Check for spikes.
-        if (dt.mask[i-1] == False and dt.mask[i] == False and
-            np.max(np.abs(dt[i-1:i+1])) > dTTol):
-            if np.abs(dt[i] + dt[i-1]) < 0.5*dTTol:
-                dt[i-1:i+1] = np.ma.masked
-                qc[i-1] = True
-            elif np.abs((1.0-wt1) * dt[i-1] - wt1*dt[i]) < 0.5*dTTol:
-                # Likely to be a valid large temperature gradient.
-                dt[i-1:i+1] = np.ma.masked # Stops the levels being rechecked.
-                
-        # Check for sharp, small amplitude spikes.
-        if (dt.mask[i-1] == False and dt.mask[i] == False and
-            np.max(np.abs(dt[i-1:i+1])) > 0.5*dTTol and
-            np.max(np.abs(gt[i-1:i+1])) > gTTol and
-            np.abs(dt[i] + dt[i-1]) < 0.25*np.abs(dt[i] - dt[i-1])):
-            dt[i-1:i+1] = np.ma.masked
-            qc[i-1] = True
-        
-        # Check for steps.
-        if dt.mask[i-1] == False and np.abs(dt[i-1]) > dTTol:
-            if z[i-1] <= 250.0 and dt[i-1] < -dTTol and dt[i-1] > -3.0*dTTol:
-                # May be sharp thermocline, do not reject.
-                pass
-            else:
-                qc[i-2:i] = True
+        qc, dt = conditionA(dt, dTTol, qc, wt1, i)                
+        qc, dt = conditionB(dt, dTTol, gTTol, qc, gt, i)
+        qc = conditionC(dt, dTTol, z, qc, i)
     
     # End of loop over levels.
     
@@ -127,3 +83,83 @@ def test(p, *args, **kwargs):
     return qc
 
 
+def composeDT(var, z, nLevels):
+    '''
+    build the array of deltas for the variable provided
+    '''
+    dt = np.ma.zeros(nLevels)
+    dt.mask = True
+    gt = dt.copy()
+
+    for i in range(nLevels):
+        if ((z[i] - z[i-1]) <= 50.0 or 
+            (z[i] >= 350.0 and (z[i] - z[i-1]) <= 100.0)):
+            dt[i] = var[i] - var[i-1]
+            gt[i] = dt[i] / np.max([10.0, z[i] - z[i-1]])
+
+
+    return dt, gt
+
+
+def determineDepthTolerance(z, lattitude):
+    '''
+    determine depth tolerance
+    '''
+    
+    if (lattitude < 20.0): 
+        depthTol = 300.0
+    else:
+        depthTol = 200.0
+
+    if z > 600.0:
+        tTolFactor = 0.3
+    elif z > 500.0:
+        tTolFactor = 0.4
+    elif z > depthTol + 100.0:
+        tTolFactor = 0.5
+    elif z > depthTol:
+        tTolFactor = 1.0 - 0.005 * (z - depthTol)
+    else:
+        tTolFactor = 1.0
+
+    return tTolFactor * 5.0
+
+def conditionA(dt, dTTol, qc, wt1, i):
+    '''
+    condition A (large spike check)
+    '''
+    if (dt.mask[i-1] == False and dt.mask[i] == False and np.max(np.abs(dt[i-1:i+1])) > dTTol):
+        if np.abs(dt[i] + dt[i-1]) < 0.5*dTTol:
+            dt[i-1:i+1] = np.ma.masked
+            qc[i-1] = True
+        elif np.abs((1.0-wt1) * dt[i-1] - wt1*dt[i]) < 0.5*dTTol:
+            # Likely to be a valid large temperature gradient.
+            dt[i-1:i+1] = np.ma.masked # Stops the levels being rechecked.
+
+    return qc, dt
+
+def conditionB(dt, dTTol, gTTol, qc, gt, i):
+    '''
+    condition B (small spike check)
+    '''
+    if (dt.mask[i-1] == False and dt.mask[i] == False and
+        np.max(np.abs(dt[i-1:i+1])) > 0.5*dTTol and
+        np.max(np.abs(gt[i-1:i+1])) > gTTol and
+        np.abs(dt[i] + dt[i-1]) < 0.25*np.abs(dt[i] - dt[i-1])):
+        dt[i-1:i+1] = np.ma.masked
+        qc[i-1] = True
+
+    return qc, dt
+
+def conditionC(dt, dTTol, z, qc, i):
+    '''
+    condition C (steps)
+    '''
+    if dt.mask[i-1] == False and np.abs(dt[i-1]) > dTTol:
+        if z[i-1] <= 250.0 and dt[i-1] < -dTTol and dt[i-1] > -3.0*dTTol:
+            # May be sharp thermocline, do not reject.
+            pass
+        else:
+            qc[i-2:i] = True
+
+    return qc
