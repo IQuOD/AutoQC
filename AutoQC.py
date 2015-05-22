@@ -3,6 +3,7 @@ import json, glob, time
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import sys
 import util.combineTests as combinatorics
 import util.benchmarks as benchmarks
 
@@ -18,13 +19,16 @@ def readInput(JSONlist):
     return datafiles
 
 def extractProfiles(filenames):
-  '''Read all profiles from the files and store in a list.'''
+  '''Read all profiles from the files and store in a list. Only the profile
+     descriptions are read, not the profile data, in order to avoid using
+     too much memory.
+  '''
   profiles = []
   for filename in filenames:
       with open(filename) as f:
-          profiles.append(wod.WodProfile(f))
+          profiles.append(wod.WodProfile(f, load_profile_data=False))
           while profiles[-1].is_last_profile_in_file(f) == False:
-              profiles.append(wod.WodProfile(f))
+              profiles.append(wod.WodProfile(f, load_profile_data=False))
 
   # assert all elements of profiles are WodProfiles
   for i in profiles:
@@ -101,6 +105,10 @@ def generateLogfile(verbose, trueVerbose, profiles, testNames):
 
   # log summary for each profile
   for i in range (0, len(profiles)): # i counts profiles
+    with open(profiles[i].file_name) as f:
+      f.seek(profiles[i].file_position)
+      profile = wod.WodProfile(f)
+      
     logfile.write('Profile ID: %i\n' % profiles[i].uid())
 
     # title row
@@ -119,7 +127,7 @@ def generateLogfile(verbose, trueVerbose, profiles, testNames):
     # row for each depth
     for j in range (0,len(trueVerbose[i])): # j counts depth
       formatString = '{0[0]:<20}{0[1]:<20}'
-      row = str(profiles[i].z()[j]) + '  ' + str(profiles[i].t()[j]) + '  '
+      row = str(profile.z()[j]) + '  ' + str(profile.t()[j]) + '  '
       for k in range (0, len(verbose)): # k counts tests
         row += str(verbose[k][i][j])
         row += '  '
@@ -142,93 +150,87 @@ def generateLogfile(verbose, trueVerbose, profiles, testNames):
 
     logfile.write('-----------------------------------------\n')
 
-def summarize(testResults, trueResults):
-  '''
-  Summarizes the performance of a single test across a set of profiles, compared to expectation.
-  Input:  testResults[i] == bool indicating if exception raised by test on profile i
-          trueResults[i] == bool inidicating if exception is expected for profile i
-  Return: list indicating: (
-    number of exceptions raised by test when they were expected (correctly identified exceptions),
-    number of exceptions raised by test when they were not expected (false positives),
-    number of profiles passed by test when an exception was expected (false negatives),
-    number of profiles passed when they were expected to pass (correctly identified passing profiles)
-  )
-  '''
-
-  assert len(testResults) == len(trueResults), 'must provide same number of test results as true results.'
-
-  testResults = np.array(testResults)
-  trueResults = np.array(trueResults)
-  TT = np.sum(testResults & trueResults, dtype=float)
-  TF = np.sum(testResults & ~trueResults, dtype=float)
-  FT = np.sum(~testResults & trueResults, dtype=float)
-  FF = np.sum(~testResults & ~trueResults, dtype=float)
-
-  return (TT, TF, FT, FF)
-
-def plotSummary(testResults, trueResults):
-  '''
-  Example of plot output.
-  Input:  testResults[i] == bool indicating if exception raised by test on profile i
-          trueResults[i] == bool inidicating if exception is expected for profile i
-  '''
-  performance = summarize(testResults, trueResults)
-
-  falsePositiveRate = performance[1] / (performance[1] + performance[3])
-  truePositiveRate  = performance[0] / (performance[0] + performance[2])
-  plt.plot(falsePositiveRate, truePositiveRate, 'x')
-  plt.gca().set_xlim(0.0, 1.0)
-  plt.gca().set_ylim(0.0, 1.0)
-  plt.gca().set_xlabel('False positive rate')
-  plt.gca().set_ylabel('True positive rate')
-  plt.show()
-
 ########################################
 # main
 ########################################
 
-# identify data files and extract profiles into an array:
+# identify data files and extract profile information into an array - this
+# information is used by some quality control checks; the profile data are
+# read later.
 filenames = readInput('datafiles.json')
 profiles = extractProfiles(filenames)
+print('{} profiles will be read'.format(len(profiles)))
 
-# tidy up profiles
-for profile in profiles:
-  catchFlags(profile)
-
-#identify and import tests
+# identify and import tests
 testNames = importQC('qctests')
+testNames.sort()
+print('{} quality control checks will be applied:'.format(len(testNames)))
 for testName in testNames:
+  print(' {}'.format(testName))
   exec('from qctests import ' + testName)
 
-# run each test, and record its summary & verbose performance
-testResults = []
-verbose = []
-for test in testNames:
-  result = run(test,profiles)
-  testResults.append(result[0])
-  verbose.append(result[1])
+# run each test on each profile, and record its summary & verbose performance
+testResults  = []
+testVerbose  = []
+trueResults  = []
+trueVerbose  = []
+firstProfile = True
+delete       = []
+currentFile  = ''
+for iprofile, pinfo in enumerate(profiles):
+  # Load the profile data.
+  if pinfo.file_name != currentFile:
+    if currentFile != '': f.close()
+    currentFile = pinfo.file_name
+    f = open(currentFile)
+  if f.tell() != pinfo.file_position: f.seek(pinfo.file_position)
+  p = wod.WodProfile(f)
+  # Check that there are temperature data in the profile, otherwise skip.
+  # A record is kept of the empty profiles.
+  if p.var_index() is None:
+    delete.append(iprofile)
+    continue
+  catchFlags(p)
+  if np.sum(p.t().mask == False) == 0:
+    delete.append(iprofile)
+    continue
+  # Run each test.    
+  for itest, test in enumerate(testNames):
+    result = run(test,[p])
+    if firstProfile:
+      testResults.append(result[0])
+      testVerbose.append(result[1])
+    else:
+      testResults[itest].append(result[0][0])
+      testVerbose[itest].append(result[1][0])
+  firstProfile = False
+  # Read the reference result.
+  truth = referenceResults([p])
+  trueResults.append(truth[0][0])
+  trueVerbose.append(truth[1][0])
+  # Update user on progress.
+  sys.stdout.write('{:5.1f}% complete\r'.format((iprofile+1)*100.0/len(profiles)))
+  sys.stdout.flush()
 # testResults[i][j] now contains a flag indicating the exception raised by test i on profile j
 
-# generate a set of logical combinations of tests
-combos = combinatorics.combineTests(testResults)
-
-# extract the summary of which profiles should have passed / failed
-truth = referenceResults(profiles)
-trueResult = truth[0]
-trueVerbose = truth[1]
-# trueResult[i] now contains a flag indicating the exception expected for profile i.
+# Remove records of profiles with no temperature data.
+for i in reversed(delete):
+  del profiles[i]
 
 # Summary statistics
 print('Number of profiles tested was %i' % len(profiles))
 for i in range (0, len(testNames)):
   print('Number of profiles that failed ' + testNames[i] + ' was %i' % np.sum(testResults[i]))
-print('Number of profiles that should have been failed was %i' % np.sum(trueResult))
+print('Number of profiles that should have been failed was %i' % np.sum(trueResults))
+
+# generate a set of logical combinations of tests
+combos = combinatorics.combineTests(testResults)
 
 # Compare the combinations to the truth.
-bmResults = benchmarks.compare_to_truth(combos, trueResult)
+bmResults = benchmarks.compare_to_truth(combos, trueResults)
 
 # Plot the results.
-#benchmarks.plot_roc(bmResults)
+benchmarks.plot_roc(bmResults)
 
 #logfile
-#generateLogfile(verbose, trueVerbose, profiles, testNames)
+#generateLogfile(testVerbose, trueVerbose, profiles, testNames)

@@ -25,7 +25,7 @@ class WodProfile(object):
             profile2.is_last_profile_in_file() # Is this the last profile?
             fid.close()
     """
-    def __init__(self, fid):
+    def __init__(self, fid, load_profile_data=True):
 
         # Record of where the profile occurs.
         self.file_name = fid.name
@@ -49,7 +49,10 @@ class WodProfile(object):
             self._read_taxonomic_data(fid)
         else:
             self.taxa = {}
-        self._read_profile_data(fid)
+        if load_profile_data:
+            self._read_profile_data(fid)
+        else:
+            self.profile_data = []
 
         # Wind forward to the next profile in the file.
         self.advance_file_position_to_next_profile(fid)
