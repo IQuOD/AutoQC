@@ -65,9 +65,18 @@ def plot_roc(bmResults):
     tpr = np.array([bmResults[i][1][1] for i in range(len(bmResults))])
     dists = np.sqrt(fpr**2 + (100.0 - tpr)**2)
 
-    lFpr  = fpr == np.min(fpr)
-    lTpr  = tpr == np.max(tpr)
+    lFpr  = fpr == np.min(fpr[tpr > 0]) # Ignore if no good rejects are made.
+    lTpr  = tpr == np.max(tpr[fpr < 100]) # Ignore if all good projiles are rejected.
     lDist = dists == np.min(dists)
+
+    # Select the combinations using the fewest tests.
+    nComb = []
+    for bm in bmResults:
+        nComb.append(np.sum([len(sublist) for sublist in bm[0]]))
+    nComb = np.array(nComb)
+    lFpr  = lFpr & (nComb == np.min(nComb[lFpr]))
+    lTpr  = lTpr & (nComb == np.min(nComb[lTpr]))
+    lDist = lDist & (nComb == np.min(nComb[lDist]))
 
     for num, bm in enumerate(bmResults):
         printout = False
