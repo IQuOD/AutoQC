@@ -45,6 +45,8 @@ def test(p, *args, **kwargs):
                 continue
             if z[i] - z[i-2] >= 5.0:
                 wt1 = (z[i-1] - z[i-2]) / (z[i] - z[i-2])
+            else:
+                wt1 = 0.5
         else:
             if (isData[i-1] and isData[i]) == False:
                 continue
@@ -70,10 +72,13 @@ def test(p, *args, **kwargs):
     # End of loop over levels.
     
     # Step or 0.0 at the bottom of a profile.
-    if dt.mask[-1] and np.abs(dt[-1]) > dTTol:
-        qc[-1] = True
-    if t[-1] == 0.0:
-        qc[-1] = True
+    if isData[-1] and dt.mask[-1] == False:
+        dTTol = determineDepthTolerance(z[-1], np.abs(p.latitude()))
+        if np.abs(dt[-1]) > dTTol:
+            qc[-1] = True
+    if isTemperature[-1]:
+        if t[-1] == 0.0:
+            qc[-1] = True
         
     # If 4 levels or more than half the profile is rejected then reject all.
     nRejects = np.count_nonzero(qc)
@@ -91,7 +96,7 @@ def composeDT(var, z, nLevels):
     dt.mask = True
     gt = dt.copy()
 
-    for i in range(nLevels):
+    for i in range(1, nLevels):
         if ((z[i] - z[i-1]) <= 50.0 or 
             (z[i] >= 350.0 and (z[i] - z[i-1]) <= 100.0)):
             dt[i] = var[i] - var[i-1]
