@@ -160,19 +160,16 @@ def conditionC(dt, dTTol, z, qc, t, i):
     condition C (steps)
     '''
 
-    if dt.mask[i] == False and np.abs(dt[i]) > dTTol:
-        if z[i] <= 250.0 and dt[i] < -dTTol and dt[i] > -3.0*dTTol:
+    if dt.mask[i-1] == False and np.abs(dt[i-1]) > dTTol:
+        if z[i-1] <= 250.0 and dt[i-1] < -dTTol and dt[i-1] > -3.0*dTTol:
             # May be sharp thermocline, do not reject.
             pass
-        elif i < len(t) - 1 and np.abs(t[i] - interpolate(z[i], z[i-1], z[i+1], t[i-1], t[i+1])) < 0.5*dTTol:
+        elif i>1 and np.abs(t[i-1] - interpolate(z[i-1], z[i-2], z[i], t[i-2], t[i])) < 0.5*dTTol:
             # consistent interpolation, do not reject
             pass
-        elif i == len(qc) - 1:
-            # only mark the last temperature at the end of the profile
-            qc[i] = True
         else:
             # mark both sides of the step
-            qc[i-1:i+1] = True
+            qc[i-2:i] = True
 
     return qc
 
