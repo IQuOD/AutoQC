@@ -1,11 +1,13 @@
 import qctests.Argo_global_range_check
 import qctests.Argo_gradient_test
+import qctests.Argo_impossible_date_test
 import qctests.Argo_pressure_increasing_test
 import qctests.Argo_spike_test
 import qctests.EN_constant_value_check
 import qctests.EN_range_check
-import qctests.WOD_gradient_check
 import qctests.EN_spike_and_step_check
+import qctests.WOD_gradient_check
+
 
 import util.testingProfile
 import numpy
@@ -150,6 +152,47 @@ def test_Argo_gradient_test_temperature_threshold():
     qc = qctests.Argo_gradient_test.test(p)
     truth = numpy.zeros(3, dtype=bool)
     assert numpy.array_equal(qc, truth), 'flagged a spike using deep criteria when shallow should have been used. (threshold)' 
+
+##### Argo_impossible_date_test -------------------------------------------------------
+
+def test_Argo_impossible_date_test_year():
+    '''
+    year limit in impossible date test
+    '''
+    p = util.testingProfile.fakeProfile([0], [0], date=[1996, 1, 1, 0]) 
+    qc = qctests.Argo_impossible_date_test.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True 
+    assert numpy.array_equal(qc, truth), 'Argo impossible date test must reject everything before 1997.'      
+
+def test_Argo_impossible_date_test_month():
+    '''
+    month limit in impossible date test
+    '''
+    p = util.testingProfile.fakeProfile([0], [0], date=[2001, 0, 1, 0]) 
+    qc = qctests.Argo_impossible_date_test.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True 
+    assert numpy.array_equal(qc, truth), 'Argo impossible date test should reject month=0 (months counted [1-12])'
+
+def test_Argo_impossible_date_test_day_basic():
+    '''
+    basic day check in impossible date test
+    '''
+    p = util.testingProfile.fakeProfile([0], [0], date=[2001, 2, 29, 0]) 
+    qc = qctests.Argo_impossible_date_test.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True 
+    assert numpy.array_equal(qc, truth), 'Argo impossible date test failing to find correct number of days in month presented'
+
+def test_Argo_impossible_date_test_day_leap_year():
+    '''
+    make sure impossible date check knows about leap years
+    '''
+    p = util.testingProfile.fakeProfile([0], [0], date=[2004, 2, 29, 0]) 
+    qc = qctests.Argo_impossible_date_test.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'Argo impossible date test not correctly identifying leap years'
 
 ##### Argo_pressure_increasing_test ---------------------------------------------------
 
