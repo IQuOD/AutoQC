@@ -6,13 +6,16 @@ class fakeProfile:
     implementations of qc-tests.
     '''
 
-    def __init__(self, temperatures, depths, latitude=None):
+    def __init__(self, temperatures, depths, latitude=None, date=[1999, 12, 31, 0]):
         self.temperatures = temperatures
         self.depths = depths
 
         self.primary_header = {}
         self.primary_header['Number of levels'] = len(depths)
         self.primary_header['Latitude'] = latitude
+        self.primary_header['Year'] = date[0]
+        self.primary_header['Month'] = date[1]
+        self.primary_header['Day'] = date[2]
         
     def latitude(self):
         """ Returns the latitude of the profile. """
@@ -30,6 +33,18 @@ class fakeProfile:
     def n_levels(self):
         """ Returns the number of levels in the profile. """
         return self.primary_header['Number of levels']
+
+    def year(self):
+        """ Returns the year. """
+        return self.primary_header['Year']
+
+    def month(self):
+        """ Returns the month. """
+        return self.primary_header['Month']
+
+    def day(self):
+        """ Returns the day. """
+        return self.primary_header['Day']
 
     def var_data(self, dat):
         """ Returns the data values for a variable given the variable index. """
