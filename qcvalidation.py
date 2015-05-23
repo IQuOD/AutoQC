@@ -1,6 +1,7 @@
 import qctests.Argo_global_range_check
 import qctests.Argo_gradient_test
 import qctests.Argo_impossible_date_test
+import qctests.Argo_impossible_location_test
 import qctests.Argo_pressure_increasing_test
 import qctests.Argo_spike_test
 import qctests.EN_constant_value_check
@@ -193,6 +194,28 @@ def test_Argo_impossible_date_test_day_leap_year():
     qc = qctests.Argo_impossible_date_test.test(p)
     truth = numpy.zeros(1, dtype=bool)
     assert numpy.array_equal(qc, truth), 'Argo impossible date test not correctly identifying leap years'
+
+##### Argo_impossible_location_test ---------------------------------------------------
+
+def test_Argo_impossible_location_nominal_lat():
+    '''
+    check for flagging an out-of-range latitude
+    '''
+    p = util.testingProfile.fakeProfile([0], [0], 91, 0) 
+    qc = qctests.Argo_impossible_location_test.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True 
+    assert numpy.array_equal(qc, truth), 'failed to flag latitude outside of range [-90, 90]'
+
+def test_Argo_impossible_location_nominal_long():
+    '''
+    check for flagging an out-of-range long
+    '''
+    p = util.testingProfile.fakeProfile([0], [0], 0, 181) 
+    qc = qctests.Argo_impossible_location_test.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True 
+    assert numpy.array_equal(qc, truth), 'failed to flag long outside of range [-180, 180]'
 
 ##### Argo_pressure_increasing_test ---------------------------------------------------
 
