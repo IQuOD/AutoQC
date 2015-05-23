@@ -515,6 +515,7 @@ def test_EN_spike_and_step_check_conditionC_exception_iii():
 
     truth = numpy.zeros(4, dtype=bool)
     truth[3] = True
+    print qc
     assert numpy.array_equal(qc, truth), 'condition C should flag only the last temperature when a step is found at the end of the profile'
 
 ##### WOD_gradient_check ---------------------------------------------------

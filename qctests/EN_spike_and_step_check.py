@@ -159,11 +159,15 @@ def conditionC(dt, dTTol, z, qc, i):
     '''
     condition C (steps)
     '''
-    if dt.mask[i-1] == False and np.abs(dt[i-1]) > dTTol:
-        if z[i-1] <= 250.0 and dt[i-1] < -dTTol and dt[i-1] > -3.0*dTTol:
+    if dt.mask[i] == False and np.abs(dt[i]) > dTTol:
+        if z[i] <= 250.0 and dt[i] < -dTTol and dt[i] > -3.0*dTTol:
             # May be sharp thermocline, do not reject.
             pass
+        elif i == len(qc) - 1:
+            # only mark the last temperature at the end of the profile
+            qc[i] = True
         else:
-            qc[i-2:i] = True
+            # mark both sides of the step
+            qc[i-1:i+1] = True
 
     return qc
