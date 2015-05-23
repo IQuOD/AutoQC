@@ -372,7 +372,7 @@ def test_EN_spike_and_step_check_conditionA():
     truth[1] = True
     assert numpy.array_equal(qc, truth), 'condition A failed to flag a large spike'
 
-def test_EN_spike_and_step_check_spike_A_nominal():
+def test_EN_spike_and_step_check_A_nominal():
     '''
     test condition A spike check in context
     '''
@@ -433,7 +433,7 @@ def test_EN_spike_and_step_check_conditionB():
     truth[1] = True
     assert numpy.array_equal(qc, truth), 'condition B failed to flag a small spike'
 
-def test_EN_spike_and_step_check_spike_B_nominal():
+def test_EN_spike_and_step_check_B_nominal():
     '''
     test condition B spike check in context
     '''
@@ -460,7 +460,7 @@ def test_EN_spike_and_step_check_conditionC():
     truth[2] = True
     assert numpy.array_equal(qc, truth), 'condition C failed to flag a step'
 
-def test_EN_spike_and_step_check_spike_C_nominal():
+def test_EN_spike_and_step_check_C_nominal():
     '''
     test condition C step check in context
     '''
@@ -517,6 +517,16 @@ def test_EN_spike_and_step_check_conditionC_exception_iii():
     truth = numpy.zeros(4, dtype=bool)
     truth[3] = True
     assert numpy.array_equal(qc, truth), 'condition C should flag only the last temperature when a step is found at the end of the profile'
+
+def test_EN_spike_and_step_check_trailing_zero():
+    '''
+    make sure trailing 0s are getting flagged
+    '''
+    p = util.testingProfile.fakeProfile([0, 0, 0, 0], [10, 20, 30, 40], latitude=50.0)
+    qc = qctests.EN_spike_and_step_check.test(p)
+    truth = numpy.zeros(4, dtype=bool)
+    truth[3] = True
+    assert numpy.array_equal(qc, truth), 'failed to flag a trailing zero'
 
 ##### WOD_gradient_check ---------------------------------------------------
 
