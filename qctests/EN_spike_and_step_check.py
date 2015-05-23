@@ -160,6 +160,7 @@ def conditionC(dt, dTTol, z, qc, i):
     '''
     condition C (steps)
     '''
+    print np.abs(dt[i-1])
     if dt.mask[i-1] == False and np.abs(dt[i-1]) > dTTol:
         if z[i-1] <= 250.0 and dt[i-1] < -dTTol and dt[i-1] > -3.0*dTTol:
             # May be sharp thermocline, do not reject.

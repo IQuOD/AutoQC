@@ -303,6 +303,12 @@ def test_EN_range_check_temperature():
 
 ##### EN_spike_and_step_check ----------------------------------------------
 
+def test_EN_spike_and_step_check_composeDT():
+    assert True
+
+def test_EN_spike_and_step_check_determineDepthTolerance():
+    assert True
+
 def test_EN_spike_and_step_check_tropics_prelim():
     '''
     test preliminary tropical rejection
@@ -312,12 +318,6 @@ def test_EN_spike_and_step_check_tropics_prelim():
     truth = numpy.zeros(4, dtype=bool)
     truth[:] = True
     assert numpy.array_equal(qc, truth), 'failed to flag cold temperatures in the tropics'
-
-def test_EN_spike_and_step_check_composeDT():
-    assert True
-
-def test_EN_spike_and_step_check_determineDepthTolerance():
-    assert True
 
 def test_EN_spike_and_step_check_conditionA():
     '''
@@ -348,7 +348,7 @@ def test_EN_spike_and_step_check_spike_A_nominal():
 
 def test_EN_spike_and_step_check_conditionA_small_spike():
     '''
-    make sure condition A isn't flagging spikes that are too small for it but big enough for A.
+    make sure condition A isn't flagging spikes that are too small for it but big enough for B.
     '''
 
     p = util.testingProfile.fakeProfile([22.5, 24, 22.5, 22], [500, 510, 520, 530], latitude=20.0)
@@ -406,6 +406,82 @@ def test_EN_spike_and_step_check_spike_B_nominal():
     truth = numpy.zeros(4, dtype=bool)
     truth[1] = True
     assert numpy.array_equal(qc, truth), 'failed to flag spike identified by condition B'
+
+def test_EN_spike_and_step_check_conditionC():
+    '''
+    test independent implementation of condition C (steps)
+    '''
+
+    p = util.testingProfile.fakeProfile([24, 24, 2, 1], [10, 20, 30, 40], latitude=20.0)
+    dt, gt = qctests.EN_spike_and_step_check.composeDT(p.t(), p.z(), 4)
+    qc = numpy.zeros(4, dtype=bool)
+    for i in range(1,4):
+        dTTol = qctests.EN_spike_and_step_check.determineDepthTolerance(p.z()[i-1], numpy.abs(p.latitude()))
+        qc = qctests.EN_spike_and_step_check.conditionC(dt, dTTol, p.z(), qc, i)
+
+    truth = numpy.zeros(4, dtype=bool)
+    truth[1] = True
+    truth[2] = True
+    assert numpy.array_equal(qc, truth), 'condition C failed to flag a step'
+
+def test_EN_spike_and_step_check_spike_C_nominal():
+    '''
+    test condition C step check in context
+    '''
+    p = util.testingProfile.fakeProfile([24, 24, 2, 1], [10, 20, 30, 40], latitude=20.0)
+    qc = qctests.EN_spike_and_step_check.test(p)
+    truth = numpy.zeros(4, dtype=bool)
+    truth[1] = True
+    truth[2] = True
+    assert numpy.array_equal(qc, truth), 'failed to flag a step that should have been caught by condition C'
+
+def test_EN_spike_and_step_check_conditionC_exception_i():
+    '''
+    make sure condition C is not flagging a step admitted by condition i (interpolation)
+    '''
+
+    p = util.testingProfile.fakeProfile([13, 13, 2, -9], [310, 320, 330, 340], latitude=20.0)
+    dt, gt = qctests.EN_spike_and_step_check.composeDT(p.t(), p.z(), 4)
+    qc = numpy.zeros(4, dtype=bool)
+    for i in range(1,4):
+        dTTol = qctests.EN_spike_and_step_check.determineDepthTolerance(p.z()[i-1], numpy.abs(p.latitude()))
+        qc = qctests.EN_spike_and_step_check.conditionC(dt, dTTol, p.z(), qc, i)
+
+    truth = numpy.zeros(4, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'condition C flagged a step that should have been dismissed by interpolation condition (i)'
+
+def test_EN_spike_and_step_check_conditionC_exception_ii():
+    '''
+    make sure condition C is not flagging a step admitted by condition ii (sharp thermocline)
+    '''
+
+    p = util.testingProfile.fakeProfile([13, 13, 2, 2], [10, 20, 30, 40], latitude=20.0)
+    dt, gt = qctests.EN_spike_and_step_check.composeDT(p.t(), p.z(), 4)
+    qc = numpy.zeros(4, dtype=bool)
+    for i in range(1,4):
+        dTTol = qctests.EN_spike_and_step_check.determineDepthTolerance(p.z()[i-1], numpy.abs(p.latitude()))
+        qc = qctests.EN_spike_and_step_check.conditionC(dt, dTTol, p.z(), qc, i)
+
+    truth = numpy.zeros(4, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'condition C flagged a step that should have been dismissed by sharp thermocline condition (ii)'
+
+def test_EN_spike_and_step_check_conditionC_exception_iii():
+    '''
+    make sure condition C is not flagging a step admitted by condition iii (last step)
+    '''
+
+    p = util.testingProfile.fakeProfile([13, 13, 13, 1], [310, 320, 330, 340], latitude=20.0)
+    dt, gt = qctests.EN_spike_and_step_check.composeDT(p.t(), p.z(), 4)
+    qc = numpy.zeros(4, dtype=bool)
+    for i in range(1,4):
+        dTTol = qctests.EN_spike_and_step_check.determineDepthTolerance(p.z()[i-1], numpy.abs(p.latitude()))
+        qc = qctests.EN_spike_and_step_check.conditionC(dt, dTTol, p.z(), qc, i)
+
+    truth = numpy.zeros(4, dtype=bool)
+    truth[3] = True
+    print qc
+    print dt
+    assert numpy.array_equal(qc, truth), 'condition C should flag only the last temperature when a step is found at the end of the profile'
 
 ##### WOD_gradient_check ---------------------------------------------------
 
