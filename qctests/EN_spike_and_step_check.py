@@ -97,8 +97,7 @@ def composeDT(var, z, nLevels):
     gt = dt.copy()
 
     for i in range(1, nLevels):
-        if ((z[i] - z[i-1]) <= 50.0 or 
-            (z[i] >= 350.0 and (z[i] - z[i-1]) <= 100.0)):
+        if ((z[i] - z[i-1]) <= 50.0 or (z[i] >= 350.0 and (z[i] - z[i-1]) <= 100.0)):
             dt[i] = var[i] - var[i-1]
             gt[i] = dt[i] / np.max([10.0, z[i] - z[i-1]])
 
@@ -160,7 +159,6 @@ def conditionC(dt, dTTol, z, qc, i):
     '''
     condition C (steps)
     '''
-    print np.abs(dt[i-1])
     if dt.mask[i-1] == False and np.abs(dt[i-1]) > dTTol:
         if z[i-1] <= 250.0 and dt[i-1] < -dTTol and dt[i-1] > -3.0*dTTol:
             # May be sharp thermocline, do not reject.

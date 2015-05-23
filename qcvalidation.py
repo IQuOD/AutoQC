@@ -303,11 +303,47 @@ def test_EN_range_check_temperature():
 
 ##### EN_spike_and_step_check ----------------------------------------------
 
-def test_EN_spike_and_step_check_composeDT():
-    assert True
+def test_EN_spike_and_step_check_composeDT_nominal():
+    '''
+    check that dts are calculated correctly in a non-pathological case
+    '''
 
-def test_EN_spike_and_step_check_determineDepthTolerance():
-    assert True
+    p = util.testingProfile.fakeProfile([20, 24, 18, 17], [0, 10, 20, 30], latitude=20.0)
+    dt, gt = qctests.EN_spike_and_step_check.composeDT(p.t(), p.z(), 4)
+    truth = numpy.ma.array([False, 4., -6., -1.], mask=False)
+    assert numpy.array_equal(dt, truth), 'incorrect calculation of delta array'
+
+def test_EN_spike_and_step_check_composeDT_gap():
+    '''
+    ensures dt is not reported when a gap is too large
+    '''
+
+    p = util.testingProfile.fakeProfile([20, 24, 18, 17], [0, 10, 70, 80], latitude=20.0)
+    dt, gt = qctests.EN_spike_and_step_check.composeDT(p.t(), p.z(), 4)
+    truth = numpy.ma.array([False, 4., False, -1.], mask=False)
+    assert numpy.array_equal(dt, truth), 'reporting delta when measurements too far separated'
+
+def test_EN_spike_and_step_check_determineDepthTolerance_tropics():
+    '''
+    check depth tolerance calculations match table B1 in the ref for tropical latitude
+    '''
+
+    assert qctests.EN_spike_and_step_check.determineDepthTolerance(299, 0) == 5, 'depthTol in tropics miscalculated in z<300m range'
+    assert qctests.EN_spike_and_step_check.determineDepthTolerance(350, 0) == 3.75, 'depthTol in tropics not interpolated correctly between 300 and 400 m'
+    assert qctests.EN_spike_and_step_check.determineDepthTolerance(450, 0) == 2.5, 'depthTol in tropics miscalculated in 400<z<500m range'
+    assert qctests.EN_spike_and_step_check.determineDepthTolerance(550, 0) == 2, 'depthTol in tropics miscalculated in 500<z<600m range'
+    assert qctests.EN_spike_and_step_check.determineDepthTolerance(601, 0) == 1.5, 'depthTol in tropics miscalculated below 600m'
+
+def test_EN_spike_and_step_check_determineDepthTolerance_nontopics():
+    '''
+    check depth tolerance calculations match table B1 in the ref for nontropical latitude
+    '''
+
+    assert qctests.EN_spike_and_step_check.determineDepthTolerance(199, 50) == 5, 'depthTol in nontropics miscalculated in z<300m range'
+    assert qctests.EN_spike_and_step_check.determineDepthTolerance(250, 50) == 3.75, 'depthTol in nontropics not interpolated correctly between 200 and 300 m'
+    assert qctests.EN_spike_and_step_check.determineDepthTolerance(350, 50) == 2.5, 'depthTol in nontropics miscalculated in 300<z<400m range'
+    assert qctests.EN_spike_and_step_check.determineDepthTolerance(550, 50) == 2, 'depthTol in nontropics miscalculated in 500<z<600m range'
+    assert qctests.EN_spike_and_step_check.determineDepthTolerance(601, 50) == 1.5, 'depthTol in nontropics miscalculated below 600m'
 
 def test_EN_spike_and_step_check_tropics_prelim():
     '''
@@ -479,8 +515,6 @@ def test_EN_spike_and_step_check_conditionC_exception_iii():
 
     truth = numpy.zeros(4, dtype=bool)
     truth[3] = True
-    print qc
-    print dt
     assert numpy.array_equal(qc, truth), 'condition C should flag only the last temperature when a step is found at the end of the profile'
 
 ##### WOD_gradient_check ---------------------------------------------------
