@@ -2,7 +2,6 @@
 import copy
 import numpy as np
 import os
-import sag_utilities as sag
 
 class WodProfile(object):
     """ Main class to parse a WOD ASCII file
