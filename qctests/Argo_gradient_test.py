@@ -31,6 +31,7 @@ def test(p):
         if isData[i] & isTemperature[i-1] & isTemperature[i+1]:
 
           isSlope = numpy.abs(t.data[i] - (t.data[i-1] + t.data[i+1])/2)
+
           if d.data[i] < 500:
               qc[i] = isSlope > 9.0
           else:

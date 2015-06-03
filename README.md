@@ -9,6 +9,18 @@ Recently, an international team of researchers has decided to work together to b
 
 The IQuOD proposal is to set up an open quality control benchmarking system.  Work will begin by implementing a battery of simple tests to run on some test data, and producing summary statistics and visualizations of the results.  Later goals include helping researchers either wrap their existing C, Fortran and Matlab test functions in Python for use in this test suite, or re-implementing those tests in native Python.
 
+## Dependencies:
+
+Uses `pyproj`, `shapely` and `geos` for geographical calculations.
+
+To install on OSX:
+
+```
+sudo pip install pyproj
+sudo pip install shapely
+brew install geos
+```
+
 ##Usage
 To execute the quality control checks,
 `python AutoQC.py`

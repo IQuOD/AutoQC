@@ -1,10 +1,15 @@
 import qctests.Argo_global_range_check
 import qctests.Argo_gradient_test
+import qctests.Argo_impossible_date_test
+import qctests.Argo_impossible_location_test
 import qctests.Argo_pressure_increasing_test
+import qctests.Argo_regional_range_test
 import qctests.Argo_spike_test
+import qctests.EN_constant_value_check
 import qctests.EN_range_check
-import qctests.WOD_gradient_check
 import qctests.EN_spike_and_step_check
+import qctests.WOD_gradient_check
+
 
 import util.testingProfile
 import numpy
@@ -150,6 +155,68 @@ def test_Argo_gradient_test_temperature_threshold():
     truth = numpy.zeros(3, dtype=bool)
     assert numpy.array_equal(qc, truth), 'flagged a spike using deep criteria when shallow should have been used. (threshold)' 
 
+##### Argo_impossible_date_test -------------------------------------------------------
+
+def test_Argo_impossible_date_test_year():
+    '''
+    year limit in impossible date test
+    '''
+    p = util.testingProfile.fakeProfile([0], [0], date=[1996, 1, 1, 0]) 
+    qc = qctests.Argo_impossible_date_test.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True 
+    assert numpy.array_equal(qc, truth), 'Argo impossible date test must reject everything before 1997.'      
+
+def test_Argo_impossible_date_test_month():
+    '''
+    month limit in impossible date test
+    '''
+    p = util.testingProfile.fakeProfile([0], [0], date=[2001, 0, 1, 0]) 
+    qc = qctests.Argo_impossible_date_test.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True 
+    assert numpy.array_equal(qc, truth), 'Argo impossible date test should reject month=0 (months counted [1-12])'
+
+def test_Argo_impossible_date_test_day_basic():
+    '''
+    basic day check in impossible date test
+    '''
+    p = util.testingProfile.fakeProfile([0], [0], date=[2001, 2, 29, 0]) 
+    qc = qctests.Argo_impossible_date_test.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True 
+    assert numpy.array_equal(qc, truth), 'Argo impossible date test failing to find correct number of days in month presented'
+
+def test_Argo_impossible_date_test_day_leap_year():
+    '''
+    make sure impossible date check knows about leap years
+    '''
+    p = util.testingProfile.fakeProfile([0], [0], date=[2004, 2, 29, 0]) 
+    qc = qctests.Argo_impossible_date_test.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'Argo impossible date test not correctly identifying leap years'
+
+##### Argo_impossible_location_test ---------------------------------------------------
+
+def test_Argo_impossible_location_nominal_lat():
+    '''
+    check for flagging an out-of-range latitude
+    '''
+    p = util.testingProfile.fakeProfile([0], [0], 91, 0) 
+    qc = qctests.Argo_impossible_location_test.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True 
+    assert numpy.array_equal(qc, truth), 'failed to flag latitude outside of range [-90, 90]'
+
+def test_Argo_impossible_location_nominal_long():
+    '''
+    check for flagging an out-of-range long
+    '''
+    p = util.testingProfile.fakeProfile([0], [0], 0, 181) 
+    qc = qctests.Argo_impossible_location_test.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True 
+    assert numpy.array_equal(qc, truth), 'failed to flag long outside of range [-180, 180]'
 
 ##### Argo_pressure_increasing_test ---------------------------------------------------
 
@@ -176,6 +243,43 @@ def test_Argo_pressure_increasing_test_pressureInversion():
     truth[1] = True
     truth[2] = True
     assert numpy.array_equal(qc, truth), 'must flag all levels corresponding to pressure inversion.' 
+
+##### Argo_regional_range_test -----------------------------------------
+
+def Argo_regional_range_test_mediterranean_hot():
+    '''
+    make sure ARRT is flagging mediterranean temps that are too hot
+    '''
+
+    p = util.testingProfile.fakeProfile([40.1, 39.9], [10, 20], 35., 18.) 
+    qc = qctests.Argo_regional_range_test.test(p)
+    truth = numpy.zeros(2, dtype=bool)
+    truth[0] = True
+    assert numpy.array_equal(qc, truth), 'failed to flag hot temperatures in Mediterranean Sea'   
+
+def Argo_regional_range_test_red_cold():
+    '''
+    make sure ARRT is flagging red sea temps that are too cold
+    '''
+
+    p = util.testingProfile.fakeProfile([21.6, 21.8], [10, 20], 22., 38.) 
+    qc = qctests.Argo_regional_range_test.test(p)
+    truth = numpy.zeros(2, dtype=bool)
+    truth[0] = True
+    assert numpy.array_equal(qc, truth), 'failed to flag cold temperatures Red Sea' 
+
+def Argo_regional_range_test_isInRegion():
+    '''
+    Check a few near misses for isInRegion
+    '''
+
+    redSeaLat  = [10., 20., 30., 10.]
+    redSeaLong = [40., 50., 30., 40.]
+    mediterraneanLat  = [30., 30., 40., 42., 50., 40., 30]
+    mediterraneanLong = [6.,  40., 35., 20., 15., 5.,  6.]
+
+    assert qctests.Argo_regional_range_test.isInRegion(43.808479, 7.445307, mediterraneanLat, mediterraneanLong) == False, '43.808479, 7.445307 should not be flagged as in the Mediterranean'
+    assert qctests.Argo_regional_range_test.isInRegion(30.540632, 34.705133, redSeaLat, redSeaLong) == False, '30.540632, 34.705133 should not be flagged as in the Red Sea'
 
 ##### Argo_spike_test ---------------------------------------------------
 
@@ -267,6 +371,42 @@ def test_Argo_spike_test_temperature_threshold():
     truth = numpy.zeros(3, dtype=bool)
     assert numpy.array_equal(qc, truth), 'flagged a spike using deep criteria when shallow should have been used. (threshold)' 
 
+#### EN_constant_value_check -------------------------------------------
+
+def test_EN_constant_value_threshold():
+    '''
+    check EN_constant_value is flagging 90% and above.
+    '''
+
+    p = util.testingProfile.fakeProfile([0,0,0,0,0,0,0,0,0,10], [100,200,300,400,500,600,700,800,900,1000])
+    qc = qctests.EN_constant_value_check.test(p)
+    truth = numpy.ones(10, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'failing to flag when exactly 90% of measurements are identical'
+
+    p = util.testingProfile.fakeProfile([0,0,0,0,0,0,0,0,10,10], [100,200,300,400,500,600,700,800,900,1000])
+    qc = qctests.EN_constant_value_check.test(p)
+    truth = numpy.zeros(10, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging when less than 90% of measurements are identical'    
+
+def test_EN_constant_value_spacing():
+    '''
+    check EN_constant_value is requiring identical values to cover at least 100 m range
+    '''
+
+    p = util.testingProfile.fakeProfile([0,0,0,0,0,0,0,0,0,10], [1,2,3,4,5,6,7,8,9,10])
+    qc = qctests.EN_constant_value_check.test(p)
+    truth = numpy.zeros(10, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging identical measurements that do not span 100 m of depth.'
+
+def test_EN_constant_value_missing_depth():
+    '''
+    Ensures EN_constant_value is not getting thrown by missing depths
+    '''
+
+    p = util.testingProfile.fakeProfile([0,0,0,0,0,0,0,0,0,0], [100,200,300,400,500,600,700,800,900,None])
+    qc = qctests.EN_constant_value_check.test(p)
+    truth = numpy.ones(10, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'failing to flag when the deepest depth in a run of constant temperature is missing.'
 
 ##### EN_range_check ---------------------------------------------------
 
@@ -561,5 +701,3 @@ def test_WOD_gradient_check_temperature_gradient():
     truth[0] = True
     truth[1] = True 
     assert numpy.array_equal(qc, truth), 'failed to flag slight excess temperature gradient' 
-    
-    
