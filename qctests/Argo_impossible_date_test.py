@@ -7,7 +7,7 @@ The date criterion has been altered so that the test can be applied to all data 
 import numpy
 import calendar
 
-def test(p):
+def test(p, **kwargs):
     """
     Runs the quality control check on profile p and returns a numpy array
     of quality control decisions with False where the data value has

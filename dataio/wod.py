@@ -90,6 +90,7 @@ class WodProfile(object):
             if item[0] == 'Significant digits' and chars == '-':
                 format[i+1][1] = 0
                 format[i+2][1] = 0
+                dest[format[i+3][0]] = None
                 continue
 
             # Cast to the required data type.
@@ -299,7 +300,7 @@ class WodProfile(object):
         for i in range(self.primary_header['Number of levels']):
             data += [{}]
             self._interpret_data(fid, copy.deepcopy(dFormat1), data[i])
-            if 'Depth' in data[i]:
+            if data[i]['Depth'] is not None:
                 data[i]['Missing'] = False
             else:
                 data[i]['Missing'] = True
@@ -309,7 +310,7 @@ class WodProfile(object):
             for j in range(self.primary_header['Number of variables']):
                 data[i]['variables'] += [{}]
                 self._interpret_data(fid, copy.deepcopy(vFormat1), data[i]['variables'][j])
-                if ('Value' in data[i]['variables'][j]):
+                if (data[i]['variables'][j]['Value'] is not None):
                     data[i]['variables'][j]['Missing'] = False
                     self._interpret_data(fid, copy.deepcopy(vFormat2), data[i]['variables'][j])
                 else:
@@ -382,6 +383,15 @@ class WodProfile(object):
     def time(self):
         """ Returns the time. """
         return self.primary_header['Time']
+        
+    def probe_type(self):
+        """ Returns the contents of secondary header 29 if it exists,
+            otherwise None. """
+        pt = None
+        for item in self.secondary_header['entries']:
+            if item['Code'] == 29:
+                pt = item['Value']
+        return pt
 
     def z(self):
         """ Returns a numpy masked array of depths. """
