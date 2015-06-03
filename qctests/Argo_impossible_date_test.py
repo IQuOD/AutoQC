@@ -1,5 +1,7 @@
 """
 Implements the impossible date test on page 6 of http://w3.jcommops.org/FTPRoot/Argo/Doc/argo-quality-control-manual.pdf
+
+The date criterion has been altered so that the test can be applied to all data types.
 """
 
 import numpy
