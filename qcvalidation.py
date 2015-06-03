@@ -161,11 +161,11 @@ def test_Argo_impossible_date_test_year():
     '''
     year limit in impossible date test
     '''
-    p = util.testingProfile.fakeProfile([0], [0], date=[1996, 1, 1, 0]) 
+    p = util.testingProfile.fakeProfile([0], [0], date=[1699, 1, 1, 0]) 
     qc = qctests.Argo_impossible_date_test.test(p)
     truth = numpy.zeros(1, dtype=bool)
     truth[0] = True 
-    assert numpy.array_equal(qc, truth), 'Argo impossible date test must reject everything before 1997.'      
+    assert numpy.array_equal(qc, truth), 'Argo impossible date test must reject everything before 1700.'      
 
 def test_Argo_impossible_date_test_month():
     '''
