@@ -1,6 +1,7 @@
 from dataio import wod
 import json, glob, time
 import matplotlib.pyplot as plt
+from netCDF4 import Dataset
 import numpy as np
 import os
 import sys
@@ -59,14 +60,14 @@ def importQC(dir):
 
   return testNames
 
-def run(test, profiles):
+def run(test, profiles, kwargs):
   '''
   run <test> on a list of <profiles>, return an array summarizing when exceptions were raised
   '''
   qcResults = []
   verbose = []
   for profile in profiles:
-    exec('result = ' + test + '.test(profile)')
+    exec('result = ' + test + '.test(profile, **kwargs)')
 
     #demand tests returned bools:
     for i in result:
@@ -150,6 +151,25 @@ def generateLogfile(verbose, trueVerbose, profiles, testNames):
 
     logfile.write('-----------------------------------------\n')
 
+def readENBackgroundCheckAux(testNames, kwargs):
+  '''
+  Reads auxiliary information needed by the EN background check.
+  '''
+  filename = 'data/EN_bgcheck_info.nc'
+  if 'EN_background_check' in testNames and os.path.isfile(filename):
+    nc = Dataset(filename)
+    data = {}
+    data['lon']   = nc.variables['longitude'][:]
+    data['lat']   = nc.variables['latitude'][:]
+    data['depth'] = nc.variables['depth'][:]
+    data['month'] = nc.variables['month'][:]
+    data['clim']  = nc.variables['potm_climatology'][:]
+    data['bgev']  = nc.variables['bg_err_var'][:]
+    data['obev']  = nc.variables['ob_err_var'][:]
+    kwargs['EN_background_check_aux'] = data
+  else:
+    kwargs['EN_background_check_aux'] = None
+
 ########################################
 # main
 ########################################
@@ -168,6 +188,10 @@ print('{} quality control checks will be applied:'.format(len(testNames)))
 for testName in testNames:
   print(' {}'.format(testName))
   exec('from qctests import ' + testName)
+
+# Set up any keyword arguments needed by tests.
+kwargs = {'profiles' : profiles}
+readENBackgroundCheckAux(testNames, kwargs)
 
 # run each test on each profile, and record its summary & verbose performance
 testResults  = []
@@ -196,7 +220,7 @@ for iprofile, pinfo in enumerate(profiles):
     continue
   # Run each test.    
   for itest, test in enumerate(testNames):
-    result = run(test,[p])
+    result = run(test, [p], kwargs)
     if firstProfile:
       testResults.append(result[0])
       testVerbose.append(result[1])
@@ -225,6 +249,7 @@ print('Number of profiles that should have been failed was %i' % np.sum(trueResu
 
 # generate a set of logical combinations of tests
 combos = combinatorics.combineTests(testResults)
+print('Number of combinations that were tried was %i' % len(combos))
 
 # Compare the combinations to the truth.
 bmResults = benchmarks.compare_to_truth(combos, trueResults)

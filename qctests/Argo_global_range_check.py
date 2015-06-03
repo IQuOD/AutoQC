@@ -5,7 +5,7 @@ system.
 See Argo quality control manual (based on version 2.5).
 """
 
-def test(p):
+def test(p, **kwargs):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 

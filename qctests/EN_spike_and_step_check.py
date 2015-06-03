@@ -2,20 +2,22 @@
 Implements the spike and step check used in the EN quality control 
 system, pages 20-21 of http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 
-The EN quality control system is actually more complicated than is represented
-here. Rather than directly reject levels that are marked as steps, it 
-marks them as suspect and then they are subjected to an extra test (a  
+The EN quality control system does not directly reject levels that are marked as 
+steps, it marks them as suspect and then they are subjected to an extra test (a  
 background check) that can reprieve them. In the future it will be best to 
 remove these elements and include them within the background check code. 
 """
 
 import numpy as np
 
-def test(p, *args, **kwargs):
+def test(p, suspect=False, **kwargs):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 
     passed the check and True where it failed. 
+    
+    By default the test returns definite rejections. If the suspect keyword is
+    set to True the test instead returns suspect levels.
     """
 
     # Define tolerances used.
@@ -62,12 +64,12 @@ def test(p, *args, **kwargs):
         if (np.abs(p.latitude()) < 20.0 and z[i-1] < 1000.0 and
             t[i-1] < 1.0):
                dt[i] = np.ma.masked 
-               qc[i-1] = True
+               if suspect == True: qc[i-1] = True
                continue
                
-        qc, dt = conditionA(dt, dTTol, qc, wt1, i)                
-        qc, dt = conditionB(dt, dTTol, gTTol, qc, gt, i)
-        qc = conditionC(dt, dTTol, z, qc, t, i)
+        qc, dt = conditionA(dt, dTTol, qc, wt1, i, suspect)                
+        qc, dt = conditionB(dt, dTTol, gTTol, qc, gt, i, suspect)
+        qc = conditionC(dt, dTTol, z, qc, t, i, suspect)
     
     # End of loop over levels.
     
@@ -75,15 +77,16 @@ def test(p, *args, **kwargs):
     if isData[-1] and dt.mask[-1] == False:
         dTTol = determineDepthTolerance(z[-1], np.abs(p.latitude()))
         if np.abs(dt[-1]) > dTTol:
-            qc[-1] = True
+            if suspect == True: qc[-1] = True
     if isTemperature[-1]:
         if t[-1] == 0.0:
-            qc[-1] = True
+            if suspect == True: qc[-1] = True
         
     # If 4 levels or more than half the profile is rejected then reject all.
-    nRejects = np.count_nonzero(qc)
-    if nRejects >= 4 or nRejects > p.n_levels()/2:
-        qc[:] = True
+    if suspect == False:
+        nRejects = np.count_nonzero(qc)
+        if nRejects >= 4 or nRejects > p.n_levels()/2:
+            qc[:] = True
 
     return qc
 
@@ -128,21 +131,21 @@ def determineDepthTolerance(z, lattitude):
 
     return tTolFactor * 5.0
 
-def conditionA(dt, dTTol, qc, wt1, i):
+def conditionA(dt, dTTol, qc, wt1, i, suspect):
     '''
     condition A (large spike check)
     '''
     if (dt.mask[i-1] == False and dt.mask[i] == False and np.max(np.abs(dt[i-1:i+1])) > dTTol):
         if np.abs(dt[i] + dt[i-1]) < 0.5*dTTol:
             dt[i-1:i+1] = np.ma.masked
-            qc[i-1] = True
+            if suspect == False: qc[i-1] = True
         elif np.abs((1.0-wt1) * dt[i-1] - wt1*dt[i]) < 0.5*dTTol:
             # Likely to be a valid large temperature gradient.
             dt[i-1:i+1] = np.ma.masked # Stops the levels being rechecked.
 
     return qc, dt
 
-def conditionB(dt, dTTol, gTTol, qc, gt, i):
+def conditionB(dt, dTTol, gTTol, qc, gt, i, suspect):
     '''
     condition B (small spike check)
     '''
@@ -151,11 +154,11 @@ def conditionB(dt, dTTol, gTTol, qc, gt, i):
         np.max(np.abs(gt[i-1:i+1])) > gTTol and
         np.abs(dt[i] + dt[i-1]) < 0.25*np.abs(dt[i] - dt[i-1])):
         dt[i-1:i+1] = np.ma.masked
-        qc[i-1] = True
+        if suspect == False: qc[i-1] = True
 
     return qc, dt
 
-def conditionC(dt, dTTol, z, qc, t, i):
+def conditionC(dt, dTTol, z, qc, t, i, suspect):
     '''
     condition C (steps)
     '''
@@ -169,7 +172,7 @@ def conditionC(dt, dTTol, z, qc, t, i):
             pass
         else:
             # mark both sides of the step
-            qc[i-2:i] = True
+            if suspect == True: qc[i-2:i] = True
 
     return qc
 

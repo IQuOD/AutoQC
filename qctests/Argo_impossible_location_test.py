@@ -5,7 +5,7 @@ Implements the impossible location test on page 6 of http://w3.jcommops.org/FTPR
 import numpy
 import calendar
 
-def test(p):
+def test(p, **kwargs):
     """
     Runs the quality control check on profile p and returns a numpy array
     of quality control decisions with False where the data value has

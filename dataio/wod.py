@@ -90,6 +90,7 @@ class WodProfile(object):
             if item[0] == 'Significant digits' and chars == '-':
                 format[i+1][1] = 0
                 format[i+2][1] = 0
+                dest[format[i+3][0]] = None
                 continue
 
             # Cast to the required data type.
@@ -382,6 +383,15 @@ class WodProfile(object):
     def time(self):
         """ Returns the time. """
         return self.primary_header['Time']
+        
+    def probe_type(self):
+        """ Returns the contents of secondary header 29 if it exists,
+            otherwise None. """
+        pt = None
+        for item in self.secondary_header['entries']:
+            if item['Code'] == 29:
+                pt = item['Value']
+        return pt
 
     def z(self):
         """ Returns a numpy masked array of depths. """
