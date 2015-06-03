@@ -67,7 +67,7 @@ def test(p, *args, **kwargs):
                
         qc, dt = conditionA(dt, dTTol, qc, wt1, i)                
         qc, dt = conditionB(dt, dTTol, gTTol, qc, gt, i)
-        qc = conditionC(dt, dTTol, z, qc, i)
+        qc = conditionC(dt, dTTol, z, qc, t, i)
     
     # End of loop over levels.
     
@@ -97,8 +97,7 @@ def composeDT(var, z, nLevels):
     gt = dt.copy()
 
     for i in range(1, nLevels):
-        if ((z[i] - z[i-1]) <= 50.0 or 
-            (z[i] >= 350.0 and (z[i] - z[i-1]) <= 100.0)):
+        if ((z[i] - z[i-1]) <= 50.0 or (z[i] >= 350.0 and (z[i] - z[i-1]) <= 100.0)):
             dt[i] = var[i] - var[i-1]
             gt[i] = dt[i] / np.max([10.0, z[i] - z[i-1]])
 
@@ -156,15 +155,27 @@ def conditionB(dt, dTTol, gTTol, qc, gt, i):
 
     return qc, dt
 
-def conditionC(dt, dTTol, z, qc, i):
+def conditionC(dt, dTTol, z, qc, t, i):
     '''
     condition C (steps)
     '''
+
     if dt.mask[i-1] == False and np.abs(dt[i-1]) > dTTol:
         if z[i-1] <= 250.0 and dt[i-1] < -dTTol and dt[i-1] > -3.0*dTTol:
             # May be sharp thermocline, do not reject.
             pass
+        elif i>1 and np.abs(t[i-1] - interpolate(z[i-1], z[i-2], z[i], t[i-2], t[i])) < 0.5*dTTol:
+            # consistent interpolation, do not reject
+            pass
         else:
+            # mark both sides of the step
             qc[i-2:i] = True
 
     return qc
+
+def interpolate(depth, shallow, deep, shallowVal, deepVal):
+    '''
+    interpolate values at <depth>
+    '''
+
+    return (depth - shallow) / (deep - shallow) * (deepVal - shallowVal) + shallowVal 
