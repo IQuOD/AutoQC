@@ -21,7 +21,7 @@ def test(p):
     # initialize qc as false:
     qc = numpy.zeros(1, dtype=bool)
 
-    if year < 1997:
+    if year < 1700:
         qc[0] = True
     elif month not in range(1,13):
         qc[0] = True
