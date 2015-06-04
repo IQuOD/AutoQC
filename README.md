@@ -41,8 +41,15 @@ To execute the quality control checks,
  - runs all the automatically detected tests over each of these profiles
  - return an array for each each test indicating which profiles excpetions were raised for, and an array indicating the expected result for each profile
 
-###Testing
+###Testing Data
 Each quality control test must be written as its own file in `/qctests`, of the form `def test(p)`, where `p` is a profile object; each test returns a bool, where `True` indicates the test has *failed*.
+
+###Testing Code
+To run the code tests:
+
+```
+nosetests tests/qcvalidation.py tests/util_tests.py tests/wod_tests.py
+```
 
 ###Data
 Each data file listed in `datafiles.json` is in the World Ocean Database (WOD; http://www.nodc.noaa.gov/OC5/WOD/pr_wod.html) ASCII format.
