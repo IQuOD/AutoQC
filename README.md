@@ -17,18 +17,11 @@ Uses `pyproj`, `shapely` and `geos` for geographical calculations.
 
 Uses netcdf4 for data format handling.
 
-The following assume an [Anaconda install](https://store.continuum.io/cshop/anaconda/) of Python
-
-To install on OSX:
+With [Anaconda](https://store.continuum.io/cshop/anaconda/) on OSX:
 
 ```
-sudo pip install pyproj
-sudo pip install shapely
 brew install geos
-
-brew tap Homebrew/homebrew-science
-brew install hdf5
-export HDF5_DIR=/usr/local/Cellar/hdf5/
+pip install -r requirements.txt
 conda install netcdf4
 ```
 
