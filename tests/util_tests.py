@@ -1,5 +1,5 @@
-import combineTests
-import benchmarks
+import util.combineTests as combineTests
+import util.benchmarks as benchmarks
 
 def test_partition_type():
     '''
