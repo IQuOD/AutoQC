@@ -1,7 +1,7 @@
 from dataio import wod
 import glob, time
 import matplotlib.pyplot as plt
-#from netCDF4 import Dataset
+from netCDF4 import Dataset
 import numpy as np
 import sys
 import util.combineTests as combinatorics
@@ -153,7 +153,7 @@ for testName in testNames:
 
 # Set up any keyword arguments needed by tests.
 kwargs = {'profiles' : profiles}
-#readENBackgroundCheckAux(testNames, kwargs)
+readENBackgroundCheckAux(testNames, kwargs)
 
 # run each test on each profile, and record its summary & verbose performance
 testResults  = []
