@@ -490,7 +490,7 @@ def test_EN_spike_and_step_check_tropics_prelim():
     test preliminary tropical rejection
     '''
     p = util.testingProfile.fakeProfile([0, 0, 0, 0], [0, 10, 20, 30], latitude=0.0)
-    qc = qctests.EN_spike_and_step_check.test(p)
+    qc = qctests.EN_spike_and_step_check.test(p, True)
     truth = numpy.zeros(4, dtype=bool)
     truth[:] = True
     assert numpy.array_equal(qc, truth), 'failed to flag cold temperatures in the tropics'
