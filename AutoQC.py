@@ -1,41 +1,12 @@
 from dataio import wod
-import json, glob, time
+import glob, time
 import matplotlib.pyplot as plt
-from netCDF4 import Dataset
+#from netCDF4 import Dataset
 import numpy as np
-import os
 import sys
 import util.combineTests as combinatorics
 import util.benchmarks as benchmarks
-
-def readInput(JSONlist):
-    '''Create a list of data file names from a json array.'''
-    datafiles = json.loads(open(JSONlist).read())
-
-    # assert that a list of data files is found, and all those files exist:
-    assert type(datafiles) is list, 'Failed to read a list from datafiles.json'
-    for i in datafiles:
-      assert os.path.isfile(i), 'datafile ' + i + ' is not found.'
-
-    return datafiles
-
-def extractProfiles(filenames):
-  '''Read all profiles from the files and store in a list. Only the profile
-     descriptions are read, not the profile data, in order to avoid using
-     too much memory.
-  '''
-  profiles = []
-  for filename in filenames:
-      with open(filename) as f:
-          profiles.append(wod.WodProfile(f, load_profile_data=False))
-          while profiles[-1].is_last_profile_in_file(f) == False:
-              profiles.append(wod.WodProfile(f, load_profile_data=False))
-
-  # assert all elements of profiles are WodProfiles
-  for i in profiles:
-    assert isinstance(i, wod.WodProfile), i + ' is not a WodProfile'
-
-  return profiles
+import util.main as main
 
 def catchFlags(profile):
   '''
@@ -50,15 +21,6 @@ def catchFlags(profile):
           continue
       if profile.profile_data[i]['variables'][index]['Value'] == 99.9:
           profile.profile_data[i]['variables'][index]['Missing'] = True
-
-def importQC(dir):
-  '''
-  return a list of names of tests found in <dir>:
-  '''
-  testFiles = glob.glob(dir+'/[!_]*.py')
-  testNames = [testFile[len(dir)+1:-3] for testFile in testFiles]
-
-  return testNames
 
 def run(test, profiles, kwargs):
   '''
@@ -177,12 +139,12 @@ def readENBackgroundCheckAux(testNames, kwargs):
 # identify data files and extract profile information into an array - this
 # information is used by some quality control checks; the profile data are
 # read later.
-filenames = readInput('datafiles.json')
-profiles = extractProfiles(filenames)
+filenames = main.readInput('datafiles.json')
+profiles = main.extractProfiles(filenames)
 print('{} profiles will be read'.format(len(profiles)))
 
 # identify and import tests
-testNames = importQC('qctests')
+testNames = main.importQC('qctests')
 testNames.sort()
 print('{} quality control checks will be applied:'.format(len(testNames)))
 for testName in testNames:
@@ -191,7 +153,7 @@ for testName in testNames:
 
 # Set up any keyword arguments needed by tests.
 kwargs = {'profiles' : profiles}
-readENBackgroundCheckAux(testNames, kwargs)
+#readENBackgroundCheckAux(testNames, kwargs)
 
 # run each test on each profile, and record its summary & verbose performance
 testResults  = []
