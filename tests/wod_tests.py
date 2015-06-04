@@ -36,7 +36,7 @@ class TestClass:
    def tearDown(self):
        return
 
-   def check_time_type(self):
+   def test_check_time_type(self):
         for p in self.profiles:
             time = p.time()
             assert type(time) is float or time is None, 'profile time should be either a float or None.'  
