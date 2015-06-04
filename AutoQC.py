@@ -8,20 +8,6 @@ import util.combineTests as combinatorics
 import util.benchmarks as benchmarks
 import util.main as main
 
-def catchFlags(profile):
-  '''
-  In some IQuOD datasets temperature values of 99.9 are special values to
-  signify not to use the data value. These are flagged here so they are not
-  sent to the quality control programs for testing.
-  '''
-  index = profile.var_index()
-  assert index is not None, 'No temperatures in profile %s' % profile.uid()
-  for i in range(profile.n_levels()):
-      if profile.profile_data[i]['variables'][index]['Missing']:
-          continue
-      if profile.profile_data[i]['variables'][index]['Value'] == 99.9:
-          profile.profile_data[i]['variables'][index]['Missing'] = True
-
 def run(test, profiles, kwargs):
   '''
   run <test> on a list of <profiles>, return an array summarizing when exceptions were raised
@@ -38,23 +24,6 @@ def run(test, profiles, kwargs):
     qcResults.append(np.any(result))
     verbose.append(result)
   return [qcResults, verbose]
-
-def referenceResults(profiles):
-  '''
-  extract the summary reference result for each profile:
-  '''
-  refResult = []
-  verbose = []
-  for profile in profiles:
-    refAssessment = profile.t_level_qc(originator=True) >= 3
-
-    #demand reference results returned bools, or masked constants for missing values:
-    for i in refAssessment:
-      assert isinstance(i, np.bool_) or isinstance(i, np.ma.core.MaskedConstant), str(i) + ' in reference result list is of type ' + str(type(i))
-
-    refResult.append(np.ma.any(refAssessment))
-    verbose.append(refAssessment)
-  return [refResult, verbose]
 
 def generateLogfile(verbose, trueVerbose, profiles, testNames):
   '''
@@ -113,25 +82,6 @@ def generateLogfile(verbose, trueVerbose, profiles, testNames):
 
     logfile.write('-----------------------------------------\n')
 
-def readENBackgroundCheckAux(testNames, kwargs):
-  '''
-  Reads auxiliary information needed by the EN background check.
-  '''
-  filename = 'data/EN_bgcheck_info.nc'
-  if 'EN_background_check' in testNames and os.path.isfile(filename):
-    nc = Dataset(filename)
-    data = {}
-    data['lon']   = nc.variables['longitude'][:]
-    data['lat']   = nc.variables['latitude'][:]
-    data['depth'] = nc.variables['depth'][:]
-    data['month'] = nc.variables['month'][:]
-    data['clim']  = nc.variables['potm_climatology'][:]
-    data['bgev']  = nc.variables['bg_err_var'][:]
-    data['obev']  = nc.variables['ob_err_var'][:]
-    kwargs['EN_background_check_aux'] = data
-  else:
-    kwargs['EN_background_check_aux'] = None
-
 ########################################
 # main
 ########################################
@@ -153,7 +103,7 @@ for testName in testNames:
 
 # Set up any keyword arguments needed by tests.
 kwargs = {'profiles' : profiles}
-readENBackgroundCheckAux(testNames, kwargs)
+main.readENBackgroundCheckAux(testNames, kwargs)
 
 # run each test on each profile, and record its summary & verbose performance
 testResults  = []
@@ -176,7 +126,7 @@ for iprofile, pinfo in enumerate(profiles):
   if p.var_index() is None:
     delete.append(iprofile)
     continue
-  catchFlags(p)
+  main.catchFlags(p)
   if np.sum(p.t().mask == False) == 0:
     delete.append(iprofile)
     continue
@@ -191,7 +141,7 @@ for iprofile, pinfo in enumerate(profiles):
       testVerbose[itest].append(result[1][0])
   firstProfile = False
   # Read the reference result.
-  truth = referenceResults([p])
+  truth = main.referenceResults([p])
   trueResults.append(truth[0][0])
   trueVerbose.append(truth[1][0])
   # Update user on progress.
