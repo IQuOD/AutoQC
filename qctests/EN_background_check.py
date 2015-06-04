@@ -35,8 +35,8 @@ def test(p, *args, **kwargs):
     ilat = np.mod(np.round((lat - grid[0]) / (grid[1] - grid[0])), nlat)
     if ilat == nlat: ilat -= 1 # Checks for edge case where lat is ~90.
     
-    assert ilon >=0 and ilon < len(grid), 'Longitude is out of range: %f %i' % (lon, ilon)
-    assert ilat >=0 and ilat < len(grid), 'Latitude is out of range: %f %i' % (lat, ilat)
+    assert ilon >=0 and ilon < nlon, 'Longitude is out of range: %f %i' % (lon, ilon)
+    assert ilat >=0 and ilat < nlat, 'Latitude is out of range: %f %i' % (lat, ilat)
     
     # Extract the relevant auxiliary data.
     imonth = p.month() - 1
