@@ -1,6 +1,7 @@
 ## helper functions used in the top level AutoQC.py
 
-import json, os, glob
+import json, os, glob, time
+import numpy as np
 from dataio import wod
 
 def readInput(JSONlist):
@@ -40,3 +41,53 @@ def importQC(dir):
   testNames = [testFile[len(dir)+1:-3] for testFile in testFiles]
 
   return testNames
+
+def catchFlags(profile):
+  '''
+  In some IQuOD datasets temperature values of 99.9 are special values to
+  signify not to use the data value. These are flagged here so they are not
+  sent to the quality control programs for testing.
+  '''
+  index = profile.var_index()
+  assert index is not None, 'No temperatures in profile %s' % profile.uid()
+  for i in range(profile.n_levels()):
+      if profile.profile_data[i]['variables'][index]['Missing']:
+          continue
+      if profile.profile_data[i]['variables'][index]['Value'] == 99.9:
+          profile.profile_data[i]['variables'][index]['Missing'] = True
+
+def referenceResults(profiles):
+  '''
+  extract the summary reference result for each profile:
+  '''
+  refResult = []
+  verbose = []
+  for profile in profiles:
+    refAssessment = profile.t_level_qc(originator=True) >= 3
+
+    #demand reference results returned bools, or masked constants for missing values:
+    for i in refAssessment:
+      assert isinstance(i, np.bool_) or isinstance(i, np.ma.core.MaskedConstant), str(i) + ' in reference result list is of type ' + str(type(i))
+
+    refResult.append(np.ma.any(refAssessment))
+    verbose.append(refAssessment)
+  return [refResult, verbose]
+
+def readENBackgroundCheckAux(testNames, kwargs):
+  '''
+  Reads auxiliary information needed by the EN background check.
+  '''
+  filename = 'data/EN_bgcheck_info.nc'
+  if 'EN_background_check' in testNames and os.path.isfile(filename):
+    nc = Dataset(filename)
+    data = {}
+    data['lon']   = nc.variables['longitude'][:]
+    data['lat']   = nc.variables['latitude'][:]
+    data['depth'] = nc.variables['depth'][:]
+    data['month'] = nc.variables['month'][:]
+    data['clim']  = nc.variables['potm_climatology'][:]
+    data['bgev']  = nc.variables['bg_err_var'][:]
+    data['obev']  = nc.variables['ob_err_var'][:]
+    kwargs['EN_background_check_aux'] = data
+  else:
+    kwargs['EN_background_check_aux'] = None
