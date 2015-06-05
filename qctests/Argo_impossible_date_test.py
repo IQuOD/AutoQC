@@ -29,5 +29,7 @@ def test(p, **kwargs):
         qc[0] = True
     elif day not in range(1, calendar.monthrange(year, month)[1] + 1):
         qc[0] = True
+    elif time is not None and (time < 0 or time >= 24):
+        qc[0] = True
 
     return qc
