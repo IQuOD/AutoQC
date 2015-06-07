@@ -1,3 +1,5 @@
+# tools for examining combining tests via and / or combinations
+
 import itertools, numpy
 from copy import deepcopy
 
