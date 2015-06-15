@@ -6,4 +6,4 @@ install:
   - sudo apt-get install libhdf5-serial-dev libnetcdf-dev
   - pip install -r requirements.txt
 # command to run tests
-script: nosetests tests/qcvalidation.py tests/util_tests.py tests/wod_tests.py
+script: nosetests tests/*.py

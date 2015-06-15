@@ -115,12 +115,7 @@ delete       = []
 currentFile  = ''
 for iprofile, pinfo in enumerate(profiles):
   # Load the profile data.
-  if pinfo.file_name != currentFile:
-    if currentFile != '': f.close()
-    currentFile = pinfo.file_name
-    f = open(currentFile)
-  if f.tell() != pinfo.file_position: f.seek(pinfo.file_position)
-  p = wod.WodProfile(f)
+  p, currentFile = main.profileData(pinfo, currentFile)
   # Check that there are temperature data in the profile, otherwise skip.
   # A record is kept of the empty profiles.
   if p.var_index() is None:

@@ -9,16 +9,17 @@ def readInput(JSONlist):
     datafiles = json.loads(open(JSONlist).read())
 
     # assert that a list of data files is found, and all those files exist:
-    assert type(datafiles) is list, 'Failed to read a list from datafiles.json'
+    assert type(datafiles) is list, 'Failed to read a list from the specified file.'
     for i in datafiles:
       assert os.path.isfile(i), 'datafile ' + i + ' is not found.'
 
     return datafiles
 
 def extractProfiles(filenames):
-  '''Read all profiles from the files and store in a list. Only the profile
-     descriptions are read, not the profile data, in order to avoid using
-     too much memory.
+  '''
+  Read all profiles from the files and store in a list. Only the profile
+  descriptions are read, not the profile data, in order to avoid using
+  too much memory.
   '''
   profiles = []
   for filename in filenames:
@@ -32,6 +33,18 @@ def extractProfiles(filenames):
     assert isinstance(i, wod.WodProfile), i + ' is not a WodProfile'
 
   return profiles
+
+def profileData(pinfo, currentFile):
+  '''
+  takes a profile info stub as returned by extractProfiles and extracts the whole profile
+  from file f.
+  '''
+  if pinfo.file_name != currentFile:
+    if currentFile != '': f.close()
+    currentFile = pinfo.file_name
+    f = open(currentFile)
+  if f.tell() != pinfo.file_position: f.seek(pinfo.file_position)
+  return wod.WodProfile(f), currentFile
 
 def importQC(dir):
   '''
@@ -54,6 +67,7 @@ def catchFlags(profile):
       if profile.profile_data[i]['variables'][index]['Missing']:
           continue
       if profile.profile_data[i]['variables'][index]['Value'] == 99.9:
+          print 'flag'
           profile.profile_data[i]['variables'][index]['Missing'] = True
 
 def referenceResults(profiles):
