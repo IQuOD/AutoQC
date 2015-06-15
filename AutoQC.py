@@ -113,9 +113,10 @@ trueVerbose  = []
 firstProfile = True
 delete       = []
 currentFile  = ''
+f = None
 for iprofile, pinfo in enumerate(profiles):
   # Load the profile data.
-  p, currentFile = main.profileData(pinfo, currentFile)
+  p, currentFile, f = main.profileData(pinfo, currentFile, f)
   # Check that there are temperature data in the profile, otherwise skip.
   # A record is kept of the empty profiles.
   if p.var_index() is None:
