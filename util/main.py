@@ -34,17 +34,18 @@ def extractProfiles(filenames):
 
   return profiles
 
-def profileData(pinfo, currentFile):
+def profileData(pinfo, currentFile, f):
   '''
   takes a profile info stub as returned by extractProfiles and extracts the whole profile
   from file f.
   '''
+
   if pinfo.file_name != currentFile:
     if currentFile != '': f.close()
     currentFile = pinfo.file_name
     f = open(currentFile)
   if f.tell() != pinfo.file_position: f.seek(pinfo.file_position)
-  return wod.WodProfile(f), currentFile
+  return wod.WodProfile(f), currentFile, f
 
 def importQC(dir):
   '''
@@ -67,7 +68,6 @@ def catchFlags(profile):
       if profile.profile_data[i]['variables'][index]['Missing']:
           continue
       if profile.profile_data[i]['variables'][index]['Value'] == 99.9:
-          print 'flag'
           profile.profile_data[i]['variables'][index]['Missing'] = True
 
 def referenceResults(profiles):
