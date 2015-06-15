@@ -81,6 +81,7 @@ class WodProfile(object):
         # stores the result in the dest dictionary.
         sigDigits = None
         precision = None
+
         for i, item in enumerate(format):
             if item[1] == 0: continue # Skip if not reading anything.
 
@@ -504,7 +505,7 @@ class WodProfile(object):
         return self.var_profile_qc(index, originator=originator)
 
     def s(self):
-        """ Returns a numpy masked array of temperatures. """
+        """ Returns a numpy masked array of salinity. """
         index = self.var_index(s=True)
         return self.var_data(index)
 
@@ -514,7 +515,7 @@ class WodProfile(object):
         return self.var_level_qc(index, originator=originator)
 
     def s_profile_qc(self, originator=False):
-        """ Returns the quality control flag for the temperature profile. """
+        """ Returns the quality control flag for the salinity profile. """
         index = self.var_index(s=True)
         return self.var_profile_qc(index, originator=originator)    
 

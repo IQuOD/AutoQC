@@ -43,7 +43,7 @@ Each quality control test must be written as its own file in `/qctests`, of the 
 To run the code tests:
 
 ```
-nosetests tests/qcvalidation.py tests/util_tests.py tests/wod_tests.py
+nosetests tests/*.py
 ```
 
 ###Data
