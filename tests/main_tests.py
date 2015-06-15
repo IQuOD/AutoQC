@@ -110,7 +110,7 @@ class TestClass():
 
         profile = main.extractProfiles(['data/example.dat'])[0]
         current = ''
-        p, current = main.profileData(profile, current)
+        p, current, f = main.profileData(profile, current, None)
 
         assert numpy.array_equal(p.z(), [0.0, 10.0, 25.0, 50.0])
         assert numpy.array_equal(p.z_level_qc(), [0,0,0,0])
@@ -138,7 +138,7 @@ class TestClass():
 
         profile = main.extractProfiles(['temp.dat'])[0]
         current = ''
-        p, current = main.profileData(profile, current)
+        p, current, f = main.profileData(profile, current, None)
 
         main.catchFlags(p)
 
@@ -151,7 +151,7 @@ class TestClass():
 
         profile = main.extractProfiles(['data/example.dat'])[0]
         current = ''
-        p, current = main.profileData(profile, current)
+        p, current, f = main.profileData(profile, current, None)
 
         ref = main.referenceResults([p])
 
