@@ -2,14 +2,8 @@
 Implements the WOD range check,
 pp 46 http://data.nodc.noaa.gov/woa/WOD/DOC/wodreadme.pdf
 """
-
-import util.main as main
 import numpy
-
-# read in parameter files at global scope
-ds_regionCodes = main.readRegionCodes()
-ds_cellCodes = main.readCellCodes()
-ds_WODtempRanges = main.readWOD_temperature_ranges()
+import data.ds as ds
 
 def test(p, **kwargs):
     """ 
@@ -17,6 +11,8 @@ def test(p, **kwargs):
     of quality control decisions with False where the data value has 
     passed the check and True where it failed. 
     """
+
+
 
     # Get data from the profile.
     t = p.t()
@@ -38,12 +34,12 @@ def test(p, **kwargs):
     if not isLat or not isLong:
         return qc
 
-    depths = ds_WODtempRanges['depths']
+    depths = ds.WODtempRanges['depths']
     gLat, gLong = nearestGrid(latitude, longitude)
-    cellCode = ds_cellCodes[(gLat, gLong)]
-    region = ds_regionCodes[cellCode]
-    minima = ds_WODtempRanges[region]['min']
-    maxima = ds_WODtempRanges[region]['max']
+    cellCode = ds.cellCodes[(gLat, gLong)]
+    region = ds.regionCodes[cellCode]
+    minima = ds.WODtempRanges[region]['min']
+    maxima = ds.WODtempRanges[region]['max']
     
     for i in range(1, p.n_levels()):
         if isData[i] == False: continue
