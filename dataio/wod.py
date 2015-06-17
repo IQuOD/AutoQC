@@ -21,7 +21,7 @@ class WodProfile(object):
             profile = WodProfile(fid) # Reads a single profile.
             profile.latitude()  # Return the latitude of the profile.
             profile.z()         # Return the depths of the observations.
-            profile2 = wod_profile(fid) # Read the next profile.
+            profile2 = WodProfile(fid) # Read the next profile.
             profile2.is_last_profile_in_file() # Is this the last profile?
             fid.close()
     """
@@ -518,15 +518,6 @@ class WodProfile(object):
         """ Returns the quality control flag for the salinity profile. """
         index = self.var_index(s=True)
         return self.var_profile_qc(index, originator=originator)    
-
-def read_test_profile():
-    # Read in a sample profile file. The profile is from 
-    # Page 137 of http://data.nodc.noaa.gov/woa/WOD/DOC/wodreadme.pdf.
-    datafile = '../demo/data/sampledata.wodascii'
-    f = open(datafile)
-    p = WodProfile(f)
-    f.close()
-    return p
 
 
 
