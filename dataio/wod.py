@@ -21,7 +21,7 @@ class WodProfile(object):
             profile = WodProfile(fid) # Reads a single profile.
             profile.latitude()  # Return the latitude of the profile.
             profile.z()         # Return the depths of the observations.
-            profile2 = wod_profile(fid) # Read the next profile.
+            profile2 = WodProfile(fid) # Read the next profile.
             profile2.is_last_profile_in_file() # Is this the last profile?
             fid.close()
     """
