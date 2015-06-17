@@ -519,14 +519,5 @@ class WodProfile(object):
         index = self.var_index(s=True)
         return self.var_profile_qc(index, originator=originator)    
 
-def read_test_profile():
-    # Read in a sample profile file. The profile is from 
-    # Page 137 of http://data.nodc.noaa.gov/woa/WOD/DOC/wodreadme.pdf.
-    datafile = '../demo/data/sampledata.wodascii'
-    f = open(datafile)
-    p = WodProfile(f)
-    f.close()
-    return p
-
 
 
