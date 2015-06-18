@@ -3,6 +3,7 @@
 import json, os, glob, time
 import numpy as np
 from dataio import wod
+from netCDF4 import Dataset
 
 def readInput(JSONlist):
     '''Create a list of data file names from a json array.'''
