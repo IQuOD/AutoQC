@@ -13,16 +13,18 @@ The IQuOD proposal is to set up an open quality control benchmarking system.  Wo
 
 ## Dependencies:
 
-Uses `pyproj`, `shapely` and `geos` for geographical calculations.
-
-Uses netcdf4 for data format handling.
-
 With [Anaconda](https://store.continuum.io/cshop/anaconda/) on OSX:
 
 ```
 brew install geos
 pip install -r requirements.txt
 conda install netcdf4
+```
+
+Then, download the necessary reference data:
+
+```
+curl -o data/EN_bgcheck_info.nc http://www.metoffice.gov.uk/hadobs/en4/data/EN_bgcheck_info.nc
 ```
 
 ##Usage
