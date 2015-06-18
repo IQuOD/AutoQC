@@ -7,6 +7,7 @@ def t48tot68(t48):
     """Convert from IPTS-48 to IPTS-68 temperature scales,
        as specified in the CF Standard Name information for
        sea_water_temperature
+       http://cfconventions.org/Data/cf-standard-names/27/build/cf-standard-name-table.html
 
        WARNING - the algorithm needs to be checked as the description was unclear.
        
@@ -22,6 +23,7 @@ def t68tot90(t68):
     """Convert from IPTS-68 to ITS-90 temperature scales,
        as specified in the CF Standard Name information for
        sea_water_temperature
+       http://cfconventions.org/Data/cf-standard-names/27/build/cf-standard-name-table.html
        
        temperatures are in degrees C"""
 
