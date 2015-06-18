@@ -18,7 +18,7 @@ def test(p, **kwargs):
     year = p.year()
     month = p.month()
     day = p.day()
-    #time = p.time()
+    time = p.time()
 
     # initialize qc as false:
     qc = numpy.zeros(1, dtype=bool)
