@@ -50,7 +50,7 @@ nosetests tests/*.py
 Each data file listed in `datafiles.json` is in the World Ocean Database (WOD; http://www.nodc.noaa.gov/OC5/WOD/pr_wod.html) ASCII format.
 
 ###Profile Objects Specification
-[TBD]
+See [the docs](https://github.com/IQuOD/AutoQC/blob/master/dataio/README.md) for the WodProfile class, a decoding helper for the WOD ASCII format.
 
 ##Contributing
 Quality control checks waiting to be implemented are listed in the Issues. If you would like to work on coding up a check, please assign yourself to the issue to avoid others duplicating the effort.
