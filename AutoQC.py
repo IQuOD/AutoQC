@@ -1,7 +1,6 @@
 from dataio import wod
 import glob, time
 import matplotlib.pyplot as plt
-from netCDF4 import Dataset
 import numpy as np
 import sys, os
 import util.combineTests as combinatorics
