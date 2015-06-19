@@ -4,6 +4,7 @@ import json, os, glob, time
 import numpy as np
 from dataio import wod
 from netCDF4 import Dataset
+import csv
 
 def readInput(JSONlist):
     '''Create a list of data file names from a json array.'''
@@ -106,3 +107,6 @@ def readENBackgroundCheckAux(testNames, kwargs):
     kwargs['EN_background_check_aux'] = data
   else:
     kwargs['EN_background_check_aux'] = None
+
+
+
