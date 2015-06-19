@@ -25,19 +25,8 @@ def test(p, *args, **kwargs):
     aux = kwargs['EN_background_check_aux']
     
     # Find grid cell nearest to the observation.
-    lon = p.longitude()
-    grid = aux['lon']
-    nlon = len(grid)
-    ilon = np.mod(np.round((lon - grid[0]) / (grid[1] - grid[0])), nlon)
-    lat = p.latitude()
-    grid = aux['lat']
-    nlat = len(grid)
-    ilat = np.mod(np.round((lat - grid[0]) / (grid[1] - grid[0])), nlat)
-    if ilat == nlat: ilat -= 1 # Checks for edge case where lat is ~90.
-    
-    assert ilon >=0 and ilon < nlon, 'Longitude is out of range: %f %i' % (lon, ilon)
-    assert ilat >=0 and ilat < nlat, 'Latitude is out of range: %f %i' % (lat, ilat)
-    
+    ilon, ilat = findGridCell(p, aux['lon'], aux['lat'])
+        
     # Extract the relevant auxiliary data.
     imonth = p.month() - 1
     clim = aux['clim'][:, ilat, ilon, imonth]
@@ -83,23 +72,15 @@ def test(p, *args, **kwargs):
         assert obevLevel > 0, 'Observation error variance <= 0'
         
         # If at low latitudes the background error variance is increased. 
-        # ALso, because we are on reported levels instead of standard levels 
+        # Also, because we are on reported levels instead of standard levels 
         # the variances are increased. NB multiplication factors are squared
         # because we are working with error variances instead of standard
         # deviations.
         if np.abs(p.latitude() < 10.0): bgevLevel *= 1.5**2
         bgevLevel *= 2.0**2
         
-        # Set up an initial estimate of probability of gross error. Information
-        # from the EN_spike_and_step_check is used here to increase the initial
-        # estimate if the observation is suspect.
-        probe_type = p.probe_type()
-        if probe_type == 1 or probe_type == 2 or probe_type == 3 or probe_type == 13 or probe_type == 16:
-            pge = 0.05    
-        else: 
-            pge = 0.01
-        if suspect[iLevel]:
-            pge = 0.5 + 0.5 * pge
+        # Set up an initial estimate of probability of gross error. 
+        pge = estimatePGE(p.probe_type(), suspect[iLevel])
     
         # Calculate potential temperature.
         if isSalinity[iLevel]:
@@ -120,4 +101,42 @@ def test(p, *args, **kwargs):
     return qc
 
 
+def findGridCell(p, gridLong, gridLat):
+    '''
+    Find grid cell nearest to the observation p, 
+    where gridLong and gridLat are lists of grid coordinates.
+    '''
+    for i in range(1, len(gridLong)):
+        assert gridLong[i] - gridLong[i-1] == gridLong[1] - gridLong[0], 'longitude grid points must be evenly spaced'
+    lon = p.longitude()
+    grid = gridLong
+    nlon = len(grid)
+    ilon = np.mod(np.round((lon - grid[0]) / (grid[1] - grid[0])), nlon)
+    for i in range(1, len(gridLat)):
+        assert gridLat[i] - gridLat[i-1] == gridLat[1] - gridLat[0], 'latitude grid points must be evenly spaced'
+    lat = p.latitude()
+    grid = gridLat
+    nlat = len(grid)
+    ilat = np.mod(np.round((lat - grid[0]) / (grid[1] - grid[0])), nlat)
+    if ilat == nlat: ilat -= 1 # Checks for edge case where lat is ~90.
+    
+    assert ilon >=0 and ilon < nlon, 'Longitude is out of range: %f %i' % (lon, ilon)
+    assert ilat >=0 and ilat < nlat, 'Latitude is out of range: %f %i' % (lat, ilat)
 
+    return ilon, ilat
+
+
+def estimatePGE(probe_type, isSuspect):
+    '''
+    Estimates the probability of gross error for a measurement taken by
+    the given probe_type. Information from the EN_spike_and_step_check 
+    is used here to increase the initial estimate if the observation is suspect.
+    '''
+    if probe_type in [1,2,3,13,16]:
+        pge = 0.05    
+    else: 
+        pge = 0.01
+    if isSuspect:
+        pge = 0.5 + 0.5 * pge
+
+    return pge
