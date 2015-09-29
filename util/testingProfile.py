@@ -6,8 +6,12 @@ class fakeProfile:
     implementations of qc-tests.
     '''
 
-    def __init__(self, temperatures, depths, latitude=None, longitude=None, date=[1999, 12, 31, 0]):
+    def __init__(self, temperatures, depths, latitude=None, longitude=None, date=[1999, 12, 31, 0], probe_type=None, salinities=None):
         self.temperatures = temperatures
+        if salinities is None:
+            self.salinities = np.ma.array(temperatures, mask=True)
+        else:
+            self.salinities = salinities
         self.depths = depths
 
         self.primary_header = {}
@@ -18,6 +22,10 @@ class fakeProfile:
         self.primary_header['Month'] = date[1]
         self.primary_header['Day'] = date[2]
         
+        self.secondary_header = {'entries':[]}
+        if probe_type is not None:
+            self.secondary_header['entries'].append({'Code':29, 'Value':probe_type})
+
     def latitude(self):
         """ Returns the latitude of the profile. """
         assert self.primary_header['Latitude'] is not None, 'Latitude has not been set'
@@ -31,6 +39,10 @@ class fakeProfile:
     def t(self):
         """ Returns a numpy masked array of temperatures. """
         return self.var_data(self.temperatures)
+
+    def s(self):
+        """ Returns a numpy masked array of salinities. """
+        return self.var_data(self.salinities)
 
     def z(self):
         """ Returns a numpy masked array of depths. """
@@ -60,4 +72,14 @@ class fakeProfile:
             if dat[i] is not None:
                 data[i] = dat[i]
         return data
+
+    def probe_type(self):
+        """ Returns the contents of secondary header 29 if it exists,
+            otherwise None. """
+        pt = None
+        for item in self.secondary_header['entries']:
+            if item['Code'] == 29:
+                pt = item['Value']
+        return pt
+
 
