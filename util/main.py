@@ -4,22 +4,24 @@ import json, os, glob, time
 import numpy as np
 from dataio import wod
 from netCDF4 import Dataset
+import csv
 
 def readInput(JSONlist):
     '''Create a list of data file names from a json array.'''
     datafiles = json.loads(open(JSONlist).read())
 
     # assert that a list of data files is found, and all those files exist:
-    assert type(datafiles) is list, 'Failed to read a list from datafiles.json'
+    assert type(datafiles) is list, 'Failed to read a list from the specified file.'
     for i in datafiles:
       assert os.path.isfile(i), 'datafile ' + i + ' is not found.'
 
     return datafiles
 
 def extractProfiles(filenames):
-  '''Read all profiles from the files and store in a list. Only the profile
-     descriptions are read, not the profile data, in order to avoid using
-     too much memory.
+  '''
+  Read all profiles from the files and store in a list. Only the profile
+  descriptions are read, not the profile data, in order to avoid using
+  too much memory.
   '''
   profiles = []
   for filename in filenames:
@@ -33,6 +35,19 @@ def extractProfiles(filenames):
     assert isinstance(i, wod.WodProfile), i + ' is not a WodProfile'
 
   return profiles
+
+def profileData(pinfo, currentFile, f):
+  '''
+  takes a profile info stub as returned by extractProfiles and extracts the whole profile
+  from file f.
+  '''
+
+  if pinfo.file_name != currentFile:
+    if currentFile != '': f.close()
+    currentFile = pinfo.file_name
+    f = open(currentFile)
+  if f.tell() != pinfo.file_position: f.seek(pinfo.file_position)
+  return wod.WodProfile(f), currentFile, f
 
 def importQC(dir):
   '''
@@ -92,3 +107,6 @@ def readENBackgroundCheckAux(testNames, kwargs):
     kwargs['EN_background_check_aux'] = data
   else:
     kwargs['EN_background_check_aux'] = None
+
+
+

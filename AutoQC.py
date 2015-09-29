@@ -1,7 +1,6 @@
 from dataio import wod
 import glob, time
 import matplotlib.pyplot as plt
-from netCDF4 import Dataset
 import numpy as np
 import sys, os
 import util.combineTests as combinatorics
@@ -113,14 +112,10 @@ trueVerbose  = []
 firstProfile = True
 delete       = []
 currentFile  = ''
+f = None
 for iprofile, pinfo in enumerate(profiles):
   # Load the profile data.
-  if pinfo.file_name != currentFile:
-    if currentFile != '': f.close()
-    currentFile = pinfo.file_name
-    f = open(currentFile)
-  if f.tell() != pinfo.file_position: f.seek(pinfo.file_position)
-  p = wod.WodProfile(f)
+  p, currentFile, f = main.profileData(pinfo, currentFile, f)
   # Check that there are temperature data in the profile, otherwise skip.
   # A record is kept of the empty profiles.
   if p.var_index() is None:
