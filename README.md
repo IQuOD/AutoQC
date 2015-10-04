@@ -17,8 +17,8 @@ With [Anaconda](https://store.continuum.io/cshop/anaconda/) on OSX:
 
 ```
 brew install geos
-pip install -r requirements.txt
 conda install netcdf4
+pip install -r requirements.txt
 ```
 
 Then, download the necessary reference data:

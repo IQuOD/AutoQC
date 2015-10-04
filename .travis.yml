@@ -9,7 +9,9 @@ before_install:
   - export PATH=/home/travis/miniconda/bin:$PATH
   - conda update --yes conda
   - travis_retry conda install --yes python=$TRAVIS_PYTHON_VERSION Shapely netCDF4 matplotlib numpy scipy scikit-learn
-# non-native conda deps:
+before_script:
+# download auxiliary data
+  - curl http://www.metoffice.gov.uk/hadobs/en4/data/EN_bgcheck_info.nc > ~/AutoQC/data/EN_bgcheck_info.nc
 install:
   - sudo apt-get install libhdf5-serial-dev libnetcdf-dev
   - conda install -y -c https://conda.binstar.org/jjhelmus pyproj
