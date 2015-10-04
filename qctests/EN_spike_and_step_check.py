@@ -167,13 +167,9 @@ def conditionC(dt, dTTol, z, qc, t, i, suspect):
         if z[i-1] <= 250.0 and dt[i-1] < -dTTol and dt[i-1] > -3.0*dTTol:
             # May be sharp thermocline, do not reject.
             pass
-        elif i>1 and z[i] - z[i-2] > 0:
-            if np.abs(t[i-1] - interpolate(z[i-1], z[i-2], z[i], t[i-2], t[i])) < 0.5*dTTol:
-                # consistent interpolation, do not reject
-                pass
-            else:
-                # mark both sides of the step
-                if suspect == True: qc[i-2:i] = True
+        elif i>1 and z[i] - z[i-2] > 0 and np.abs(t[i-1] - interpolate(z[i-1], z[i-2], z[i], t[i-2], t[i])) < 0.5*dTTol:
+            # consistent interpolation, do not reject
+            pass
         else:
             # mark both sides of the step
             if suspect == True: qc[i-2:i] = True
