@@ -106,6 +106,40 @@ def combineRows(logicTable, rows, a=True):
 
     return result
 
+def recursiveSimpleGenerateCombinations(use, i, n, results):
+    '''
+    Algorithm for generating all single-group combinations of tests. Used by
+    simpleGenerateCombinations().
+
+    Inputs use - a numpy Boolean array of which tests are used in a combination.
+                 On first call of this routine this should be set to all False.
+           i   - an index variable which should be set to 0 on first call of the routine.
+           n   - the number of tests available.
+    In/out results - a list variable used to store numpy Boolean arrays that say
+                     which tests are in use in a combination.
+    '''
+    for j in range(i, n):
+        usesave = use.copy()
+        use[j] = True
+        results += [use.copy()]
+        if j < (n - 1):
+            recursiveSimpleGenerateCombinations(use, j + 1, n, results)
+        use = usesave
+
+def simpleGenerateCombinations(n):
+    '''
+    Generates all single-group combinations of tests. I.e. it will generate 
+    combinations of the form [[0, 1, 2]], [[2, 3]] etc. but not [[0, 1], [2, 3]].
+
+    Input n - the number of tests available.
+    Returns a list of the combinations.
+    '''
+    use = numpy.zeros(n, dtype=bool)
+    results = []
+    recursiveSimpleGenerateCombinations(use, 0, n, results)
+    numbers = numpy.arange(n, dtype=int)
+    return [[list(numbers[result])] for result in results]
+
 def combineTests(logicTable):
     '''
     Generate all possible paritions of tests into AND / OR combinations, and return the result
@@ -122,7 +156,7 @@ def combineTests(logicTable):
 
     results = []
 
-    partitions = generateCombinations( range(totalTests) )
+    partitions = simpleGenerateCombinations( totalTests )
 
     for each_partition in partitions:
         combo = combineLogic(logicTable, each_partition)
