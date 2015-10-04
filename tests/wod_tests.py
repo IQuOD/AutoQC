@@ -1,5 +1,5 @@
 import util.main as main
-from dataio import wod
+from wodpy import wod
 
 class TestClass:
    def setUp(self):

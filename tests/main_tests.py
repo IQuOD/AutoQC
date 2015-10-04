@@ -1,6 +1,6 @@
 import util.main as main
 import os
-from dataio import wod
+from wodpy import wod
 import numpy
 
 class TestClass():

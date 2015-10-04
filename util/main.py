@@ -2,7 +2,7 @@
 
 import json, os, glob, time
 import numpy as np
-from dataio import wod
+from wodpy import wod
 from netCDF4 import Dataset
 import csv
 
