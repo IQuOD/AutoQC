@@ -12,6 +12,7 @@ before_install:
 install:
   - sudo apt-get install libhdf5-serial-dev libnetcdf-dev
   - conda install -y -c https://conda.binstar.org/jjhelmus pyproj
+  - sudo pip install wodpy
 before_script:
 # download auxiliary data
   - cd data; curl -O http://www.metoffice.gov.uk/hadobs/en4/data/EN_bgcheck_info.nc; cd ..;
