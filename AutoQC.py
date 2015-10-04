@@ -1,4 +1,4 @@
-from dataio import wod
+from wodpy import wod
 import glob, time
 import matplotlib.pyplot as plt
 import numpy as np
