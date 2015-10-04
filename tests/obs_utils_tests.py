@@ -3,10 +3,11 @@ import numpy as np
 
 def t48tot68_test():
     '''
-    todo after resolving issue #90
+    spotcheck on temperature conversion
     '''
 
-    assert True
+    assert isinstance(outils.t48tot68(100), float), 'temperature conversion not returing a float'
+    assert outils.t48tot68(100) == 100, 'temperature conversion not matching expectation at t48=100'
 
 def t68tot90_test():
     '''
