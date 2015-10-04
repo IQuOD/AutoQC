@@ -43,3 +43,23 @@ def test_Argo_impossible_date_test_day_leap_year():
     qc = qctests.Argo_impossible_date_test.test(p)
     truth = numpy.zeros(1, dtype=bool)
     assert numpy.array_equal(qc, truth), 'Argo impossible date test not correctly identifying leap years'
+
+def test_Argo_impossible_date_test_hour():
+    '''
+    hour range in impossible date test
+    '''
+    p = util.testingProfile.fakeProfile([0], [0], date=[2004, 2, 29, 24]) 
+    qc = qctests.Argo_impossible_date_test.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    truth[0] = True
+    assert numpy.array_equal(qc, truth), 'Argo impossible date test not correctly flagging an out of range time; times fall on [0,24)'    
+
+def test_Argo_impossible_date_test_hour_missing():
+    '''
+    pass the dataset if the time is missing
+    '''
+    p = util.testingProfile.fakeProfile([0], [0], date=[2004, 1, 29, None]) 
+    qc = qctests.Argo_impossible_date_test.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+
+    assert numpy.array_equal(qc, truth), 'Argo impossible date test not correctly handling missing time data.' 

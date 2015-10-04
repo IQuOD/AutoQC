@@ -18,7 +18,7 @@ def test(p, **kwargs):
     year = p.year()
     month = p.month()
     day = p.day()
-    #time = p.time()
+    time = p.time()
 
     # initialize qc as false:
     qc = numpy.zeros(1, dtype=bool)
@@ -28,6 +28,8 @@ def test(p, **kwargs):
     elif month not in range(1,13):
         qc[0] = True
     elif day not in range(1, calendar.monthrange(year, month)[1] + 1):
+        qc[0] = True
+    elif time is not None and (time < 0 or time >= 24):
         qc[0] = True
 
     return qc

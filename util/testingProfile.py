@@ -21,6 +21,7 @@ class fakeProfile:
         self.primary_header['Year'] = date[0]
         self.primary_header['Month'] = date[1]
         self.primary_header['Day'] = date[2]
+        self.primary_header['Time'] = date[3]
         
         self.secondary_header = {'entries':[]}
         if probe_type is not None:
@@ -63,6 +64,10 @@ class fakeProfile:
     def day(self):
         """ Returns the day. """
         return self.primary_header['Day']
+
+    def time(self):
+        """ Returns the time. """
+        return self.primary_header['Time']
 
     def var_data(self, dat):
         """ Returns the data values for a variable given the variable index. """
