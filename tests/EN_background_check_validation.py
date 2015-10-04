@@ -18,7 +18,6 @@ def test_EN_background_check_temperature():
     expected = [False, False, False, True]
     assert numpy.array_equal(qc, expected), 'mismatch between qc results and expected values'
 
-
 def test_EN_background_check_findGridCell():
     '''
     check behavior of grid cell identifier:
@@ -66,5 +65,3 @@ def test_EN_background_check_estimatePGE():
     assert qctests.EN_background_check.estimatePGE(1, False) == 0.05, 'incorrect non-suspect bathythermograph pge'
     assert qctests.EN_background_check.estimatePGE(16, True) == 0.525, 'incorrect suspect bathythermograph pge'
     assert qctests.EN_background_check.estimatePGE(4, False) == 0.01, 'incorrect non-suspect non-bathythermograph pge'
-
-
