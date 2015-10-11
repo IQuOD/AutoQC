@@ -1,7 +1,7 @@
 Name,code
 Climatology Range,1
 North_Atlantic,2
-Coastal_N Atlantic,3
+Coastal_N_Atlantic,3
 Equatorial_Atlant,4
 Coastal_Eq_Atlant,5
 South_Atlantic,6
@@ -9,13 +9,13 @@ Coastal_S_Atlantic,7
 North_Pacific,8
 Coastal_N_Pac,9
 Equatorial_Pac,10
-Coastal_Eq Pac,11
+Coastal_Eq_Pac,11
 South_Pacific,12
 Coastal_S_Pac,13
 North_Indian,14
 Coastal_N_Indian,15
 Equatorial_Indian,16
-Coastal_Eq Indian,17
+Coastal_Eq_Indian,17
 South_Indian,18
 Coastal_S_Indian,19
 Antarctic,20
