@@ -6,6 +6,7 @@ import sys, os
 import util.combineTests as combinatorics
 import util.benchmarks as benchmarks
 import util.main as main
+import util.svmClassifier as svmClassifier
 
 def run(test, profiles, kwargs):
   '''
@@ -154,15 +155,23 @@ for i in range (0, len(testNames)):
   print('Number of profiles that failed ' + testNames[i] + ' was %i' % np.sum(testResults[i]))
 print('Number of profiles that should have been failed was %i' % np.sum(trueResults))
 
+TT, TF, FT, FF = svmClassifier.assessResults(testResults, trueResults, trainingSize=5000)
+
+print 'True trues:', TT
+print 'False positives:', TF
+print 'False negatives:', FT
+print 'Correct falses:', FF
+
+
 # generate a set of logical combinations of tests
-combos = combinatorics.combineTests(testResults)
-print('Number of combinations that were tried was %i' % len(combos))
+#combos = combinatorics.combineTests(testResults)
+#print('Number of combinations that were tried was %i' % len(combos))
 
 # Compare the combinations to the truth.
-bmResults = benchmarks.compare_to_truth(combos, trueResults)
+#bmResults = benchmarks.compare_to_truth(combos, trueResults)
 
 # Plot the results.
-benchmarks.plot_roc(bmResults)
+#benchmarks.plot_roc(bmResults)
 
 #logfile
 #generateLogfile(testVerbose, trueVerbose, profiles, testNames)
