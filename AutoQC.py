@@ -2,7 +2,7 @@ from wodpy import wod
 import glob, time
 import matplotlib.pyplot as plt
 import numpy as np
-import sys, os
+import sys, os, json
 import util.combineTests as combinatorics
 import util.benchmarks as benchmarks
 import util.main as main
@@ -82,6 +82,19 @@ def generateLogfile(verbose, trueVerbose, profiles, testNames):
 
     logfile.write('-----------------------------------------\n')
 
+def dumpRawResults(testResults, trueResults):
+  '''
+  log the raw lists of results to text files
+  good for doing large trials on learning strategies.
+  '''
+
+  results = open('results.dat', 'w')
+  true = open('true.dat', 'w')
+
+  results.write(json.dumps([ [bool(j) for j in i] for i in testResults]))
+  true.write(json.dumps([bool(i) for i in trueResults] ))
+
+
 ########################################
 # main
 ########################################
@@ -115,6 +128,8 @@ delete       = []
 currentFile  = ''
 f = None
 for iprofile, pinfo in enumerate(profiles):
+  if iprofile >= 1000000:
+    break
   # Load the profile data.
   p, currentFile, f = main.profileData(pinfo, currentFile, f)
   # Check that there are temperature data in the profile, otherwise skip.
@@ -155,14 +170,6 @@ for i in range (0, len(testNames)):
   print('Number of profiles that failed ' + testNames[i] + ' was %i' % np.sum(testResults[i]))
 print('Number of profiles that should have been failed was %i' % np.sum(trueResults))
 
-TT, TF, FT, FF = svmClassifier.assessResults(testResults, trueResults, trainingSize=5000)
-
-print 'True trues:', TT
-print 'False positives:', TF
-print 'False negatives:', FT
-print 'Correct falses:', FF
-
-
 # generate a set of logical combinations of tests
 #combos = combinatorics.combineTests(testResults)
 #print('Number of combinations that were tried was %i' % len(combos))
@@ -175,3 +182,4 @@ print 'Correct falses:', FF
 
 #logfile
 #generateLogfile(testVerbose, trueVerbose, profiles, testNames)
+dumpRawResults(testResults, trueResults)

@@ -35,3 +35,14 @@ def test_assessResults():
     assert TF==0, 'wrong TF on trivial test (svm should be perfect in this case)'
     assert FT==0, 'wrong FT on trivial test (svm should be perfect in this case)'
     assert FF==4, 'wrong FF on trivial test (svm should be perfect in this case)'
+
+def shuffleList_test():
+    '''
+    check behavior of shuffling.
+    '''
+
+    a = [1,2,3,4,5]
+    b = ['a', 'b', 'c', 'd', 'e']
+    svmClassifier.shuffleLists(a,b)
+
+    assert a[b.index('d')] == 4, 'lists did not maintain pairwise correspondence after shuffling.'
