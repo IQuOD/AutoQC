@@ -157,4 +157,3 @@ class TestClass():
 
         assert ref[0][0] == False, 'incorrect extraction of overall reference result for data/example.dat'
         assert numpy.array_equal(ref[1][0], [False, False, False, False] ), 'incorrect extraction of verbose reference results for data/example.dat'
-

@@ -108,5 +108,3 @@ def readENBackgroundCheckAux(testNames, kwargs):
   else:
     kwargs['EN_background_check_aux'] = None
 
-
-
