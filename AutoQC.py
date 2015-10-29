@@ -6,7 +6,6 @@ import sys, os, json
 import util.combineTests as combinatorics
 import util.benchmarks as benchmarks
 import util.main as main
-import util.svmClassifier as svmClassifier
 
 def run(test, profiles, kwargs):
   '''
