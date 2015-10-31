@@ -15,21 +15,55 @@ def test(p, **kwargs):
     # Get temperature, salinity, pressure values from the profile.
     t = p.t()
     s = p.s()
-    p = p.p()
+    P = p.p()
 
     # initialize qc as a bunch of falses;
-    qc = numpy.zeros(len(t.data), dtype=bool)
-
+    qc = numpy.zeros(p.n_levels(), dtype=bool)
+    
     # check for gaps in data
     isTemperature = (t.mask==False)
     isSalinity = (s.mask==False)
-    isPressure = (p.mask==False)
+    isPressure = (P.mask==False)
     isData = isTemperature & isSalinity & isPressure
 
-    levelFlags = numpy.zeros(len(t.data), dtype=bool)
+    # calculate potential temperatures
+    T = []
+    for i in range(0, p.n_levels()):
+        T.append(potentialTemperature(s[i], t[i], P[i]))
 
-    for i in range(1,len(t.data)-1):
-        pass
+    for i in range(2,len(t.data)-1):
+        if (isData[i] and isData[i-1] and isData[i-2]) == False:
+            continue
+
+        delta_rho_k = mcdougallEOS(s[i], T[i], P[i]) - mcdougallEOS(s[i-1], T[i-1], P[i-1]) 
+        if delta_rho_k >= -0.03:
+            continue;
+
+        delta_rho_k_prev = mcdougallEOS(s[i-1], T[i-1], P[i-1]) - mcdougallEOS(s[i-2], T[i-2], P[i-2])
+
+        if abs(delta_rho_k_prev + delta_rho_k) < 0.25*abs(delta_rho_k_prev - delta_rho_k):
+            qc[i-1] = True
+        else:
+            if isData[i+1] == False:
+                continue
+
+            delta_rho_k_next = mcdougallEOS(s[i+1], T[i+1], P[i+1]) - mcdougallEOS(s[i], T[i], P[i])
+            if abs(delta_rho_k + delta_rho_k_next) < 0.25*abs(delta_rho_k - delta_rho_k_next):
+                qc[i] = True
+            else:
+                qc[i-1] = True
+                qc[i] = True
+
+    #check bottom of profile
+    i = p.n_levels()-1
+    if isData[i] and isData[i-1]:
+        delta_rho_k = mcdougallEOS(s[i], T[i], P[i]) - mcdougallEOS(s[i-1], T[i-1], P[i-1])
+        if delta_rho_k < -0.03:
+            qc[i] = True
+
+    #check for critical number of flags, flag all if so:
+    if sum(qc) >= max(2, len(t.data)/4.):
+        qc = numpy.ones(len(t.data), dtype=bool)
 
     return qc
 
@@ -103,3 +137,29 @@ def mcdougallEOS(salinity, temperature, pressure):
     p2 += p2CF[12]*pressure*pressure*pressure*temperature
 
     return p1/p2
+
+def potentialTemperature(S, T, p):
+    # approximation for potential temperature given in McDougall et al 2003 (http://journals.ametsoc.org/doi/pdf/10.1175/1520-0426%282003%2920%3C730%3AAACEAF%3E2.0.CO%3B2)
+    # S in psu, T in degrees C, p in db
+    # note p_r = 0 for these fit values
+
+    coef = [
+         0,
+         1.067610e-5,
+        -1.434297e-6,
+        -7.566349e-9,
+        -8.535585e-6,
+         3.074672e-8,
+         1.918639e-8,
+         1.788718e-10
+    ]
+
+    poly =  coef[1]
+    poly += coef[2]*S
+    poly += coef[3]*p
+    poly += coef[4]*T
+    poly += coef[5]*S*T
+    poly += coef[6]*T*T
+    poly += coef[7]*T*p
+
+    return T + p*poly
