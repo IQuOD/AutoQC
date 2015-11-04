@@ -6,13 +6,17 @@ class fakeProfile:
     implementations of qc-tests.
     '''
 
-    def __init__(self, temperatures, depths, latitude=None, longitude=None, date=[1999, 12, 31, 0], probe_type=None, salinities=None):
+    def __init__(self, temperatures, depths, latitude=None, longitude=None, date=[1999, 12, 31, 0], probe_type=None, salinities=None, pressures=None):
         self.temperatures = temperatures
         if salinities is None:
             self.salinities = np.ma.array(temperatures, mask=True)
         else:
             self.salinities = salinities
         self.depths = depths
+        if pressures is None:
+            self.pressures = np.ma.array(temperatures, mask=True)
+        else:
+            self.pressures = pressures
 
         self.primary_header = {}
         self.primary_header['Number of levels'] = len(depths)
@@ -44,6 +48,10 @@ class fakeProfile:
     def s(self):
         """ Returns a numpy masked array of salinities. """
         return self.var_data(self.salinities)
+
+    def p(self):
+        """ Returns a numpy masked array of salinities. """
+        return self.var_data(self.pressures)
 
     def z(self):
         """ Returns a numpy masked array of depths. """
