@@ -7,6 +7,7 @@ before_install:
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
   - export PATH=/home/travis/miniconda/bin:$PATH
+  - conda update -q conda
   - travis_retry conda install --yes python=$TRAVIS_PYTHON_VERSION Shapely netCDF4 matplotlib numpy scipy scikit-learn
 install:
   - sudo apt-get install libhdf5-serial-dev libnetcdf-dev
