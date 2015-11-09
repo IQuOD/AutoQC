@@ -14,9 +14,9 @@ before_install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - travis_retry conda install --yes python=$TRAVIS_PYTHON_VERSION Shapely netCDF4 matplotlib numpy scipy scikit-learn pyproj
-install:
   - sudo apt-get install libhdf5-serial-dev libnetcdf-dev
+  - travis_retry conda install --yes python=$TRAVIS_PYTHON_VERSION Shapely netCDF4 matplotlib numpy scipy pyproj
+install:
   #- conda install -y -c https://conda.binstar.org/jjhelmus pyproj
   - pip install wodpy
 before_script:
