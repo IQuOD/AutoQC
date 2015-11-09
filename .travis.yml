@@ -21,6 +21,6 @@ before_install:
 install:
   - sudo apt-get install libhdf5-serial-dev libnetcdf-dev
   - pip install wodpy
-  - source activate test-environment
+  #- source activate test-environment
   - python setup.py install
 script: nosetests tests/*.py
