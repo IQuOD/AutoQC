@@ -87,8 +87,8 @@ def dumpRawResults(testResults, trueResults):
   good for doing large trials on learning strategies.
   '''
 
-  results = open('results.dat', 'w')
-  true = open('true.dat', 'w')
+  results = open('results-' + sys.argv[1] + '.dat', 'w')
+  true = open('true-' + sys.argv[1] + '.dat', 'w')
 
   results.write(json.dumps([ [bool(j) for j in i] for i in testResults]))
   true.write(json.dumps([bool(i) for i in trueResults] ))
