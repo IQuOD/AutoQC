@@ -2,7 +2,7 @@ language: python
 python:
   # We don't actually use the Travis Python, but this keeps it organized.
   - "2.7"
-install:
+before_install:
   - sudo apt-get update
   # We do this conditionally because it saves us some downloading if the
   # version is the same.
@@ -16,14 +16,11 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  # Useful for debugging any issues with conda
-  - conda info -a
-
-  # Replace dep1 dep2 ... with your dependencies
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Shapely netCDF4 matplotlib numpy scipy scikit-learn
-  - source activate test-environment
+  - travis_retry conda install --yes python=$TRAVIS_PYTHON_VERSION Shapely netCDF4 matplotlib numpy scipy scikit-learn
   - conda install -y -c https://conda.binstar.org/jjhelmus pyproj
-before_script:
-# download auxiliary data
-  - cd data; curl -O http://www.metoffice.gov.uk/hadobs/en4/data/EN_bgcheck_info.nc; cd ..;
+install:
+  - sudo apt-get install libhdf5-serial-dev libnetcdf-dev
+  - pip install wodpy
+  - source activate test-environment
+  - python setup.py install
 script: nosetests tests/*.py
