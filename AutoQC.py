@@ -95,9 +95,9 @@ def dumpRawResults(testResults, trueResults):
   true.write(json.dumps([bool(i) for i in trueResults] ))
 
 def parallel_function(f):
-  '''
-  thanks http://scottsievert.github.io/blog/2014/07/30/simple-python-parallelism/
-  '''
+    '''
+    thanks http://scottsievert.github.io/blog/2014/07/30/simple-python-parallelism/
+    '''
     def easy_parallize(f, sequence):
         """ assumes f takes sequence as input, easy w/ Python's scope """
         from multiprocessing import Pool

@@ -1,4 +1,3 @@
 [
-    "data/split-0.dat",
-    "data/split-1.dat"
+    "../AutoQC_raw/quota/test/chunk.dat"
 ]
