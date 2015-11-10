@@ -1,3 +1,4 @@
 [
-    "data/quota_subset.dat"
+    "data/split-0.dat",
+    "data/split-1.dat"
 ]

@@ -13,6 +13,7 @@ def run(test, profiles, kwargs):
   '''
   qcResults = []
   verbose = []
+  exec('from qctests import ' + test)
   for profile in profiles:
     exec('result = ' + test + '.test(profile, **kwargs)')
 
@@ -93,6 +94,93 @@ def dumpRawResults(testResults, trueResults):
   results.write(json.dumps([ [bool(j) for j in i] for i in testResults]))
   true.write(json.dumps([bool(i) for i in trueResults] ))
 
+def parallel_function(f):
+  '''
+  thanks http://scottsievert.github.io/blog/2014/07/30/simple-python-parallelism/
+  '''
+    def easy_parallize(f, sequence):
+        """ assumes f takes sequence as input, easy w/ Python's scope """
+        from multiprocessing import Pool
+        pool = Pool(processes=4) # depends on available cores
+        result = pool.map(f, sequence) # for i in sequence: result[i] = f(i)
+        cleaned = [x for x in result if not x is None] # getting results
+        cleaned = np.asarray(cleaned)
+        pool.close() # not optimal! but easy
+        pool.join()
+        return cleaned
+    from functools import partial
+    return partial(easy_parallize, f)
+
+
+def processFile(fName):
+  profiles = main.extractProfiles([fName])
+  print('{} profiles will be read'.format(len(profiles)))
+
+  # identify and import tests
+  testNames = main.importQC('qctests')
+  testNames.sort()
+  print('{} quality control checks will be applied:'.format(len(testNames)))
+  for testName in testNames:
+    print(' {}'.format(testName))
+    exec('from qctests import ' + testName)
+
+  # Set up any keyword arguments needed by tests.
+  kwargs = {'profiles' : profiles}
+  main.readENBackgroundCheckAux(testNames, kwargs)
+
+  # run each test on each profile, and record its summary & verbose performance
+  testResults  = []
+  testVerbose  = []
+  trueResults  = []
+  trueVerbose  = []
+  firstProfile = True
+  delete       = []
+  currentFile  = ''
+  f = None
+  for iprofile, pinfo in enumerate(profiles):
+    if iprofile >= 1000000:
+      break
+    # Load the profile data.
+    p, currentFile, f = main.profileData(pinfo, currentFile, f)
+    # Check that there are temperature data in the profile, otherwise skip.
+    # A record is kept of the empty profiles.
+    if p.var_index() is None:
+      delete.append(iprofile)
+      continue
+    main.catchFlags(p)
+    if np.sum(p.t().mask == False) == 0:
+      delete.append(iprofile)
+      continue
+    # Run each test.    
+    for itest, test in enumerate(testNames):
+      result = run(test, [p], kwargs)
+      if firstProfile:
+        testResults.append(result[0])
+        testVerbose.append(result[1])
+      else:
+        testResults[itest].append(result[0][0])
+        testVerbose[itest].append(result[1][0])
+    firstProfile = False
+    # Read the reference result.
+    truth = main.referenceResults([p])
+    trueResults.append(truth[0][0])
+    trueVerbose.append(truth[1][0])
+    # Update user on progress.
+    sys.stdout.write('{:5.1f}% complete\r'.format((iprofile+1)*100.0/len(profiles)))
+    sys.stdout.flush()
+  # testResults[i][j] now contains a flag indicating the exception raised by test i on profile j
+
+  # Remove records of profiles with no temperature data.
+  for i in reversed(delete):
+    del profiles[i]
+
+  # Summary statistics
+  print('Number of profiles tested was %i' % len(profiles))
+  for i in range (0, len(testNames)):
+    print('Number of profiles that failed ' + testNames[i] + ' was %i' % np.sum(testResults[i]))
+  print('Number of profiles that should have been failed was %i' % np.sum(trueResults))
+
+  return trueResults, testResults
 
 ########################################
 # main
@@ -102,72 +190,29 @@ def dumpRawResults(testResults, trueResults):
 # information is used by some quality control checks; the profile data are
 # read later.
 filenames = main.readInput('datafiles.json')
-profiles = main.extractProfiles(filenames)
-print('{} profiles will be read'.format(len(profiles)))
 
-# identify and import tests
-testNames = main.importQC('qctests')
-testNames.sort()
-print('{} quality control checks will be applied:'.format(len(testNames)))
-for testName in testNames:
-  print(' {}'.format(testName))
-  exec('from qctests import ' + testName)
+processFile.parallel = parallel_function(processFile)
+parallel_result = processFile.parallel(filenames)
 
-# Set up any keyword arguments needed by tests.
-kwargs = {'profiles' : profiles}
-main.readENBackgroundCheckAux(testNames, kwargs)
+#recombine results
+truth = parallel_result[0][0]
+results = parallel_result[0][1]
 
-# run each test on each profile, and record its summary & verbose performance
-testResults  = []
-testVerbose  = []
-trueResults  = []
-trueVerbose  = []
-firstProfile = True
-delete       = []
-currentFile  = ''
-f = None
-for iprofile, pinfo in enumerate(profiles):
-  if iprofile >= 1000000:
-    break
-  # Load the profile data.
-  p, currentFile, f = main.profileData(pinfo, currentFile, f)
-  # Check that there are temperature data in the profile, otherwise skip.
-  # A record is kept of the empty profiles.
-  if p.var_index() is None:
-    delete.append(iprofile)
-    continue
-  main.catchFlags(p)
-  if np.sum(p.t().mask == False) == 0:
-    delete.append(iprofile)
-    continue
-  # Run each test.    
-  for itest, test in enumerate(testNames):
-    result = run(test, [p], kwargs)
-    if firstProfile:
-      testResults.append(result[0])
-      testVerbose.append(result[1])
-    else:
-      testResults[itest].append(result[0][0])
-      testVerbose[itest].append(result[1][0])
-  firstProfile = False
-  # Read the reference result.
-  truth = main.referenceResults([p])
-  trueResults.append(truth[0][0])
-  trueVerbose.append(truth[1][0])
-  # Update user on progress.
-  sys.stdout.write('{:5.1f}% complete\r'.format((iprofile+1)*100.0/len(profiles)))
-  sys.stdout.flush()
-# testResults[i][j] now contains a flag indicating the exception raised by test i on profile j
+for i in range(1, len(parallel_result)):
+  truth = truth + parallel_result[i][0]
 
-# Remove records of profiles with no temperature data.
-for i in reversed(delete):
-  del profiles[i]
+  for j in range(len(parallel_result[i][1])):
+    results[j] = results[j] + parallel_result[i][1][j]
 
-# Summary statistics
-print('Number of profiles tested was %i' % len(profiles))
-for i in range (0, len(testNames)):
-  print('Number of profiles that failed ' + testNames[i] + ' was %i' % np.sum(testResults[i]))
-print('Number of profiles that should have been failed was %i' % np.sum(trueResults))
+dumpRawResults(results, truth)
+
+
+
+
+
+
+
+
 
 # generate a set of logical combinations of tests
 #combos = combinatorics.combineTests(testResults)
@@ -181,4 +226,4 @@ print('Number of profiles that should have been failed was %i' % np.sum(trueResu
 
 #logfile
 #generateLogfile(testVerbose, trueVerbose, profiles, testNames)
-dumpRawResults(testResults, trueResults)
+#dumpRawResults(testResults, trueResults)
