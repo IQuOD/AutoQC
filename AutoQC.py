@@ -6,6 +6,7 @@ import sys, os, json
 import util.combineTests as combinatorics
 import util.benchmarks as benchmarks
 import util.main as main
+import pandas
 
 def run(test, profiles, kwargs):
   '''
@@ -82,17 +83,19 @@ def generateLogfile(verbose, trueVerbose, profiles, testNames):
 
     logfile.write('-----------------------------------------\n')
 
-def dumpRawResults(testResults, trueResults):
+def generateCSV(truth, results, tests):
   '''
-  log the raw lists of results to text files
-  good for doing large trials on learning strategies.
+  log resuls as a CSV, columns for tests, rows for profiles.
   '''
 
-  results = open('results-' + sys.argv[1] + '.dat', 'w')
-  true = open('true-' + sys.argv[1] + '.dat', 'w')
+  d = {}
+  for i, testName in enumerate(tests):
+    d[testName] = results[i]
 
-  results.write(json.dumps([ [bool(j) for j in i] for i in testResults]))
-  true.write(json.dumps([bool(i) for i in trueResults] ))
+  df = pandas.DataFrame(d)
+  df.insert(0, 'True Flags', truth)
+
+  df.to_csv('results-' + sys.argv[1] + '.csv')
 
 def parallel_function(f):
     '''
@@ -180,7 +183,7 @@ def processFile(fName):
     print('Number of profiles that failed ' + testNames[i] + ' was %i' % np.sum(testResults[i]))
   print('Number of profiles that should have been failed was %i' % np.sum(trueResults))
 
-  return trueResults, testResults
+  return trueResults, testResults, testNames
 
 ########################################
 # main
@@ -191,28 +194,26 @@ def processFile(fName):
 # read later.
 filenames = main.readInput('datafiles.json')
 
-processFile.parallel = parallel_function(processFile)
-parallel_result = processFile.parallel(filenames)
+if len(sys.argv)>1:
+  processFile.parallel = parallel_function(processFile)
+  parallel_result = processFile.parallel(filenames)
+  #recombine results
+  truth = parallel_result[0][0]
+  results = parallel_result[0][1]
+  tests = parallel_result[0][2]
 
-#recombine results
-truth = parallel_result[0][0]
-results = parallel_result[0][1]
-
-for i in range(1, len(parallel_result)):
-  truth = truth + parallel_result[i][0]
-
-  for j in range(len(parallel_result[i][1])):
-    results[j] = results[j] + parallel_result[i][1][j]
-
-dumpRawResults(results, truth)
-
+  generateCSV(truth, results, tests)
+else:
+  print 'Please add a command line argument to name your output file:'
+  print 'python AutoQC myFile'
+  print 'will result in output written to results-myFile.csv'
 
 
 
 
 
 
-
+# deprecated - should run all plotting and analysis on csv output
 
 # generate a set of logical combinations of tests
 #combos = combinatorics.combineTests(testResults)
