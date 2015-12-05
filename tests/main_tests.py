@@ -178,5 +178,22 @@ class TestClass():
 
         assert_frame_equal(df, dfTrue, check_names=True)
 
+    def parallelization_test(self):
+        '''
+        simple test to check parallelization infrastructure
+        '''
+
+        dummy.parallel = main.parallel_function(dummy)
+        parallel_result = dummy.parallel([1,2])
+
+        assert numpy.array_equal(parallel_result[0][0], [2,3])
+        assert numpy.array_equal(parallel_result[0][1], [4,5])
+        assert numpy.array_equal(parallel_result[1][0], [4,6])
+        assert numpy.array_equal(parallel_result[1][1], [8,10])
+
+def dummy(x):
+    return [2*x, 3*x], [4*x, 5*x]
+
+
 
 

@@ -82,24 +82,6 @@ def generateLogfile(verbose, trueVerbose, profiles, testNames):
 
     logfile.write('-----------------------------------------\n')
 
-def parallel_function(f):
-    '''
-    thanks http://scottsievert.github.io/blog/2014/07/30/simple-python-parallelism/
-    '''
-    def easy_parallize(f, sequence):
-        """ assumes f takes sequence as input, easy w/ Python's scope """
-        from multiprocessing import Pool
-        pool = Pool(processes=int(sys.argv[2])) # depends on available cores
-        result = pool.map(f, sequence) # for i in sequence: result[i] = f(i)
-        cleaned = [x for x in result if not x is None] # getting results
-        cleaned = np.asarray(cleaned)
-        pool.close() # not optimal! but easy
-        pool.join()
-        return cleaned
-    from functools import partial
-    return partial(easy_parallize, f)
-
-
 def processFile(fName):
   profiles = main.extractProfiles([fName])
   print('{} profiles will be read'.format(len(profiles)))
@@ -175,7 +157,7 @@ def processFile(fName):
 filenames = main.readInput('datafiles.json')
 
 if len(sys.argv)>2:
-  processFile.parallel = parallel_function(processFile)
+  processFile.parallel = main.parallel_function(processFile, sys.argv[2])
   parallel_result = processFile.parallel(filenames)
   #recombine results
   truth = parallel_result[0][0]

@@ -1,6 +1,6 @@
 ## helper functions used in the top level AutoQC.py
 
-import json, os, glob, time, pandas, csv
+import json, os, glob, time, pandas, csv, sys
 import numpy as np
 from wodpy import wod
 from netCDF4 import Dataset
@@ -105,3 +105,20 @@ def generateCSV(truth, results, tests, primaryKeys, name):
   df.to_csv('results-' + name + '.csv')
 
   return df # for testing
+
+def parallel_function(f, nfold=2):
+    '''
+    thanks http://scottsievert.github.io/blog/2014/07/30/simple-python-parallelism/
+    '''
+    def easy_parallize(f, sequence):
+        """ assumes f takes sequence as input, easy w/ Python's scope """
+        from multiprocessing import Pool
+        pool = Pool(processes=int(nfold)) # depends on available cores
+        result = pool.map(f, sequence) # for i in sequence: result[i] = f(i)
+        cleaned = [x for x in result if not x is None] # getting results
+        cleaned = np.asarray(cleaned)
+        pool.close() # not optimal! but easy
+        pool.join()
+        return cleaned
+    from functools import partial
+    return partial(easy_parallize, f)
