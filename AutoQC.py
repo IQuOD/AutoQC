@@ -6,7 +6,7 @@ import sys, os, json
 import util.combineTests as combinatorics
 import util.benchmarks as benchmarks
 import util.main as main
-import pandas
+import qctests.EN_background_check as EN_bkg
 
 def run(test, profiles, kwargs):
   '''
@@ -83,20 +83,6 @@ def generateLogfile(verbose, trueVerbose, profiles, testNames):
 
     logfile.write('-----------------------------------------\n')
 
-def generateCSV(truth, results, tests):
-  '''
-  log resuls as a CSV, columns for tests, rows for profiles.
-  '''
-
-  d = {}
-  for i, testName in enumerate(tests):
-    d[testName] = results[i]
-
-  df = pandas.DataFrame(d)
-  df.insert(0, 'True Flags', truth)
-
-  df.to_csv('results-' + sys.argv[1] + '.csv')
-
 def parallel_function(f):
     '''
     thanks http://scottsievert.github.io/blog/2014/07/30/simple-python-parallelism/
@@ -104,7 +90,7 @@ def parallel_function(f):
     def easy_parallize(f, sequence):
         """ assumes f takes sequence as input, easy w/ Python's scope """
         from multiprocessing import Pool
-        pool = Pool(processes=4) # depends on available cores
+        pool = Pool(processes=int(sys.argv[2])) # depends on available cores
         result = pool.map(f, sequence) # for i in sequence: result[i] = f(i)
         cleaned = [x for x in result if not x is None] # getting results
         cleaned = np.asarray(cleaned)
@@ -125,11 +111,9 @@ def processFile(fName):
   print('{} quality control checks will be applied:'.format(len(testNames)))
   for testName in testNames:
     print(' {}'.format(testName))
-    exec('from qctests import ' + testName)
 
   # Set up any keyword arguments needed by tests.
-  kwargs = {'profiles' : profiles}
-  main.readENBackgroundCheckAux(testNames, kwargs)
+  kwargs = {}
 
   # run each test on each profile, and record its summary & verbose performance
   testResults  = []
@@ -141,8 +125,6 @@ def processFile(fName):
   currentFile  = ''
   f = None
   for iprofile, pinfo in enumerate(profiles):
-    if iprofile >= 1000000:
-      break
     # Load the profile data.
     p, currentFile, f = main.profileData(pinfo, currentFile, f)
     # Check that there are temperature data in the profile, otherwise skip.
@@ -194,7 +176,7 @@ def processFile(fName):
 # read later.
 filenames = main.readInput('datafiles.json')
 
-if len(sys.argv)>1:
+if len(sys.argv)>2:
   processFile.parallel = parallel_function(processFile)
   parallel_result = processFile.parallel(filenames)
   #recombine results
@@ -202,29 +184,8 @@ if len(sys.argv)>1:
   results = parallel_result[0][1]
   tests = parallel_result[0][2]
 
-  generateCSV(truth, results, tests)
+  main.generateCSV(truth, results, tests, sys.argv[1])
 else:
-  print 'Please add a command line argument to name your output file:'
-  print 'python AutoQC myFile'
-  print 'will result in output written to results-myFile.csv'
-
-
-
-
-
-
-# deprecated - should run all plotting and analysis on csv output
-
-# generate a set of logical combinations of tests
-#combos = combinatorics.combineTests(testResults)
-#print('Number of combinations that were tried was %i' % len(combos))
-
-# Compare the combinations to the truth.
-#bmResults = benchmarks.compare_to_truth(combos, trueResults)
-
-# Plot the results.
-#benchmarks.plot_roc(bmResults)
-
-#logfile
-#generateLogfile(testVerbose, trueVerbose, profiles, testNames)
-#dumpRawResults(testResults, trueResults)
+  print 'Please add command line arguments to name your output file and set parallelization:'
+  print 'python AutoQC myFile 4'
+  print 'will result in output written to results-myFile.csv, and will run the calculation parallelized across 4 cores.'

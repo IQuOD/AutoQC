@@ -157,3 +157,22 @@ class TestClass():
 
         assert ref[0][0] == False, 'incorrect extraction of overall reference result for data/example.dat'
         assert numpy.array_equal(ref[1][0], [False, False, False, False] ), 'incorrect extraction of verbose reference results for data/example.dat'
+
+    def generateCSV_test(self):
+        '''
+        make sure things are being packed into dataframes correctly;
+        assumes Pandas writes dataframes to csv correctly. 
+        '''
+
+        truth = [True, False, True]
+        results = [
+            [False, False, False],
+            [True, True, True]
+        ]
+        tests = ['x', 'y']
+
+        df = main.generateCSV(truth, results, tests, 'test')
+
+        print df['x']
+
+        assert False

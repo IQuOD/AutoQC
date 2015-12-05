@@ -87,3 +87,5 @@ def readWOD_temperature_ranges(filename='data/WOD_ranges_Temperature.csv'):
 regionCodes = readRegionCodes()
 cellCodes = readCellCodes()
 WODtempRanges = readWOD_temperature_ranges()
+
+records = {'backgroundAux':None}

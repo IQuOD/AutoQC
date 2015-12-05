@@ -6,6 +6,9 @@ system, http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 import EN_spike_and_step_check
 import numpy as np
 import util.obs_utils as outils
+from netCDF4 import Dataset
+import os
+import data.ds as ds
 
 def test(p, *args, **kwargs):
     """ 
@@ -14,15 +17,14 @@ def test(p, *args, **kwargs):
     passed the check and True where it failed. 
     """
 
+    if ds.records['backgroundAux'] is None:
+        ds.records['backgroundAux'] = readENBackgroundCheckAux()
+
     # Define an array to hold results.
     qc    = np.zeros(p.n_levels(), dtype=bool)
-
-    # Check that we have the auxiliary information we need, otherwise we
-    # will just return.
-    if kwargs['EN_background_check_aux'] is None: return qc
     
     # If we are here then the auxiliary information is available.
-    aux = kwargs['EN_background_check_aux']
+    aux = ds.records['backgroundAux']
     
     # Find grid cell nearest to the observation.
     ilon, ilat = findGridCell(p, aux['lon'], aux['lat'])
@@ -140,3 +142,22 @@ def estimatePGE(probe_type, isSuspect):
         pge = 0.5 + 0.5 * pge
 
     return pge
+
+def readENBackgroundCheckAux():
+    '''
+    Reads auxiliary information needed by the EN background check.
+    '''
+    filename = 'data/EN_bgcheck_info.nc'
+    nc = Dataset(filename)
+    data = {}
+    data['lon']   = nc.variables['longitude'][:]
+    data['lat']   = nc.variables['latitude'][:]
+    data['depth'] = nc.variables['depth'][:]
+    data['month'] = nc.variables['month'][:]
+    data['clim']  = nc.variables['potm_climatology'][:]
+    data['bgev']  = nc.variables['bg_err_var'][:]
+    data['obev']  = nc.variables['ob_err_var'][:]
+    
+    return data
+
+

@@ -1,10 +1,9 @@
 ## helper functions used in the top level AutoQC.py
 
-import json, os, glob, time
+import json, os, glob, time, pandas, csv
 import numpy as np
 from wodpy import wod
 from netCDF4 import Dataset
-import csv
 
 def readInput(JSONlist):
     '''Create a list of data file names from a json array.'''
@@ -89,22 +88,19 @@ def referenceResults(profiles):
     verbose.append(refAssessment)
   return [refResult, verbose]
 
-def readENBackgroundCheckAux(testNames, kwargs):
-  '''
-  Reads auxiliary information needed by the EN background check.
-  '''
-  filename = 'data/EN_bgcheck_info.nc'
-  if 'EN_background_check' in testNames and os.path.isfile(filename):
-    nc = Dataset(filename)
-    data = {}
-    data['lon']   = nc.variables['longitude'][:]
-    data['lat']   = nc.variables['latitude'][:]
-    data['depth'] = nc.variables['depth'][:]
-    data['month'] = nc.variables['month'][:]
-    data['clim']  = nc.variables['potm_climatology'][:]
-    data['bgev']  = nc.variables['bg_err_var'][:]
-    data['obev']  = nc.variables['ob_err_var'][:]
-    kwargs['EN_background_check_aux'] = data
-  else:
-    kwargs['EN_background_check_aux'] = None
 
+def generateCSV(truth, results, tests, name):
+  '''
+  log resuls as a CSV, columns for tests, rows for profiles.
+  '''
+
+  d = {}
+  for i, testName in enumerate(tests):
+    d[testName] = results[i]
+
+  df = pandas.DataFrame(d)
+  df.insert(0, 'True Flags', truth)
+
+  df.to_csv('results-' + name + '.csv')
+
+  return df
