@@ -116,6 +116,7 @@ def processFile(fName):
   testVerbose  = []
   trueResults  = []
   trueVerbose  = []
+  profileIDs   = []
   firstProfile = True
   delete       = []
   currentFile  = ''
@@ -146,6 +147,7 @@ def processFile(fName):
     truth = main.referenceResults([p])
     trueResults.append(truth[0][0])
     trueVerbose.append(truth[1][0])
+    profileIDs.append(p.uid())
     # Update user on progress.
     sys.stdout.write('{:5.1f}% complete\r'.format((iprofile+1)*100.0/len(profiles)))
     sys.stdout.flush()
@@ -161,7 +163,7 @@ def processFile(fName):
     print('Number of profiles that failed ' + testNames[i] + ' was %i' % np.sum(testResults[i]))
   print('Number of profiles that should have been failed was %i' % np.sum(trueResults))
 
-  return trueResults, testResults, testNames
+  return trueResults, testResults, testNames, profileIDs
 
 ########################################
 # main
@@ -179,8 +181,9 @@ if len(sys.argv)>2:
   truth = parallel_result[0][0]
   results = parallel_result[0][1]
   tests = parallel_result[0][2]
+  profileIDs = parallel_result[0][3]
 
-  main.generateCSV(truth, results, tests, sys.argv[1])
+  main.generateCSV(truth, results, tests, profileIDs, sys.argv[1])
 else:
   print 'Please add command line arguments to name your output file and set parallelization:'
   print 'python AutoQC myFile 4'

@@ -89,7 +89,7 @@ def referenceResults(profiles):
   return [refResult, verbose]
 
 
-def generateCSV(truth, results, tests, name):
+def generateCSV(truth, results, tests, primaryKeys, name):
   '''
   log resuls as a CSV, columns for tests, rows for profiles.
   '''
@@ -98,7 +98,8 @@ def generateCSV(truth, results, tests, name):
   for i, testName in enumerate(tests):
     d[testName] = results[i]
 
-  df = pandas.DataFrame(d)
+  df = pandas.DataFrame(d, index=primaryKeys)
+
   df.insert(0, 'True Flags', truth)
 
   df.to_csv('results-' + name + '.csv')

@@ -1,7 +1,8 @@
 import util.main as main
 import os
 from wodpy import wod
-import numpy
+import numpy, pandas
+from pandas.util.testing import assert_frame_equal
 
 class TestClass():
     def setUp(self):
@@ -164,15 +165,18 @@ class TestClass():
         assumes Pandas writes dataframes to csv correctly. 
         '''
 
-        truth = [True, False, True]
+        truth = [True, False, False]
         results = [
             [False, False, False],
             [True, True, True]
         ]
         tests = ['x', 'y']
+        keys = [1000,1001,1002]
 
-        df = main.generateCSV(truth, results, tests, 'test')
+        df = main.generateCSV(truth, results, tests, keys, 'test')
+        dfTrue = pandas.DataFrame([[True, False, True],[False, False, True],[False, False, True]], index=keys, columns=['True Flags', 'x', 'y'])
 
-        print df
+        assert_frame_equal(df, dfTrue, check_names=True)
 
-        assert False
+
+

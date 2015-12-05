@@ -16,7 +16,7 @@ def test(p, *args):
     """
 
     # Define an array to hold results.
-    qc    = np.zeros(p.n_levels(), dtype=bool)
+    qc = np.zeros(p.n_levels(), dtype=bool)
     
     # Find grid cell nearest to the observation.
     ilon, ilat = findGridCell(p, auxParam['lon'], auxParam['lat'])
