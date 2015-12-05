@@ -173,6 +173,6 @@ class TestClass():
 
         df = main.generateCSV(truth, results, tests, 'test')
 
-        print df['x']
+        print df
 
         assert False

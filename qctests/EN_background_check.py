@@ -7,34 +7,26 @@ import EN_spike_and_step_check
 import numpy as np
 import util.obs_utils as outils
 from netCDF4 import Dataset
-import os
-import data.ds as ds
 
-def test(p, *args, **kwargs):
+def test(p, *args):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 
     passed the check and True where it failed. 
     """
 
-    if ds.records['backgroundAux'] is None:
-        ds.records['backgroundAux'] = readENBackgroundCheckAux()
-
     # Define an array to hold results.
     qc    = np.zeros(p.n_levels(), dtype=bool)
     
-    # If we are here then the auxiliary information is available.
-    aux = ds.records['backgroundAux']
-    
     # Find grid cell nearest to the observation.
-    ilon, ilat = findGridCell(p, aux['lon'], aux['lat'])
+    ilon, ilat = findGridCell(p, auxParam['lon'], auxParam['lat'])
         
     # Extract the relevant auxiliary data.
     imonth = p.month() - 1
-    clim = aux['clim'][:, ilat, ilon, imonth]
-    bgev = aux['bgev'][:, ilat, ilon]
-    obev = aux['obev']
-    depths = aux['depth']
+    clim = auxParam['clim'][:, ilat, ilon, imonth]
+    bgev = auxParam['bgev'][:, ilat, ilon]
+    obev = auxParam['obev']
+    depths = auxParam['depth']
     
     # Remove missing data points.
     iOK = (clim.mask == False) & (bgev.mask == False)
@@ -147,6 +139,7 @@ def readENBackgroundCheckAux():
     '''
     Reads auxiliary information needed by the EN background check.
     '''
+
     filename = 'data/EN_bgcheck_info.nc'
     nc = Dataset(filename)
     data = {}
@@ -161,3 +154,5 @@ def readENBackgroundCheckAux():
     return data
 
 
+#import parameters on load
+auxParam = readENBackgroundCheckAux()

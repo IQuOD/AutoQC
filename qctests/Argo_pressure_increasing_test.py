@@ -8,7 +8,7 @@ http://w3.jcommops.org/FTPRoot/Argo/Doc/argo-quality-control-manual.pdf page 8.
 
 import numpy as np
 
-def test(p, **kwargs):
+def test(p):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 

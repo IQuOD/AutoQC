@@ -6,9 +6,8 @@ import sys, os, json
 import util.combineTests as combinatorics
 import util.benchmarks as benchmarks
 import util.main as main
-import qctests.EN_background_check as EN_bkg
 
-def run(test, profiles, kwargs):
+def run(test, profiles):
   '''
   run <test> on a list of <profiles>, return an array summarizing when exceptions were raised
   '''
@@ -16,7 +15,7 @@ def run(test, profiles, kwargs):
   verbose = []
   exec('from qctests import ' + test)
   for profile in profiles:
-    exec('result = ' + test + '.test(profile, **kwargs)')
+    exec('result = ' + test + '.test(profile)')
 
     #demand tests returned bools:
     for i in result:
@@ -112,9 +111,6 @@ def processFile(fName):
   for testName in testNames:
     print(' {}'.format(testName))
 
-  # Set up any keyword arguments needed by tests.
-  kwargs = {}
-
   # run each test on each profile, and record its summary & verbose performance
   testResults  = []
   testVerbose  = []
@@ -138,7 +134,7 @@ def processFile(fName):
       continue
     # Run each test.    
     for itest, test in enumerate(testNames):
-      result = run(test, [p], kwargs)
+      result = run(test, [p])
       if firstProfile:
         testResults.append(result[0])
         testVerbose.append(result[1])

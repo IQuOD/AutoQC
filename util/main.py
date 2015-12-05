@@ -103,4 +103,4 @@ def generateCSV(truth, results, tests, name):
 
   df.to_csv('results-' + name + '.csv')
 
-  return df
+  return df # for testing

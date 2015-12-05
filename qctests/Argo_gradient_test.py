@@ -4,7 +4,7 @@ Implements the gradient test on page 8 of http://w3.jcommops.org/FTPRoot/Argo/Do
 
 import numpy
 
-def test(p, **kwargs):
+def test(p):
     """
     Runs the quality control check on profile p and returns a numpy array
     of quality control decisions with False where the data value has
