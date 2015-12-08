@@ -4,8 +4,9 @@ import main
 import math
 from wodpy import wod
 
-filename = '../../AutoQC_raw/quota/quota_all.dat'
+#filename = '../../AutoQC_raw/quota/quota_all.dat'
 #filename = '../data/quota_subset.dat'
+filename = '../../AutoQC_raw/quota/test/chunk.dat'
 n = 30
 
 fid = open(filename)
