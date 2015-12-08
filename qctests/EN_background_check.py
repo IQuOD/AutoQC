@@ -6,8 +6,9 @@ system, http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 import EN_spike_and_step_check
 import numpy as np
 import util.obs_utils as outils
+from netCDF4 import Dataset
 
-def test(p, *args, **kwargs):
+def test(p, *args):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 
@@ -15,24 +16,17 @@ def test(p, *args, **kwargs):
     """
 
     # Define an array to hold results.
-    qc    = np.zeros(p.n_levels(), dtype=bool)
-
-    # Check that we have the auxiliary information we need, otherwise we
-    # will just return.
-    if kwargs['EN_background_check_aux'] is None: return qc
-    
-    # If we are here then the auxiliary information is available.
-    aux = kwargs['EN_background_check_aux']
+    qc = np.zeros(p.n_levels(), dtype=bool)
     
     # Find grid cell nearest to the observation.
-    ilon, ilat = findGridCell(p, aux['lon'], aux['lat'])
+    ilon, ilat = findGridCell(p, auxParam['lon'], auxParam['lat'])
         
     # Extract the relevant auxiliary data.
     imonth = p.month() - 1
-    clim = aux['clim'][:, ilat, ilon, imonth]
-    bgev = aux['bgev'][:, ilat, ilon]
-    obev = aux['obev']
-    depths = aux['depth']
+    clim = auxParam['clim'][:, ilat, ilon, imonth]
+    bgev = auxParam['bgev'][:, ilat, ilon]
+    obev = auxParam['obev']
+    depths = auxParam['depth']
     
     # Remove missing data points.
     iOK = (clim.mask == False) & (bgev.mask == False)
@@ -140,3 +134,25 @@ def estimatePGE(probe_type, isSuspect):
         pge = 0.5 + 0.5 * pge
 
     return pge
+
+def readENBackgroundCheckAux():
+    '''
+    Reads auxiliary information needed by the EN background check.
+    '''
+
+    filename = 'data/EN_bgcheck_info.nc'
+    nc = Dataset(filename)
+    data = {}
+    data['lon']   = nc.variables['longitude'][:]
+    data['lat']   = nc.variables['latitude'][:]
+    data['depth'] = nc.variables['depth'][:]
+    data['month'] = nc.variables['month'][:]
+    data['clim']  = nc.variables['potm_climatology'][:]
+    data['bgev']  = nc.variables['bg_err_var'][:]
+    data['obev']  = nc.variables['ob_err_var'][:]
+    
+    return data
+
+
+#import parameters on load
+auxParam = readENBackgroundCheckAux()

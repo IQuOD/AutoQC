@@ -1,7 +1,8 @@
 import util.main as main
 import os
 from wodpy import wod
-import numpy
+import numpy, pandas
+from pandas.util.testing import assert_frame_equal
 
 class TestClass():
     def setUp(self):
@@ -157,3 +158,42 @@ class TestClass():
 
         assert ref[0][0] == False, 'incorrect extraction of overall reference result for data/example.dat'
         assert numpy.array_equal(ref[1][0], [False, False, False, False] ), 'incorrect extraction of verbose reference results for data/example.dat'
+
+    def generateCSV_test(self):
+        '''
+        make sure things are being packed into dataframes correctly;
+        assumes Pandas writes dataframes to csv correctly. 
+        '''
+
+        truth = [True, False, False]
+        results = [
+            [False, False, False],
+            [True, True, True]
+        ]
+        tests = ['x', 'y']
+        keys = [1000,1001,1002]
+
+        df = main.generateCSV(truth, results, tests, keys, 'test')
+        dfTrue = pandas.DataFrame([[True, False, True],[False, False, True],[False, False, True]], index=keys, columns=['True Flags', 'x', 'y'])
+
+        assert_frame_equal(df, dfTrue, check_names=True)
+
+    def parallelization_test(self):
+        '''
+        simple test to check parallelization infrastructure
+        '''
+
+        dummy.parallel = main.parallel_function(dummy)
+        parallel_result = dummy.parallel([1,2])
+
+        assert numpy.array_equal(parallel_result[0][0], [2,3])
+        assert numpy.array_equal(parallel_result[0][1], [4,5])
+        assert numpy.array_equal(parallel_result[1][0], [4,6])
+        assert numpy.array_equal(parallel_result[1][1], [8,10])
+
+def dummy(x):
+    return [2*x, 3*x], [4*x, 5*x]
+
+
+
+
