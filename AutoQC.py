@@ -118,14 +118,18 @@ def parallel_function(f):
 def processFile(fName):
   profiles = main.extractProfiles([fName])
   print('{} profiles will be read'.format(len(profiles)))
+  print('')
 
   # identify and import tests
   testNames = main.importQC('qctests')
   testNames.sort()
-  print('{} quality control checks will be applied:'.format(len(testNames)))
+  print('{} quality control checks have been found'.format(len(testNames)))
+  testNames = main.checkQCTestRequirements(testNames)
+  print('{} quality control checks are able to be run:'.format(len(testNames)))
   for testName in testNames:
-    print(' {}'.format(testName))
+    print('  {}'.format(testName))
     exec('from qctests import ' + testName)
+  print('')
 
   # Set up any keyword arguments needed by tests.
   kwargs = {'profiles' : profiles}
@@ -169,7 +173,7 @@ def processFile(fName):
     trueResults.append(truth[0][0])
     trueVerbose.append(truth[1][0])
     # Update user on progress.
-    sys.stdout.write('{:5.1f}% complete\r'.format((iprofile+1)*100.0/len(profiles)))
+    sys.stdout.write('QC of profiles is {:5.1f}% complete\r'.format((iprofile+1)*100.0/len(profiles)))
     sys.stdout.flush()
   # testResults[i][j] now contains a flag indicating the exception raised by test i on profile j
 
@@ -178,10 +182,18 @@ def processFile(fName):
     del profiles[i]
 
   # Summary statistics
+  print('')
+  print('')
   print('Number of profiles tested was %i' % len(profiles))
+  print('')
+  print('%30s %7s %7s %7s %7s %7s' % ('NAME OF TEST', 'FAILS', 'TPR', 'FPR', 'TNR', 'FNR')) 
+  overallResults = np.zeros(len(profiles), dtype=bool)
   for i in range (0, len(testNames)):
-    print('Number of profiles that failed ' + testNames[i] + ' was %i' % np.sum(testResults[i]))
-  print('Number of profiles that should have been failed was %i' % np.sum(trueResults))
+    overallResults = np.logical_or(overallResults, testResults[i])
+    tpr, fpr, fnr, tnr = main.calcRates(testResults[i], trueResults)
+    print('%30s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % (testNames[i], np.sum(testResults[i]), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
+  tpr, fpr, fnr, tnr = main.calcRates(overallResults, trueResults)
+  print('%30s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % ('RESULT OF OR OF ALL:', np.sum(overallResults), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
 
   return trueResults, testResults, testNames
 
