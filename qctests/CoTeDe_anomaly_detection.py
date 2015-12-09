@@ -1,6 +1,6 @@
 from cotede_qc.cotede_test import get_qc
 
-def test(p, **kwargs):
+def test(p):
     '''Run the CoTeDe Anomaly Detection QC.'''
 
     config   = 'anomaly_detection'
