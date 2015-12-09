@@ -3,7 +3,7 @@ Implements the global range check used in the EN quality control
 system. 
 """
 
-def test(p, **kwargs):
+def test(p):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 
