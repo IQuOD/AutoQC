@@ -51,8 +51,9 @@ class DummyCNV(object):
         year  = self.p.year()
         month = self.p.month()
         day   = self.p.day()
+        if day == 0: day = 15
         time  = self.p.time()
-        if time is None:
+        if time is None or time < 0 or time >= 24:
             hours   = 0
             minutes = 0
             seconds = 0
