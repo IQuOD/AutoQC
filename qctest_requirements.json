@@ -1,0 +1,14 @@
+[
+  {
+    "applies_to":["EN_background_check"],
+    "qctests":["EN_spike_and_step_check"],
+    "data":["EN_bgcheck_info.nc"]
+  },
+  {
+    "applies_to":["CoTeDe_*"],
+    "modules":["cotede"]
+  }
+]
+ 
+
+

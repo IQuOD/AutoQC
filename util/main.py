@@ -1,6 +1,6 @@
 ## helper functions used in the top level AutoQC.py
 
-import json, os, glob, time, pandas, csv, sys
+import json, os, glob, time, pandas, csv, sys, fnmatch
 import numpy as np
 from wodpy import wod
 from netCDF4 import Dataset
@@ -122,3 +122,89 @@ def parallel_function(f, nfold=2):
         return cleaned
     from functools import partial
     return partial(easy_parallize, f)
+
+def checkQCTestRequirements(checks):
+  '''Reads set of requirements from qctest_requirements.json and
+     checks each QC test to see if their requirements are met.
+     A list of QC tests that meet requirements are returned.
+     Messages are printed to screen if a check does not meet
+     its requirements.
+  '''
+
+  # Read list of requirements to run the quality control checks.
+  # Each requirement is defined in a dictionary. Each must 
+  # have an entry called 'applies_to'. This is a list of QC
+  # test names or search strings e.g. CoTeDe* that define
+  # which QC tests the requirements apply to. Other entries
+  # in the dictionary are optional and can include:
+  # 'modules' - a list of modules that are required by the test.
+  # 'qctests' - a list of other QC tests that are required.
+  # 'data' - a list of datafiles (in the data directory) that are needed.
+  # The check is repeated until no QC checks failing requirements
+  # are found. This is done because a dependency on another QC
+  # check may not be found on the first pass.
+  with open('qctest_requirements.json') as f:
+    reqs = json.load(f)
+
+  # First check for modules and data files.
+  changedList = True
+  while changedList:
+    changedList = False
+    okchecks = []
+    for check in checks:
+      use = True
+      for req in reqs:
+        applies = False
+        for applycheck in req['applies_to']:
+          if fnmatch.fnmatch(check, applycheck): applies = True # Needs wildcard functionality.
+        if applies:
+          if req.has_key('modules'):
+            for module in req['modules']:
+              try:
+                exec('import ' + module)
+              except:
+                use = False
+                print('  ' + check + ' not available without module ' + module)
+          if req.has_key('data'):
+            for datafile in req['data']:
+              if os.path.isfile('data/' + datafile) == False:
+                use = False
+                print('  ' + check + ' not available without file data/' + datafile)
+          if req.has_key('qctests'):
+            for qctest in req['qctests']:
+              if qctest not in checks:
+                use = False
+                print('  ' + check + ' not available without QC test ' + qctest)
+
+      if use: 
+        okchecks.append(check)
+      else:
+        changedList = True
+    checks      = okchecks
+
+  return checks
+
+def calcRates(testResults, trueResults):
+  '''Given two boolean numpy arrays or lists, the true and false, positive and negative rates
+     are calculated.
+  '''
+  # Ensure we have numpy arrays.
+  testResultsNp = np.array(testResults)
+  trueResultsNp = np.array(trueResults)
+
+  # Calculate number of passes, fails.
+  nTrueRejects = np.sum(trueResultsNp)
+  nTruePasses  = np.sum(trueResultsNp == False)
+
+  nFF = np.sum(np.logical_and(testResultsNp, trueResultsNp))
+  nFP = np.sum(np.logical_and(testResultsNp, trueResultsNp == False))
+  nPF = np.sum(np.logical_and(testResultsNp == False, trueResultsNp))
+  nPP = np.sum(np.logical_and(testResultsNp == False, trueResultsNp == False))
+
+  # Calculate rates.
+  tpr = nFF * 100.0 / nTrueRejects
+  fpr = nFP * 100.0 / nTruePasses
+  fnr = nPF * 100.0 / nTrueRejects
+  tnr = nPP * 100.0 / nTruePasses
+
+  return tpr, fpr, fnr, tnr 

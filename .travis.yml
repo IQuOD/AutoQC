@@ -19,6 +19,8 @@ before_install:
 install:
   #- conda install -y -c https://conda.binstar.org/jjhelmus pyproj
   - pip install wodpy
+  - pip install seabird
+  - pip install cotede
 before_script:
 # download auxiliary data
   - cd data; curl -O http://www.metoffice.gov.uk/hadobs/en4/data/EN_bgcheck_info.nc; cd ..;

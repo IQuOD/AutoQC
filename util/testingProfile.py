@@ -41,6 +41,10 @@ class fakeProfile:
         assert self.primary_header['Longitude'] is not None, 'Longitude has not been set'
         return self.primary_header['Longitude']
 
+    def uid(self):
+        '''Returns nothing but needs to be present for some tests.'''
+        return None 
+
     def t(self):
         """ Returns a numpy masked array of temperatures. """
         return self.var_data(self.temperatures)
