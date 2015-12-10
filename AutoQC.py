@@ -1,10 +1,7 @@
 from wodpy import wod
 import glob, time
-import matplotlib.pyplot as plt
 import numpy as np
 import sys, os, json
-import util.combineTests as combinatorics
-import util.benchmarks as benchmarks
 import util.main as main
 import pandas
 
