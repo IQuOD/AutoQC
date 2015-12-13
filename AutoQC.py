@@ -86,17 +86,6 @@ def processFile(fName):
   print('{} profiles will be read'.format(len(profiles)))
   print('')
 
-  # identify and import tests
-  testNames = main.importQC('qctests')
-  testNames.sort()
-
-  print('{} quality control checks have been found'.format(len(testNames)))
-  testNames = main.checkQCTestRequirements(testNames)
-  print('{} quality control checks are able to be run:'.format(len(testNames)))
-  for testName in testNames:
-    print('  {}'.format(testName))
-  print('')
-
   # run each test on each profile, and record its summary & verbose performance
   testResults  = []
   testVerbose  = []
@@ -157,12 +146,22 @@ def processFile(fName):
   tpr, fpr, fnr, tnr = main.calcRates(overallResults, trueResults)
   print('%30s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % ('RESULT OF OR OF ALL:', np.sum(overallResults), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
 
-  return trueResults, testResults, testNames, profileIDs
+  return trueResults, testResults, profileIDs
 
 
 ########################################
 # main
 ########################################
+
+# identify and import tests
+testNames = main.importQC('qctests')
+testNames.sort()
+print('{} quality control checks have been found'.format(len(testNames)))
+testNames = main.checkQCTestRequirements(testNames)
+print('{} quality control checks are able to be run:'.format(len(testNames)))
+for testName in testNames:
+  print('  {}'.format(testName))
+print('')
 
 # identify data files and extract profile information into an array - this
 # information is used by some quality control checks; the profile data are
@@ -175,15 +174,14 @@ if len(sys.argv)>2:
   #recombine results
   truth = parallel_result[0][0]
   results = parallel_result[0][1]
-  tests = parallel_result[0][2]
-  profileIDs = parallel_result[0][3]
+  profileIDs = parallel_result[0][2]
   for pr in parallel_result[1:]:
     truth      += pr[0]
     for itr, tr in enumerate(pr[1]):
       results[itr] += tr
-    profileIDs += pr[3]
+    profileIDs += pr[2]
 
-  main.generateCSV(truth, results, tests, profileIDs, sys.argv[1])
+  main.generateCSV(truth, results, testNames, profileIDs, sys.argv[1])
 else:
   print 'Please add command line arguments to name your output file and set parallelization:'
   print 'python AutoQC myFile 4'
