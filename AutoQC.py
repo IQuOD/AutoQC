@@ -132,20 +132,6 @@ def processFile(fName):
   for i in reversed(delete):
     del profiles[i]
 
-  # Summary statistics
-  print('')
-  print('')
-  print('Number of profiles tested was %i' % len(profiles))
-  print('')
-  print('%30s %7s %7s %7s %7s %7s' % ('NAME OF TEST', 'FAILS', 'TPR', 'FPR', 'TNR', 'FNR')) 
-  overallResults = np.zeros(len(profiles), dtype=bool)
-  for i in range (0, len(testNames)):
-    overallResults = np.logical_or(overallResults, testResults[i])
-    tpr, fpr, fnr, tnr = main.calcRates(testResults[i], trueResults)
-    print('%30s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % (testNames[i], np.sum(testResults[i]), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
-  tpr, fpr, fnr, tnr = main.calcRates(overallResults, trueResults)
-  print('%30s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % ('RESULT OF OR OF ALL:', np.sum(overallResults), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
-
   return trueResults, testResults, profileIDs
 
 
@@ -180,6 +166,21 @@ if len(sys.argv)>2:
     for itr, tr in enumerate(pr[1]):
       results[itr] += tr
     profileIDs += pr[2]
+
+  # Summary statistics
+  nProfiles = len(truth)
+  print('')
+  print('')
+  print('Number of profiles tested was %i' % nProfiles)
+  print('')
+  print('%30s %7s %7s %7s %7s %7s' % ('NAME OF TEST', 'FAILS', 'TPR', 'FPR', 'TNR', 'FNR')) 
+  overallResults = np.zeros(nProfiles, dtype=bool)
+  for i in range (0, len(testNames)):
+    overallResults = np.logical_or(overallResults, results[i])
+    tpr, fpr, fnr, tnr = main.calcRates(results[i], truth)
+    print('%30s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % (testNames[i], np.sum(results[i]), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
+  tpr, fpr, fnr, tnr = main.calcRates(overallResults, truth)
+  print('%30s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % ('RESULT OF OR OF ALL:', np.sum(overallResults), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
 
   main.generateCSV(truth, results, testNames, profileIDs, sys.argv[1])
 else:
