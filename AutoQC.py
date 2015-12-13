@@ -177,6 +177,11 @@ if len(sys.argv)>2:
   results = parallel_result[0][1]
   tests = parallel_result[0][2]
   profileIDs = parallel_result[0][3]
+  for pr in parallel_result[1:]:
+    truth      += pr[0]
+    for itr, tr in enumerate(pr[1]):
+      results[itr] += tr
+    profileIDs += pr[3]
 
   main.generateCSV(truth, results, tests, profileIDs, sys.argv[1])
 else:
