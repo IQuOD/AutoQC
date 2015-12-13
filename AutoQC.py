@@ -100,13 +100,9 @@ def processFile(fName):
     # Load the profile data.
     p, currentFile, f = main.profileData(pinfo, currentFile, f)
     # Check that there are temperature data in the profile, otherwise skip.
-    # A record is kept of the empty profiles.
     if p.var_index() is None:
-      delete.append(iprofile)
       continue
-    main.catchFlags(p)
     if np.sum(p.t().mask == False) == 0:
-      delete.append(iprofile)
       continue
     # Run each test.    
     for itest, test in enumerate(testNames):
@@ -127,10 +123,6 @@ def processFile(fName):
     sys.stdout.write('QC of profiles is {:5.1f}% complete\r'.format((iprofile+1)*100.0/len(profiles)))
     sys.stdout.flush()
   # testResults[i][j] now contains a flag indicating the exception raised by test i on profile j
-
-  # Remove records of profiles with no temperature data.
-  for i in reversed(delete):
-    del profiles[i]
 
   return trueResults, testResults, profileIDs
 

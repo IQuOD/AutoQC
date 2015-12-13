@@ -46,7 +46,9 @@ def profileData(pinfo, currentFile, f):
     currentFile = pinfo.file_name
     f = open(currentFile)
   if f.tell() != pinfo.file_position: f.seek(pinfo.file_position)
-  return wod.WodProfile(f), currentFile, f
+  profile = wod.WodProfile(f)
+  catchFlags(profile)
+  return profile, currentFile, f
 
 def importQC(dir):
   '''
