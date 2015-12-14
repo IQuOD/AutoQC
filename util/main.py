@@ -214,7 +214,7 @@ def calcRates(testResults, trueResults):
 def printSummary(truth, results, testNames):
 
   nProfiles = len(truth)
-  print('\n\nNumber of profiles tested was %i\n' % nProfiles)
+  print('Number of profiles tested was %i\n' % nProfiles)
   print('%30s %7s %7s %7s %7s %7s' % ('NAME OF TEST', 'FAILS', 'TPR', 'FPR', 'TNR', 'FNR')) 
   overallResults = np.zeros(nProfiles, dtype=bool)
   for i in range (0, len(testNames)):

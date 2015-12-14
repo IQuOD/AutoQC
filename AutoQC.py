@@ -24,6 +24,8 @@ def run(test, profiles):
   return [qcResults, verbose]
 
 def processFile(fName):
+  profiles  = main.extractProfiles([fName])
+
   # run each test on each profile, and record its summary & verbose performance
   testResults  = []
   testVerbose  = []
@@ -56,9 +58,6 @@ def processFile(fName):
     trueResults.append(truth[0][0])
     trueVerbose.append(truth[1][0])
     profileIDs.append(p.uid())
-    # Update user on progress.
-    sys.stdout.write('QC of profiles is {:5.1f}% complete\r'.format((iprofile+1)*100.0/len(profiles)))
-    sys.stdout.flush()
   # testResults[i][j] now contains a flag indicating the exception raised by test i on profile j
 
   return trueResults, testResults, profileIDs
@@ -68,27 +67,25 @@ def processFile(fName):
 # main
 ########################################
 
-# identify and import tests
-testNames = main.importQC('qctests')
-testNames.sort()
-print('{} quality control checks have been found'.format(len(testNames)))
-testNames = main.checkQCTestRequirements(testNames)
-print('{} quality control checks are able to be run:'.format(len(testNames)))
-for testName in testNames:
-  print('  {}'.format(testName))
-
-# identify data files and extract profile information into an array - this
-# information is used by some quality control checks; the profile data are
-# read later.
-filenames = main.readInput('datafiles.json')
-profiles  = main.extractProfiles(filenames)
-print('\n{} profiles will be read\n'.format(len(profiles)))
-
 if len(sys.argv)>2:
-  nProcessed = 0
+  # Identify and import tests
+  testNames = main.importQC('qctests')
+  testNames.sort()
+  print('{} quality control checks have been found'.format(len(testNames)))
+  testNames = main.checkQCTestRequirements(testNames)
+  print('{} quality control checks are able to be run:'.format(len(testNames)))
+  for testName in testNames:
+    print('  {}'.format(testName))
+
+  # Identify data files.
+  filenames = main.readInput('datafiles.json')
+
+  # Parallel processing.
+  print('\nPlease wait while QC is performed\n')
   processFile.parallel = main.parallel_function(processFile, sys.argv[2])
   parallel_result = processFile.parallel(filenames)
-  #recombine results
+
+  # Recombine results
   truth = parallel_result[0][0]
   results = parallel_result[0][1]
   profileIDs = parallel_result[0][2]
