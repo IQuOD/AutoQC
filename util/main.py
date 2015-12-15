@@ -224,3 +224,33 @@ def printSummary(truth, results, testNames):
   tpr, fpr, fnr, tnr = calcRates(overallResults, truth)
   print('%30s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % ('RESULT OF OR OF ALL:', np.sum(overallResults), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
 
+
+def combineArrays(parallelResults):
+  '''
+  given the results of processFile() run in parallel on several datasets,
+  recombine the results into a single set of lists for output to CSV.
+  '''
+
+  truth = parallelResults[0][0]
+  results = parallelResults[0][1]
+  profileIDs = parallelResults[0][2]
+  for pr in parallelResults[1:]:
+    truth      += pr[0]
+    for itr, tr in enumerate(pr[1]):
+      results[itr] += tr
+    profileIDs += pr[2]
+
+  return truth, results, profileIDs
+
+
+
+
+
+
+
+
+
+
+
+
+

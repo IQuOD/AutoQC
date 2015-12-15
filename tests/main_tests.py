@@ -191,6 +191,24 @@ class TestClass():
         assert numpy.array_equal(parallel_result[1][0], [4,6])
         assert numpy.array_equal(parallel_result[1][1], [8,10])
 
+    def combineArrays_test(self):
+        '''
+        spotcheck combineArrays
+        '''
+
+        parallel = [
+            [[0,1],[[100,101],[102,103],[104,105]], [992,993]],
+            [[2,3],[[200,201],[202,203],[204,205]], [994,995]],
+            [[4,5],[[300,301],[302,303],[304,305]], [996,997]],
+            [[6,7],[[400,401],[402,403],[404,405]], [998,999]]
+        ]
+
+        truth, results, ids = main.combineArrays(parallel)
+
+        assert numpy.array_equal(truth, [0,1,2,3,4,5,6,7])
+        assert numpy.array_equal(results, [ [100,101, 200,201, 300,301, 400,401], [102,103, 202,203, 302,303, 402,403], [104,105, 204,205, 304,305, 404,405] ])
+        assert numpy.array_equal(ids, [992, 993, 994, 995, 996, 997, 998, 999])
+
 def dummy(x):
     return [2*x, 3*x], [4*x, 5*x]
 

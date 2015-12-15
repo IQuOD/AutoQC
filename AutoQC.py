@@ -86,14 +86,7 @@ if len(sys.argv)>2:
   parallel_result = processFile.parallel(filenames)
 
   # Recombine results
-  truth = parallel_result[0][0]
-  results = parallel_result[0][1]
-  profileIDs = parallel_result[0][2]
-  for pr in parallel_result[1:]:
-    truth      += pr[0]
-    for itr, tr in enumerate(pr[1]):
-      results[itr] += tr
-    profileIDs += pr[2]
+  truth, results, profileIDs = main.combineArrays(parallel_result)
 
   # Print summary statistics and write output file.
   main.printSummary(truth, results, testNames)
