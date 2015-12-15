@@ -46,7 +46,9 @@ def profileData(pinfo, currentFile, f):
     currentFile = pinfo.file_name
     f = open(currentFile)
   if f.tell() != pinfo.file_position: f.seek(pinfo.file_position)
-  return wod.WodProfile(f), currentFile, f
+  profile = wod.WodProfile(f)
+  catchFlags(profile)
+  return profile, currentFile, f
 
 def importQC(dir):
   '''
@@ -208,3 +210,17 @@ def calcRates(testResults, trueResults):
   tnr = nPP * 100.0 / nTruePasses
 
   return tpr, fpr, fnr, tnr 
+
+def printSummary(truth, results, testNames):
+
+  nProfiles = len(truth)
+  print('Number of profiles tested was %i\n' % nProfiles)
+  print('%30s %7s %7s %7s %7s %7s' % ('NAME OF TEST', 'FAILS', 'TPR', 'FPR', 'TNR', 'FNR')) 
+  overallResults = np.zeros(nProfiles, dtype=bool)
+  for i in range (0, len(testNames)):
+    overallResults = np.logical_or(overallResults, results[i])
+    tpr, fpr, fnr, tnr = calcRates(results[i], truth)
+    print('%30s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % (testNames[i], np.sum(results[i]), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
+  tpr, fpr, fnr, tnr = calcRates(overallResults, truth)
+  print('%30s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % ('RESULT OF OR OF ALL:', np.sum(overallResults), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
+
