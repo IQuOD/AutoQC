@@ -7,6 +7,23 @@
   {
     "applies_to":["CoTeDe_*"],
     "modules":["cotede"]
+  },
+  {
+    "applies_to":["CoTeDe_Argo_density_inversion"],
+    "modules":["gsw"]
+  },
+  {
+    "applies_to":["CoTeDe_WOA_normbias"],
+    "data":["temperature_seasonal_5deg.nc"]
+  },
+  {
+    "applies_to":["CoTeDe_location_at_sea_test"],
+    "data":["etopo5.cdf"]
+  },
+  {
+    "applies_to":["CoTeDe_fuzzy_logic"],
+    "modules":["skfuzzy"],
+    "data":["temperature_seasonal_5deg.nc"]
   }
 ]
  
