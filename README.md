@@ -45,6 +45,7 @@ Each quality control test must be written as its own file in `/qctests`, of the 
 To run the code tests:
 
 ```
+pip install nose
 nosetests tests/*.py
 ```
 
