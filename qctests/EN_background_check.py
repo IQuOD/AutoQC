@@ -57,10 +57,6 @@ def test(p, *args):
         bgevLevel = np.interp(z[iLevel], depths, bgev, right=99999)
         obevLevel = np.interp(z[iLevel], depths, obev, right=99999)
         if climLevel == 99999:
-            qc[iLevel] = True # This could reject some good data if the 
-                              # climatology is incomplete, but also can act as
-                              # a check that the depth of the profile is 
-                              # consistent with the depth of the ocean.
             continue 
         assert bgevLevel > 0, 'Background error variance <= 0'
         assert obevLevel > 0, 'Observation error variance <= 0'

@@ -5,6 +5,10 @@
     "data":["EN_bgcheck_info.nc"]
   },
   {
+    "applies_to":["EN_background_available_check"],
+    "qctests":["EN_background_check"]
+  },
+  {
     "applies_to":["CoTeDe_*"],
     "modules":["cotede"]
   },
