@@ -6,7 +6,7 @@ class fakeProfile:
     implementations of qc-tests.
     '''
 
-    def __init__(self, temperatures, depths, latitude=None, longitude=None, date=[1999, 12, 31, 0], probe_type=None, salinities=None, pressures=None):
+    def __init__(self, temperatures, depths, latitude=None, longitude=None, date=[1999, 12, 31, 0], probe_type=None, salinities=None, pressures=None, uid=None):
         self.temperatures = temperatures
         if salinities is None:
             self.salinities = np.ma.array(temperatures, mask=True)
@@ -26,6 +26,7 @@ class fakeProfile:
         self.primary_header['Month'] = date[1]
         self.primary_header['Day'] = date[2]
         self.primary_header['Time'] = date[3]
+        self.primary_header['WOD unique cast number'] = uid
         
         self.secondary_header = {'entries':[]}
         if probe_type is not None:
@@ -42,8 +43,8 @@ class fakeProfile:
         return self.primary_header['Longitude']
 
     def uid(self):
-        '''Returns nothing but needs to be present for some tests.'''
-        return None 
+        """ Returns the unique identifier of the profile. """
+        return self.primary_header['WOD unique cast number']
 
     def t(self):
         """ Returns a numpy masked array of temperatures. """

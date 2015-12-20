@@ -21,7 +21,13 @@ install:
   - pip install wodpy
   - pip install seabird
   - pip install cotede
+  - pip install gsw
+  - pip install scikit-fuzzy
 before_script:
 # download auxiliary data
-  - cd data; curl -O http://www.metoffice.gov.uk/hadobs/en4/data/EN_bgcheck_info.nc; cd ..;
+  - cd data
+  - curl -O http://www.metoffice.gov.uk/hadobs/en4/data/EN_bgcheck_info.nc
+  - curl -O http://data.nodc.noaa.gov/thredds/fileServer/woa/WOA09/NetCDFdata/temperature_seasonal_5deg.nc
+  - curl -o etopo5.nc http://oos.soest.hawaii.edu/thredds/ncss/etopo5?var=ROSE&disableLLSubset=on&disableProjSubset=on&horizStride=1&addLatLon=true
+  - cd .. 
 script: nosetests tests/*.py

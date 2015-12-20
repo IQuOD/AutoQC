@@ -1,4 +1,4 @@
-The files in this directory originated from the CoTeDe package (https://github.com/castelao/CoTeDe) which is distributed under the following license:
+The files in this directory originated from the CoTeDe package (https://github.com/castelao/CoTeDe) which is distributed under the following license below. The files have been modified for the purposes of running the CoTeDe programs for AutoQC.
 
 Copyright (c) 2011-2015, Guilherme Pimenta Castelão
 

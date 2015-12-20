@@ -18,10 +18,10 @@ class DummyCNV(object):
 
         # Data section.
         # These are repeated to allow different names.
-        longnames = ['Pressure', 'Temperature', 'Salinity', 'Temperature', 'Salinity']
-        names = ['PRES', 'TEMP', 'PSAL', 'temperature', 'salinity']
+        longnames = ['Pressure', 'Temperature', 'Salinity']
+        names = ['PRES', 'TEMP', 'PSAL']
         self.data    = []
-        for i, data in enumerate([p.z(), p.t(), p.s(), p.t(), p.s()]):
+        for i, data in enumerate([p.z(), p.t(), p.s()]):
             data.attributes = {'id':i,
                                'longname':longnames[i],
                                'name':names[i],
@@ -82,13 +82,13 @@ def get_qc(p, config, test):
     # Disable logging messages from CoTeDe unless they are more
     # severe than a warning. 
     logging.disable('warn')
-
+    
     # Create a dummy results variable if this is the first call.
     try: 
         cotede_results
     except NameError:
         cotede_results = [-1, '', None]
-
+    
     # Check if we need to perform the quality control.
     if p.uid() != cotede_results[0] or config != cotede_results[1]:
         inputs = DummyCNV(p)
@@ -98,10 +98,10 @@ def get_qc(p, config, test):
                               ProfileQC(inputs, cfg=json.load(f))]
     
     # Define where the QC results are found.
-    if config == 'anomaly_detection':
-        var = 'TEMP'
+    if test == 'location_at_sea':
+        var = 'common'
     else:
-        raise ValueError('Variable name is not defined for ' + config)
+        var = 'TEMP'
 
     # Get the QC results, which use the IOC conventions.
     qc_returned = cotede_results[2].flags[var][test]
@@ -110,7 +110,10 @@ def get_qc(p, config, test):
     # of 2. If it ever does, we need to decide whether 
     # this counts as a pass or reject.
     qc = np.ma.zeros(p.n_levels(), dtype=bool)
-    qc[np.logical_or(qc_returned == 3, qc_returned == 4)] = True
+    if var == 'common':
+        if qc_returned == 3 or qc_returned == 4: qc[:] = True
+    else:
+        qc[np.logical_or(qc_returned == 3, qc_returned == 4)] = True
 
     return qc
 
