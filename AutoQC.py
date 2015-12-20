@@ -170,17 +170,14 @@ def processFile(fName):
 filenames = main.readInput('datafiles.json')
 
 if len(sys.argv)>2:
-  #if sys.argv[2] > 1:
-  #  processFile.parallel = main.parallel_function(processFile, sys.argv[2])
-  #  parallel_result = processFile.parallel(filenames)
-  #  #recombine results
-  #  truth = parallel_result[0][0]
-  #  results = parallel_result[0][1]
-  #  tests = parallel_result[0][2]
-  #  profileIDs = parallel_result[0][3]
-  #else:
-  truth, results, test, profileIDs = processFile(filenames[0])
-
+  processFile.parallel = main.parallel_function(processFile, sys.argv[2])
+  parallel_result = processFile.parallel(filenames)
+  #recombine results
+  truth = parallel_result[0][0]
+  results = parallel_result[0][1]
+  tests = parallel_result[0][2]
+  profileIDs = parallel_result[0][3]
+  
   main.generateCSV(truth, results, tests, profileIDs, sys.argv[1])
 else:
   print 'Please add command line arguments to name your output file and set parallelization:'
