@@ -18,7 +18,7 @@
   },
   {
     "applies_to":["CoTeDe_location_at_sea_test"],
-    "data":["etopo5.cdf"]
+    "data":["etopo5.nc"]
   },
   {
     "applies_to":["CoTeDe_fuzzy_logic"],

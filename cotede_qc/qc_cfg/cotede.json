@@ -1,6 +1,6 @@
 {"main": {
     "location_at_sea": {
-        "file": "data/etopo5.cdf",
+        "file": "data/etopo5.nc",
         "url": ""
         }
     },
