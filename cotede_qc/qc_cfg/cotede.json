@@ -12,6 +12,11 @@
         "url": ""
         },
     "spike": 6.0,
+    "spike_depthconditional": {
+        "pressure_threshold": 500,
+        "shallow_max": 6.0,
+        "deep_max": 2.0
+        },
     "tukey53H_norm": {
         "k": 1.5,
         "l": 12
