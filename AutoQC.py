@@ -41,6 +41,7 @@ def processFile(fName):
     # Check that there are temperature data in the profile, otherwise skip.
     if p.var_index() is None:
       continue
+    main.catchFlags(p)
     if np.sum(p.t().mask == False) == 0:
       continue
     # Run each test.    
