@@ -11,25 +11,43 @@ Recently, an international team of researchers has decided to work together to b
 
 The IQuOD proposal is to set up an open quality control benchmarking system.  Work will begin by implementing a battery of simple tests to run on some test data, and producing summary statistics and visualizations of the results.  Later goals include helping researchers either wrap their existing C, Fortran and Matlab test functions in Python for use in this test suite, or re-implementing those tests in native Python.
 
-## Dependencies:
+## Dependencies & Setup:
 
-With [Anaconda](https://store.continuum.io/cshop/anaconda/) on OSX:
-
-```
-brew install geos
-conda install netcdf4
-pip install -r requirements.txt
-```
-
-Then, download the necessary reference data:
+The easiest way to set up AutoQC is via [Docker](https://www.docker.com/); install Docker per their website, and then grab the autoqc image:
 
 ```
-curl -o data/EN_bgcheck_info.nc http://www.metoffice.gov.uk/hadobs/en4/data/EN_bgcheck_info.nc
+docker pull billmills/autoqc
 ```
+
+Start the image via
+
+```
+docker run -i -t billmills/autoqc /bin/bash
+```
+
+And you'll find AutoQC all set up and ready to use in the directory `/home/AutoQC-master`. Note that the version of AutoQC that ships with the docker image may be behind master on GitHub; you can always clone the latest version right from the image, if you need an update.
+
+If you want to run AutoQC without Docker, have a look at the setup steps in `Dockerfile`; these correspond to the same setup steps you'll need to do on a similar machine (ie on Debian with miniconda already installed).
+
+### AutoQC on AWS
+
+Docker makes running AutoQC on the cloud very easy. Once you've set up your Amazon Web Services account, launch an EC2 instance and do:
+
+```
+sudo yum update -y
+sudo yum install -y docker
+sudo service docker start
+sudo docker pull billmills/autoqc
+sudo docker run -i -t billmills/autoqc /bin/bash
+```
+
+And once again, AutoQC will be all set up in `/home/AutoQC-master`.
 
 ##Usage
 To execute the quality control checks,
-`python AutoQC.py`
+`python AutoQC.py name nProcessors`
+
+where `name` names the output csv naming as `result-name.csv`, and `nProcessors` is the number of cores to parallelize over.
 
 ##Structure
 `AutoQC.py` performs the following:
