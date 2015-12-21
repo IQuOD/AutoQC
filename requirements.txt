@@ -5,3 +5,7 @@ matplotlib>=1.4.0
 wodpy>=1.0.0
 seabird>=0.6.3
 cotede>=0.14.1
+netCDF4
+gsw
+scikit-fuzzy
+pyWOA
