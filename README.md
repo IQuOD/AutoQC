@@ -25,7 +25,7 @@ Start the image via
 docker run -i -t billmills/autoqc /bin/bash
 ```
 
-And you'll find AutoQC all set up and ready to use in the directory `/home/AutoQC-master`. Note that the version of AutoQC that ships with the docker image may be behind master on GitHub; you can always clone the latest version right from the image, if you need an update.
+And you'll find AutoQC all set up and ready to use in the directory `/AutoQC`. Note that the version of AutoQC that ships with the docker image may be behind master on GitHub; you can always clone the latest version right from the image, if you need an update.
 
 If you want to run AutoQC without Docker, have a look at the setup steps in `Dockerfile`; these correspond to the same setup steps you'll need to do on a similar machine (ie on Debian with miniconda already installed).
 
@@ -41,7 +41,7 @@ sudo docker pull billmills/autoqc
 sudo docker run -i -t billmills/autoqc /bin/bash
 ```
 
-And once again, AutoQC will be all set up in `/home/AutoQC-master`.
+And once again, AutoQC will be all set up in `/AutoQC`.
 
 ##Usage
 To execute the quality control checks,
