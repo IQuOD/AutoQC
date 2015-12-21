@@ -11,7 +11,6 @@ RUN conda install --yes python=2.7 pip nose Shapely netCDF4 matplotlib numpy sci
 RUN pip install wodpy cotede gsw scikit-fuzzy
 
 # fetch & setup AutoQC + data
-RUN cd /home
 RUN git clone https://github.com/IQuOD/AutoQC.git
 ADD EN_bgcheck_info.nc /AutoQC/data/.
 ADD temperature_seasonal_5deg.nc /AutoQC/data/.
