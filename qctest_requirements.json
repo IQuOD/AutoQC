@@ -8,6 +8,9 @@
     "applies_to":["EN_background_available_check"],
     "qctests":["EN_background_check"]
   },
+  { "applies_to":["EN_increasing_depth_check"],
+    "qctests":["EN_spike_and_step_check"]
+  },
   {
     "applies_to":["CoTeDe_*"],
     "modules":["cotede"]
