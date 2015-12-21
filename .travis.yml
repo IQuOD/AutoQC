@@ -19,7 +19,6 @@ before_install:
 install:
   #- conda install -y -c https://conda.binstar.org/jjhelmus pyproj
   - pip install wodpy
-  - pip install seabird
   - pip install cotede
   - pip install gsw
   - pip install scikit-fuzzy
