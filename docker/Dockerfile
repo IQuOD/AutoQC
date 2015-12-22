@@ -8,7 +8,7 @@ RUN apt-get update
 # dependencies!
 RUN apt-get -y install libhdf5-serial-dev libnetcdf-dev unzip
 RUN conda install --yes python=2.7 pip nose Shapely netCDF4 matplotlib numpy scipy pyproj pandas
-RUN pip install wodpy cotede gsw scikit-fuzzy pyWOA
+RUN pip install wodpy cotede==0.15.3 gsw scikit-fuzzy pyWOA
 
 # fetch & setup AutoQC + data
 RUN git clone https://github.com/IQuOD/AutoQC.git
