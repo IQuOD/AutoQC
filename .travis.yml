@@ -9,4 +9,4 @@ before_install:
 - docker pull iquod/autoqc
 
 script:
-- docker run -v $(pwd)/AutoQC:/AutoQC_latest iquod/autoqc /bin/bash -c "cp /AutoQC/data/* /AutoQC_latest/data/*; cd /AutoQC_latest; nosetests tests/*.py"
+- docker run -v $PWD/AutoQC:/AutoQC_latest iquod/autoqc /bin/bash -c "cp /AutoQC/data/* /AutoQC_latest/data/*; cd /AutoQC_latest; nosetests tests/*.py"
