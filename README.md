@@ -75,15 +75,3 @@ See [the docs](https://github.com/IQuOD/AutoQC/blob/master/dataio/README.md) for
 
 ##Contributing
 Quality control checks waiting to be implemented are listed in the Issues. If you would like to work on coding up a check, please assign yourself to the issue to avoid others duplicating the effort.
-
-
-
-
-
-real    103m20.578s
-user    102m38.972s
-sys 0m28.676s
-
-real    97m5.229s
-user    96m35.780s
-sys 0m14.390s
