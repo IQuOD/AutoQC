@@ -91,10 +91,14 @@ def get_qc(p, config, test):
     # Check if we need to perform the quality control.
     if p.uid() != cotede_results[0] or config != cotede_results[1]:
         inputs = DummyCNV(p)
-        with open('cotede_qc/qc_cfg/' + config + '.json') as f:
-            cotede_results = [p.uid(), 
-                              config, 
-                              ProfileQC(inputs, cfg=json.load(f))]
+        if isinstance(config, dict):
+            cfg = config
+        else:
+            with open('cotede_qc/qc_cfg/' + config + '.json') as f:
+                cfg = json.load(f)
+        cotede_results = [p.uid(), 
+                          config, 
+                          ProfileQC(inputs, cfg=cfg)]
     
     # Define where the QC results are found.
     if test == 'location_at_sea':
