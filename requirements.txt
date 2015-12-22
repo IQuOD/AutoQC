@@ -4,7 +4,6 @@ pyproj>=1.9.4
 matplotlib>=1.4.0
 wodpy>=1.0.0
 cotede==0.15.3
-netCDF4
 gsw
 scikit-fuzzy
 pyWOA
