@@ -16,18 +16,18 @@ The IQuOD proposal is to set up an open quality control benchmarking system.  Wo
 The easiest way to set up AutoQC is via [Docker](https://www.docker.com/); install Docker per their website, and then grab the autoqc image:
 
 ```
-docker pull billmills/autoqc
+docker pull iquod/autoqc
 ```
 
 Start the image via
 
 ```
-docker run -i -t billmills/autoqc /bin/bash
+docker run -i -t iquod/autoqc /bin/bash
 ```
 
 And you'll find AutoQC all set up and ready to use in the directory `/AutoQC`. Note that the version of AutoQC that ships with the docker image may be behind master on GitHub; you can always do `git pull origin master` from the `/AutoQC` directory inside the image, if you need an update.
 
-If you want to run AutoQC without Docker, have a look at the setup steps in `Dockerfile`; these correspond to the same setup steps you'll need to do on a similar machine (ie on Debian with miniconda already installed).
+If you want to run AutoQC without Docker, have a look at the setup steps in `docker/Dockerfile`; these correspond to the same setup steps you'll need to do on a similar machine (ie on Debian with miniconda already installed).
 
 ### AutoQC on AWS
 
@@ -37,8 +37,8 @@ Docker makes running AutoQC on the cloud very easy. Once you've set up your Amaz
 sudo yum update -y
 sudo yum install -y docker
 sudo service docker start
-sudo docker pull billmills/autoqc
-sudo docker run -i -t billmills/autoqc /bin/bash
+sudo docker pull iquod/autoqc
+sudo docker run -i -t iquod/autoqc /bin/bash
 ```
 
 And once again, AutoQC will be all set up in `/AutoQC`.
@@ -83,3 +83,7 @@ Quality control checks waiting to be implemented are listed in the Issues. If yo
 real    103m20.578s
 user    102m38.972s
 sys 0m28.676s
+
+real    97m5.229s
+user    96m35.780s
+sys 0m14.390s
