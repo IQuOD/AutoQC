@@ -9,8 +9,7 @@ def test_CSIRO_gradient():
     Spot-check some values in the CSIRO gradient test.
     '''
 
-    # pass a marginal positive spike (criteria exactly 9 C):
-    p = util.testingProfile.fakeProfile([0,10,0,0.1,-39.9,-39.1], [10,20,30,40,50,60]) 
+    p = util.testingProfile.fakeProfile([0,10,0,0.1,-24.9,-24.1], [10,20,30,40,50,60]) 
     qc = qctests.CSIRO_gradient.test(p)
     truth = numpy.zeros(6, dtype=bool)
     truth[0] = True;  # in range

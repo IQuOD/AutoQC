@@ -34,7 +34,7 @@ def test(p):
         if isData[i] & isData[i+1]:
 
             gradient = (d.data[i+1] - d.data[i]) / (t.data[i+1] - t.data[i]) 
-            print gradient
+            
             # gradient flag
             if gradient > -0.4 and gradient < 12.5:
                 qc[i] = True

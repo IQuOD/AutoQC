@@ -18,12 +18,12 @@ def test(p):
     isXBT = p.probe_type() == 2
 
     # initialize qc as a bunch of falses;
-    qc = numpy.zeros(len(t.data), dtype=bool)
+    qc = numpy.zeros(p.n_levels(), dtype=bool)
 
     # check for gaps in data
     isDepth = (d.mask==False)
 
-    for i in range(0,len(t.data)-1):
+    for i in range(p.n_levels()):
         if isDepth[i]:
             # too-shallow temperatures on XBT probes
             # note we simply flag this profile for manual QC, in order to minimize false negatives.
