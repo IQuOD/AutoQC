@@ -3,7 +3,6 @@ import datetime
 import json
 import logging
 import numpy as np
-from seabird import cnv
 
 '''Runs QC tests from the CoTeDe package.
    CoTeDe (https://github.com/castelao/CoTeDe) is copyright (c) 2011-2015, Guilherme Pimenta Castelao.
