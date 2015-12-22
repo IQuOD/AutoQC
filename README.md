@@ -25,7 +25,7 @@ Start the image via
 docker run -i -t billmills/autoqc /bin/bash
 ```
 
-And you'll find AutoQC all set up and ready to use in the directory `/AutoQC`. Note that the version of AutoQC that ships with the docker image may be behind master on GitHub; you can always clone the latest version right from the image, if you need an update.
+And you'll find AutoQC all set up and ready to use in the directory `/AutoQC`. Note that the version of AutoQC that ships with the docker image may be behind master on GitHub; you can always do `git pull origin master` from the `/AutoQC` directory inside the image, if you need an update.
 
 If you want to run AutoQC without Docker, have a look at the setup steps in `Dockerfile`; these correspond to the same setup steps you'll need to do on a similar machine (ie on Debian with miniconda already installed).
 
@@ -75,3 +75,11 @@ See [the docs](https://github.com/IQuOD/AutoQC/blob/master/dataio/README.md) for
 
 ##Contributing
 Quality control checks waiting to be implemented are listed in the Issues. If you would like to work on coding up a check, please assign yourself to the issue to avoid others duplicating the effort.
+
+
+
+
+
+real    103m20.578s
+user    102m38.972s
+sys 0m28.676s
