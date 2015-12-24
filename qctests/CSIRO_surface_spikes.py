@@ -1,5 +1,5 @@
 """
-Implements the wire break test of DOI: 10.1175/JTECHO539.1
+Implements CSIRO's surface spike check
 All questionable features result in a flag, in order to minimize false negatives 
 """
 
@@ -14,6 +14,8 @@ def test(p):
 
     # Get temperature values from the profile.
     t = p.t()
+    # depths
+    d = p.z()
     # is this an xbt?
     isXBT = p.probe_type() == 2
 
@@ -22,10 +24,16 @@ def test(p):
 
     # check for gaps in data
     isTemperature = (t.mask==False)
+    isDepth = (d.mask==False)
+    isData = isTemperature & isData
 
-    # wire breaks at bottom of profile:
-    if isTemperature[-1] and isXBT:
-        if t.data[-1] < -2.8 or t.data[-1] > 36:
-            qc[-1] = True
+    # flag any level that is shallower than 4m and is followed by a level shallower than 8m.
+    for i in range(p.n_levels()):
+        if isData[i]:
+            if d.data[i] < 4 and i < p.n_levels()-1: #only interested in depths less than 4m and not at the bottom of the profile.
+                if d.data[i+1] < 8:
+                    qc[i] = True
+            else:
+                break
 
     return qc

@@ -1,5 +1,5 @@
 """
-Implements the wire break test of DOI: 10.1175/JTECHO539.1
+Implements CSIRO's bottle check
 All questionable features result in a flag, in order to minimize false negatives 
 """
 
@@ -14,8 +14,10 @@ def test(p):
 
     # Get temperature values from the profile.
     t = p.t()
-    # is this an xbt?
-    isXBT = p.probe_type() == 2
+    # what probe type is this?
+    isBottle = p.probe_type() == 7
+    isUnderway = p.probe_type() == 8
+    isCTD = p.probe_type() == 4
 
     # initialize qc as a bunch of falses;
     qc = numpy.zeros(len(t.data), dtype=bool)
@@ -23,9 +25,10 @@ def test(p):
     # check for gaps in data
     isTemperature = (t.mask==False)
 
-    # wire breaks at bottom of profile:
-    if isTemperature[-1] and isXBT:
-        if t.data[-1] < -2.8 or t.data[-1] > 36:
-            qc[-1] = True
+    # flag any level that is colder than -20 for any of the relevant probe types
+    for i in range(p.n_levels()):
+        if isTemperature[i]:
+            if t.data[i] < -20 and (isBottle or isUnderway or isCTD):
+                qc[i] = True
 
     return qc
