@@ -89,7 +89,9 @@ def get_qc(p, config, test):
         cotede_results = [-1, '', None]
     
     # Check if we need to perform the quality control.
-    if p.uid() != cotede_results[0] or config != cotede_results[1]:
+    if (p.uid() != cotede_results[0] or 
+            config != cotede_results[1] or
+                p.uid() is None):
         inputs = DummyCNV(p)
         if isinstance(config, dict):
             cfg = config

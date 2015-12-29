@@ -8,12 +8,27 @@ import numpy as np
 import util.obs_utils as outils
 from netCDF4 import Dataset
 
-def test(p, *args):
+def test(p):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 
     passed the check and True where it failed. 
     """
+    
+    # Check if the QC of this profile was already done and if not
+    # run the QC.
+    if p.uid() != uid or p.uid() is None:
+        run_qc(p)
+
+    # QC results are in the module variable.
+    return qc
+
+def run_qc(p):
+    """
+    Performs the QC check.
+    """
+
+    global qc, uid, origLevels, ptLevels, bgLevels, bgevLevels, obevLevels
 
     # Define an array to hold results.
     qc = np.zeros(p.n_levels(), dtype=bool)
@@ -47,6 +62,15 @@ def test(p, *args):
 
     # Use the EN_spike_and_step_check to find suspect values.
     suspect = EN_spike_and_step_check.test(p, suspect=True)
+
+    # Create a record of the processing for use by the background
+    # and buddy checks on standard levels.
+    uid        = p.uid()
+    origLevels = []
+    ptLevels   = []
+    bgLevels   = []
+    bgevLevels = []
+    obevLevels = []
 
     # Loop over levels.
     for iLevel in range(p.n_levels()):
@@ -86,10 +110,17 @@ def test(p, *args):
         pdTotal = 0.1 * pge + pdGood * (1.0 - pge)
         pgebk   = 0.1 * pge / pdTotal
               
-        if pgebk >= 0.5: qc[iLevel] = True
+        if pgebk >= 0.5: 
+            qc[iLevel] = True
+        else:
+            # Store the results.
+            origLevels.append(iLevel)
+            ptLevels.append(potm)
+            bgLevels.append(climLevel)
+            bgevLevels.append(bgevLevel)
+            obevLevels.append(obevLevel)
     
-    return qc
-
+    return None
 
 def findGridCell(p, gridLong, gridLat):
     '''
@@ -149,6 +180,16 @@ def readENBackgroundCheckAux():
     
     return data
 
-
 #import parameters on load
 auxParam = readENBackgroundCheckAux()
+
+# Initialise global variables to hold data needed for the
+# EN background and buddy check on standard levels.
+uid        = None
+qc         = None
+origLevels = []
+ptLevels   = []
+bgLevels   = []
+bgevLevels = []
+obevLevels = []
+

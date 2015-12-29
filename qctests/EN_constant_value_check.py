@@ -12,6 +12,16 @@ def test(p):
     passed the check and True where it failed. 
     """
 
+    if p.uid() != uid or p.uid() is None:
+        run_qc(p)
+
+    # QC results are stored in the module variable.
+    return qc
+
+def run_qc(p):
+
+    global qc, uid
+
     # Get temperature values from the profile.
     t = p.t()
     d = p.z()
@@ -49,7 +59,12 @@ def test(p):
             if d.data[last] - d.data[first] >= 100:
                 qc = numpy.ones(len(t.data), dtype=bool) #note everyhing is flagged by this test.
 
+    uid = p.uid()
 
-    return qc
+    return None
+
+uid = None
+qc  = None
+
 
 

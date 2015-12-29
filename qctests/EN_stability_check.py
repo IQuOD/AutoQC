@@ -12,6 +12,16 @@ def test(p):
     passed the check and True where it failed. 
     """
 
+    if p.uid() != uid or p.uid() is None:
+        run_qc(p)
+
+    # QC results are in the module variable.
+    return qc
+
+def run_qc(p):
+
+    global uid, qc
+
     # Get temperature, salinity, pressure values from the profile.
     t = p.t()
     s = p.s()
@@ -65,11 +75,9 @@ def test(p):
     if sum(qc) >= max(2, len(t.data)/4.):
         qc = numpy.ones(len(t.data), dtype=bool)
 
-    return qc
+    uid = p.uid()
 
-
-
-
+    return None
 
 
 def mcdougallEOS(salinity, temperature, pressure):
@@ -163,3 +171,6 @@ def potentialTemperature(S, T, p):
     poly += coef[7]*T*p
 
     return T + p*poly
+
+uid = None
+qc  = None
