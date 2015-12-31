@@ -4,4 +4,4 @@ import EN_spike_and_step_check
 
 def test(p):
 
-    return EN_spike_and_step_check(p, suspect=True)
+    return EN_spike_and_step_check.test(p, suspect=True)

@@ -39,5 +39,4 @@ def test(p):
             if gradient > -0.4 and gradient < 12.5:
                 qc[i] = True
 
-    print qc
     return qc
