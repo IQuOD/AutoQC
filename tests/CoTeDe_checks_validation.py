@@ -144,7 +144,7 @@ def test_CoTeDe_tukey53H_norm():
     import qctests.CoTeDe_GTSPP_gradient
     qc = qctests.CoTeDe_GTSPP_gradient.test(p)
     qc = qctests.CoTeDe_tukey53H_norm.test(p)
-    print qc[-10:]
+
     assert np.array_equal(qc, expected_qc_tukey53H_norm), 'mismatch between qc results and expected values'
 
 def test_CoTeDe_WOA_normbias():
