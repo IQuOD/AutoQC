@@ -28,11 +28,18 @@ def run_qc(p):
     Performs the QC check.
     """
 
-    global qc, uid, origLevels, ptLevels, bgLevels, bgevLevels, obevLevels
+    global qc, uid, origLevels, ptLevels, bgLevels, bgev
 
     # Define an array to hold results.
     qc = np.zeros(p.n_levels(), dtype=bool)
     
+    # Create a record of the processing for use by the background
+    # and buddy checks on standard levels.
+    uid        = p.uid()
+    origLevels = []
+    ptLevels   = []
+    bgLevels   = []
+
     # Find grid cell nearest to the observation.
     ilon, ilat = findGridCell(p, auxParam['lon'], auxParam['lat'])
         
@@ -40,6 +47,7 @@ def run_qc(p):
     imonth = p.month() - 1
     clim = auxParam['clim'][:, ilat, ilon, imonth]
     bgev = auxParam['bgev'][:, ilat, ilon]
+    bgevStdLevels = bgev # Save the full column for use by another check.
     obev = auxParam['obev']
     depths = auxParam['depth']
     
@@ -62,15 +70,6 @@ def run_qc(p):
 
     # Use the EN_spike_and_step_check to find suspect values.
     suspect = EN_spike_and_step_check.test(p, suspect=True)
-
-    # Create a record of the processing for use by the background
-    # and buddy checks on standard levels.
-    uid        = p.uid()
-    origLevels = []
-    ptLevels   = []
-    bgLevels   = []
-    bgevLevels = []
-    obevLevels = []
 
     # Loop over levels.
     for iLevel in range(p.n_levels()):
@@ -117,8 +116,6 @@ def run_qc(p):
             origLevels.append(iLevel)
             ptLevels.append(potm)
             bgLevels.append(climLevel)
-            bgevLevels.append(bgevLevel)
-            obevLevels.append(obevLevel)
     
     return None
 
@@ -185,11 +182,10 @@ auxParam = readENBackgroundCheckAux()
 
 # Initialise global variables to hold data needed for the
 # EN background and buddy check on standard levels.
-uid        = None
-qc         = None
-origLevels = []
-ptLevels   = []
-bgLevels   = []
-bgevLevels = []
-obevLevels = []
+uid           = None
+qc            = None
+origLevels    = []
+ptLevels      = []
+bgLevels      = []
+bgevStdLevels = []
 
