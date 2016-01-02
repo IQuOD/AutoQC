@@ -20,6 +20,16 @@ def test(p, suspect=False):
     set to True the test instead returns suspect levels.
     """
 
+    if p.uid() != uid or suspect != suspectSetting or p.uid() is None:
+        run_qc(p, suspect)
+
+    # QC results are in the global variable.
+    return qc
+
+def run_qc(p, suspect):
+
+    global uid, qc, suspectSetting
+
     # Define tolerances used.
     tolD     = np.array([0, 200, 300, 500, 600])
     tolDTrop = np.array([0, 300, 400, 500, 600])
@@ -88,7 +98,11 @@ def test(p, suspect=False):
         if nRejects >= 4 or nRejects > p.n_levels()/2:
             qc[:] = True
 
-    return qc
+    # Save details of the QC performed in module variables.
+    uid            = p.uid()
+    suspectSetting = suspect
+
+    return None
 
 
 def composeDT(var, z, nLevels):
@@ -182,3 +196,7 @@ def interpolate(depth, shallow, deep, shallowVal, deepVal):
     '''
 
     return (depth - shallow) / (deep - shallow) * (deepVal - shallowVal) + shallowVal 
+
+uid            = None
+qc             = None
+suspectSetting = None

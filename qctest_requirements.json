@@ -8,8 +8,14 @@
     "applies_to":["EN_background_available_check"],
     "qctests":["EN_background_check"]
   },
-  { "applies_to":["EN_increasing_depth_check"],
+  { 
+    "applies_to":["EN_increasing_depth_check"],
     "qctests":["EN_spike_and_step_check"]
+  },
+  {
+    "applies_to":["EN_std_lev_bkg_and_buddy_check"],
+    "qctests":["EN_background_check", "EN_constant_value_check", "EN_increasing_depth_check", "EN_range_check", "EN_spike_and_step_check", "EN_stability_check"],
+    "modules":["cotede"]
   },
   {
     "applies_to":["CoTeDe_*"],

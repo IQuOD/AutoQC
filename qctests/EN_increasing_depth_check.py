@@ -11,6 +11,16 @@ def test(p):
     of quality control decisions with False where the data value has 
     passed the check and True where it failed. 
     """
+ 
+    if p.uid() != uid or p.uid() is None:
+        run_qc(p)
+
+    # QC results are in the module variable.
+    return qc
+
+def run_qc(p):
+
+    global qc, uid
 
     # Get z values from the profile.
     d    = p.z()
@@ -69,6 +79,9 @@ def test(p):
                 qc[currentLev] = True
                 qc[otherLev]   = True
 
-    return qc
+    uid = p.uid()
 
+    return None
 
+uid = None
+qc  = None
