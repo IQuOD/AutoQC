@@ -24,8 +24,6 @@ def run(test, profiles):
   return [qcResults, verbose]
 
 def processFile(fName):
-  profiles  = main.extractProfiles([fName])
-
   # run each test on each profile, and record its summary & verbose performance
   testResults  = []
   testVerbose  = []
@@ -78,8 +76,10 @@ if len(sys.argv)>2:
   for testName in testNames:
     print('  {}'.format(testName))
 
-  # Identify data files.
+  # Identify data files and create a profile list.
   filenames = main.readInput('datafiles.json')
+  profiles  = main.extractProfiles(filenames)
+  print('\n{} file(s) will be read containing {} profiles'.format(len(filenames), len(profiles)))
 
   # Parallel processing.
   print('\nPlease wait while QC is performed\n')
