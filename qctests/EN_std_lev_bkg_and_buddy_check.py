@@ -12,6 +12,7 @@ import EN_increasing_depth_check
 import EN_range_check
 import EN_spike_and_step_check
 import EN_stability_check
+import util.main as main
 import __main__
 import numpy as np
 
@@ -70,7 +71,7 @@ def test(p):
             profile.month() != p.month() or
             profile.cruise() == p.cruise()): continue
         # Do a rough check of distance.
-        latDiff = np.abs(p.latitude() - lat)
+        latDiff = np.abs(profile.latitude() - lat)
         if latDiff > 5: continue
         # Do a more detailed check of distance.
         lonComp = profile.longitude()
@@ -87,14 +88,25 @@ def test(p):
             iMinDist = iProfile
     # Check if we have found a buddy and process if so.
     if minDist <= 400000:
-        pBuddy = profiles[iMinDist]
-        result = stdLevelData(p)
-        if result is not None: 
+        fid = None
+        pBuddy, currentFile, fid = main.profileData(profiles[iMinDist], '', fid)
+        fid.close()
+        Fail = False
+        if pBuddy.var_index() is None:
+            Fail = True
+        if Fail == False:
+            main.catchFlags(pBuddy)
+            if np.sum(pBuddy.t().mask == False) == 0:
+                Fail = True
+        if Fail == False:
+          result = stdLevelData(pBuddy)
+          if result is not None: 
             # This code should ideally be separated into a function.
             levelsBuddy, origLevelsBuddy, assocLevelsBuddy = result
-            bgevBuddy = EN_background_check.bgevStdLevels
-            pgeBuddy      = np.ma.array(np.ndarray(len(levels)))
+            bgevBuddy     = EN_background_check.bgevStdLevels
+            pgeBuddy      = np.ma.array(np.ndarray(len(levelsBuddy)))
             pgeBuddy.mask = True
+
             for iLevel, level in enumerate(levels):
                 if levelsBuddy.mask[iLevel] or bgevBuddy.mask[iLevel]: continue
                 bgevLevel = bgevBuddy[iLevel]
