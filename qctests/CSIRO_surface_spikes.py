@@ -12,8 +12,6 @@ def test(p):
     passed the check and True where it failed.
     """
 
-    # Get temperature values from the profile.
-    t = p.t()
     # depths
     d = p.z()
     # is this an xbt?
@@ -23,13 +21,11 @@ def test(p):
     qc = numpy.zeros(len(t.data), dtype=bool)
 
     # check for gaps in data
-    isTemperature = (t.mask==False)
     isDepth = (d.mask==False)
-    isData = isTemperature & isData
 
     # flag any level that is shallower than 4m and is followed by a level shallower than 8m.
     for i in range(p.n_levels()):
-        if isData[i]:
+        if isDepth[i]:
             if d.data[i] < 4 and i < p.n_levels()-1: #only interested in depths less than 4m and not at the bottom of the profile.
                 if d.data[i+1] < 8:
                     qc[i] = True
