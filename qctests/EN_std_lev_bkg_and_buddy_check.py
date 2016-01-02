@@ -33,7 +33,7 @@ def test(p):
     levels, origLevels, assocLevels = result
 
     # Retrieve the background and observation error variances.
-    bgev = EN_background_check.bgev
+    bgev = EN_background_check.bgevStdLevels
     obev = EN_background_check.auxParam['obev']
 
     # Loop through the levels and calculate the PGE.
@@ -92,7 +92,7 @@ def test(p):
         if result is not None: 
             # This code should ideally be separated into a function.
             levelsBuddy, origLevelsBuddy, assocLevelsBuddy = result
-            bgevBuddy = EN_background_check.bgev
+            bgevBuddy = EN_background_check.bgevStdLevels
             pgeBuddy      = np.ma.array(np.ndarray(len(levels)))
             pgeBuddy.mask = True
             for iLevel, level in enumerate(levels):

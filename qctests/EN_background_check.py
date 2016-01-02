@@ -28,7 +28,7 @@ def run_qc(p):
     Performs the QC check.
     """
 
-    global qc, uid, origLevels, ptLevels, bgLevels, bgev
+    global qc, uid, origLevels, ptLevels, bgLevels, bgevStdLevels
 
     # Define an array to hold results.
     qc = np.zeros(p.n_levels(), dtype=bool)
