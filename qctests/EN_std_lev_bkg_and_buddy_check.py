@@ -55,37 +55,14 @@ def test(p):
 
     # Find buddy.
     profiles = __main__.profiles
-    lat = p.latitude()
-    lon = p.longitude()
     minDist  = 1000000000.0
     iMinDist = None
     for iProfile, profile in enumerate(profiles):
-        # Check that it is not the same profile and that they
-        # are near in time. The time criteria matches the EN 
-        # processing but would probably be better if it checked
-        # that the profiles were within a time threshold. The
-        # cruise is compared as two profiles from the same instrument
-        # should not be compared.
-        if (profile.uid() == p.uid() or
-            profile.year() != p.year() or
-            profile.month() != p.month() or
-            profile.cruise() == p.cruise()): continue
-        # Do a rough check of distance.
-        latDiff = np.abs(profile.latitude() - lat)
-        if latDiff > 5: continue
-        # Do a more detailed check of distance.
-        lonComp = profile.longitude()
-        # Check in case they are either side of the edge of the map.
-        if np.abs(lonComp - lon) > 180:
-            if lonComp < lon:
-                lonComp += 360.0
-            else:
-                lonComp -= 360.0
-        # Calculate distance and compare to previous.
-        pDist = haversine(lat, lon, profile.latitude(), lonComp)
-        if pDist < minDist:
+        pDist = assessBuddy(p, profile)
+        if pDist is not None and pDist < minDist:
             minDist  = pDist
             iMinDist = iProfile
+            
     # Check if we have found a buddy and process if so.
     if minDist <= 400000:
         fid = None
@@ -165,7 +142,41 @@ def test(p):
 
     return qc
 
-    
+def assessBuddy(p, buddy):
+    """
+    given a profile <p> and a possible buddy profile <buddy>,
+    return None if <buddy> is not a valid buddy, or the distance
+    to <p> if it is.
+    """
+
+    # Check that it is not the same profile and that they
+    # are near in time. The time criteria matches the EN 
+    # processing but would probably be better if it checked
+    # that the profiles were within a time threshold. The
+    # cruise is compared as two profiles from the same instrument
+    # should not be compared.
+    if (buddy.uid() == p.uid() or
+        buddy.year() != p.year() or
+        buddy.month() != p.month() or
+        buddy.cruise() == p.cruise()): return None
+    lat = p.latitude()
+    lon = p.longitude()
+    latComp = buddy.latitude()
+    lonComp = buddy.longitude()
+    # Do a rough check of distance.
+    latDiff = np.abs(latComp - lat)
+    if latDiff > 5: return None
+    # Do a more detailed check of distance.
+    # Check in case they are either side of the edge of the map.
+    if np.abs(lonComp - lon) > 180:
+        if lonComp < lon:
+            lonComp += 360.0
+        else:
+            lonComp -= 360.0
+    # Calculate distance and return.
+    return haversine(lat, lon, latComp, lonComp)
+
+
 def stdLevelData(p):
     """
     Combines data that have passed other QC checks to create a 
