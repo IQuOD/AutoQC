@@ -38,7 +38,7 @@ def test(p):
     obev = EN_background_check.auxParam['obev']
 
     #find initial pge
-    pgeData = determine_initial_pge(levels, bgev, obev, p)
+    pgeData = determine_pge(levels, levels, bgev, obev, p)
 
     # Find buddy.
     profiles = __main__.profiles
@@ -70,9 +70,9 @@ def test(p):
           if result is not None: 
             levelsBuddy, origLevelsBuddy, assocLevelsBuddy = result
             bgevBuddy = EN_background_check.bgevStdLevels
-            pgeBuddy  = determine_pgeBuddy(levels, levelsBuddy, bgevBuddy, pBuddy, obev)
+            pgeBuddy  = determine_pge(levels, levelsBuddy, bgevBuddy, obev, pBuddy)
             pgeData   = determine_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, p, pBuddy, obev, bgev, bgevBuddy)
-            
+
     # Assign the QC flags.
     for i, pge in enumerate(pgeData):
         if pgeData.mask[i]: continue
@@ -84,48 +84,27 @@ def test(p):
 
     return qc
 
-def determine_initial_pge(levels, bgev, obev, profile):
+def determine_pge(levelsA, levelsB, bgev, obev, profile):
     '''
 
     '''
-    # Loop through the levels and calculate the PGE.
-    pgeData      = np.ma.array(np.ndarray(len(levels)))
-    pgeData.mask = True
-    for iLevel, level in enumerate(levels):
-        if levels.mask[iLevel] or bgev.mask[iLevel]: continue
+    pge = np.ma.array(np.ndarray(len(levelsB)))
+    pge.mask = True
+
+    for iLevel, level in enumerate(levelsA):
+        if levelsB.mask[iLevel] or bgev.mask[iLevel]: continue
         bgevLevel = bgev[iLevel]
         if np.abs(profile.latitude() < 10.0): bgevLevel *= 1.5**2
         obevLevel = obev[iLevel]
-        pge = EN_background_check.estimatePGE(profile.probe_type(), False)
+        pge_est = EN_background_check.estimatePGE(profile.probe_type(), False)
 
         evLevel = obevLevel + bgevLevel
         sdiff   = level**2 / evLevel
         pdGood  = np.exp(-0.5 * np.min([sdiff, 160.0])) / np.sqrt(2.0 * np.pi * evLevel)
-        pdTotal = 0.1 * pge + pdGood * (1.0 - pge)
-        pgeData[iLevel] = 0.1 * pge / pdTotal
+        pdTotal = 0.1 * pge_est + pdGood * (1.0 - pge_est)
+        pge[iLevel] = 0.1 * pge_est / pdTotal
 
-    return pgeData
-
-def determine_pgeBuddy(levels, levelsBuddy, bgevBuddy, buddyProfile, obev):
-    '''
-
-    '''
-    pgeBuddy = np.ma.array(np.ndarray(len(levelsBuddy)))
-    pgeBuddy.mask = True
-
-    for iLevel, level in enumerate(levels):
-        if levelsBuddy.mask[iLevel] or bgevBuddy.mask[iLevel]: continue
-        bgevLevel = bgevBuddy[iLevel]
-        if np.abs(buddyProfile.latitude() < 10.0): bgevLevel *= 1.5**2
-        obevLevel = obev[iLevel]
-        pge = EN_background_check.estimatePGE(buddyProfile.probe_type(), False)
-        evLevel = obevLevel + bgevLevel
-        sdiff   = level**2 / evLevel
-        pdGood  = np.exp(-0.5 * np.min([sdiff, 160.0])) / np.sqrt(2.0 * np.pi * evLevel)
-        pdTotal = 0.1 * pge + pdGood * (1.0 - pge)
-        pgeBuddy[iLevel] = 0.1 * pge / pdTotal
-
-    return pgeBuddy
+    return pge
 
 def determine_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, profile, buddyProfile, obev, bgev, bgevBuddy):
     '''
