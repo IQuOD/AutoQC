@@ -37,28 +37,15 @@ def test(p):
     bgev = EN_background_check.bgevStdLevels
     obev = EN_background_check.auxParam['obev']
 
-    # Loop through the levels and calculate the PGE.
-    pgeData      = np.ma.array(np.ndarray(len(levels)))
-    pgeData.mask = True
-    for iLevel, level in enumerate(levels):
-        if levels.mask[iLevel] or bgev.mask[iLevel]: continue
-        bgevLevel = bgev[iLevel]
-        if np.abs(p.latitude() < 10.0): bgevLevel *= 1.5**2
-        obevLevel = obev[iLevel]
-        pge = EN_background_check.estimatePGE(p.probe_type(), False)
-
-        evLevel = obevLevel + bgevLevel
-        sdiff   = level**2 / evLevel
-        pdGood  = np.exp(-0.5 * np.min([sdiff, 160.0])) / np.sqrt(2.0 * np.pi * evLevel)
-        pdTotal = 0.1 * pge + pdGood * (1.0 - pge)
-        pgeData[iLevel] = 0.1 * pge / pdTotal
+    #find initial pge
+    pgeData = determine_initial_pge(levels, bgev, obev, p)
 
     # Find buddy.
     profiles = __main__.profiles
     minDist  = 1000000000.0
     iMinDist = None
     for iProfile, profile in enumerate(profiles):
-        pDist = assessBuddy(p, profile)
+        pDist = assessBuddyDistance(p, profile)
         if pDist is not None and pDist < minDist:
             minDist  = pDist
             iMinDist = iProfile
@@ -68,6 +55,8 @@ def test(p):
         fid = None
         pBuddy, currentFile, fid = main.profileData(profiles[iMinDist], '', fid)
         fid.close()
+
+        # buddy vetos
         Fail = False
         if pBuddy.var_index() is None:
             Fail = True
@@ -75,62 +64,15 @@ def test(p):
             main.catchFlags(pBuddy)
             if np.sum(pBuddy.t().mask == False) == 0:
                 Fail = True
+
         if Fail == False:
           result = stdLevelData(pBuddy)
           if result is not None: 
-            # This code should ideally be separated into a function.
             levelsBuddy, origLevelsBuddy, assocLevelsBuddy = result
-            bgevBuddy     = EN_background_check.bgevStdLevels
-            pgeBuddy      = np.ma.array(np.ndarray(len(levelsBuddy)))
-            pgeBuddy.mask = True
-
-            for iLevel, level in enumerate(levels):
-                if levelsBuddy.mask[iLevel] or bgevBuddy.mask[iLevel]: continue
-                bgevLevel = bgevBuddy[iLevel]
-                if np.abs(pBuddy.latitude() < 10.0): bgevLevel *= 1.5**2
-                obevLevel = obev[iLevel]
-                pge = EN_background_check.estimatePGE(pBuddy.probe_type(), False)
-                evLevel = obevLevel + bgevLevel
-                sdiff   = level**2 / evLevel
-                pdGood  = np.exp(-0.5 * np.min([sdiff, 160.0])) / np.sqrt(2.0 * np.pi * evLevel)
-                pdTotal = 0.1 * pge + pdGood * (1.0 - pge)
-                pgeBuddy[iLevel] = 0.1 * pge / pdTotal
-
-            for iLevel in range(len(levelsBuddy)):
-                if levels.mask[iLevel] or levelsBuddy.mask[iLevel]: continue
-                
-                # For simplicity, going to assume that length scales
-                # are isotropic and the same everywhere; in the EN 
-                # processing length scales are stretched in E/W direction
-                # near the equator and this functionality could be added
-                # later.
-                corScaleA = 300.0 # In km.             
-                corScaleB = 400.0 # In km.
-                corScaleT = 21600.0 # In secs.
-                mesSDist  = minDist / (1000.0 * corScaleA)
-                synSDist  = minDist / (1000.0 * corScaleB)
-                timeDiff2 = (timeDiff(p, pBuddy) / corScaleT)**2 
-                
-                covar = (np.sqrt(bgev[iLevel] * bgevBuddy[iLevel]) * 
-                         (1.0 + mesSDist) * np.exp(-mesSDist - timeDiff2) + 
-                         np.sqrt(bgev[iLevel] * bgevBuddy[iLevel]) *
-                         (1.0 + synSDist) * np.exp(-synSDist - timeDiff2))
-
-                errVarA = obev[iLevel] + 2.0 * bgev[iLevel]
-                errVarB = obev[iLevel] + 2.0 * bgevBuddy[iLevel]
-                rho2    = covar**2 / (errVarA + errVarB)
-                expArg  = (-(0.5 * rho2 / (1.0 - rho2)) *  
-                           (levels[iLevel]**2 / errVarA + 
-                            levelsBuddy[iLevel]**2 / errVarB - 
-                            2.0 * levels[iLevel] * levelsBuddy[iLevel] / covar))
-                expArg  = -0.5 * np.log(1.0 - rho2) + expArg
-                expArg  = min(80.0, max(-80.0, expArg))
-                Z       = 1.0 / (2.0 - (1.0 - pgeData[iLevel]) * 
-                                 (1.0 - pgeBuddy[iLevel]) * (1.0 - expArg))
-                if Z < 0.0: Z = 1.0 # In case of rounding errors.
-                Z = Z**0.5
-                pgeData[iLevel] = pgeData[iLevel] * Z
-
+            bgevBuddy = EN_background_check.bgevStdLevels
+            pgeBuddy  = determine_pgeBuddy(levels, levelsBuddy, bgevBuddy, pBuddy, obev)
+            pgeData   = determine_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, p, pBuddy, obev, bgev, bgevBuddy)
+            
     # Assign the QC flags.
     for i, pge in enumerate(pgeData):
         if pgeData.mask[i]: continue
@@ -142,7 +84,93 @@ def test(p):
 
     return qc
 
-def assessBuddy(p, buddy):
+def determine_initial_pge(levels, bgev, obev, profile):
+    '''
+
+    '''
+    # Loop through the levels and calculate the PGE.
+    pgeData      = np.ma.array(np.ndarray(len(levels)))
+    pgeData.mask = True
+    for iLevel, level in enumerate(levels):
+        if levels.mask[iLevel] or bgev.mask[iLevel]: continue
+        bgevLevel = bgev[iLevel]
+        if np.abs(profile.latitude() < 10.0): bgevLevel *= 1.5**2
+        obevLevel = obev[iLevel]
+        pge = EN_background_check.estimatePGE(profile.probe_type(), False)
+
+        evLevel = obevLevel + bgevLevel
+        sdiff   = level**2 / evLevel
+        pdGood  = np.exp(-0.5 * np.min([sdiff, 160.0])) / np.sqrt(2.0 * np.pi * evLevel)
+        pdTotal = 0.1 * pge + pdGood * (1.0 - pge)
+        pgeData[iLevel] = 0.1 * pge / pdTotal
+
+    return pgeData
+
+def determine_pgeBuddy(levels, levelsBuddy, bgevBuddy, buddyProfile, obev):
+    '''
+
+    '''
+    pgeBuddy = np.ma.array(np.ndarray(len(levelsBuddy)))
+    pgeBuddy.mask = True
+
+    for iLevel, level in enumerate(levels):
+        if levelsBuddy.mask[iLevel] or bgevBuddy.mask[iLevel]: continue
+        bgevLevel = bgevBuddy[iLevel]
+        if np.abs(buddyProfile.latitude() < 10.0): bgevLevel *= 1.5**2
+        obevLevel = obev[iLevel]
+        pge = EN_background_check.estimatePGE(buddyProfile.probe_type(), False)
+        evLevel = obevLevel + bgevLevel
+        sdiff   = level**2 / evLevel
+        pdGood  = np.exp(-0.5 * np.min([sdiff, 160.0])) / np.sqrt(2.0 * np.pi * evLevel)
+        pdTotal = 0.1 * pge + pdGood * (1.0 - pge)
+        pgeBuddy[iLevel] = 0.1 * pge / pdTotal
+
+    return pgeBuddy
+
+def determine_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, profile, buddyProfile, obev, bgev, bgevBuddy):
+    '''
+
+    '''
+
+    for iLevel in range(len(levelsBuddy)):
+        if levels.mask[iLevel] or levelsBuddy.mask[iLevel]: continue
+        
+        # For simplicity, going to assume that length scales
+        # are isotropic and the same everywhere; in the EN 
+        # processing length scales are stretched in E/W direction
+        # near the equator and this functionality could be added
+        # later.
+        corScaleA = 300.0 # In km.             
+        corScaleB = 400.0 # In km.
+        corScaleT = 21600.0 # In secs.
+        mesSDist  = minDist / (1000.0 * corScaleA)
+        synSDist  = minDist / (1000.0 * corScaleB)
+        timeDiff2 = (timeDiff(profile, buddyProfile) / corScaleT)**2 
+        
+        covar = (np.sqrt(bgev[iLevel] * bgevBuddy[iLevel]) * 
+                 (1.0 + mesSDist) * np.exp(-mesSDist - timeDiff2) + 
+                 np.sqrt(bgev[iLevel] * bgevBuddy[iLevel]) *
+                 (1.0 + synSDist) * np.exp(-synSDist - timeDiff2))
+
+        errVarA = obev[iLevel] + 2.0 * bgev[iLevel]
+        errVarB = obev[iLevel] + 2.0 * bgevBuddy[iLevel]
+        rho2    = covar**2 / (errVarA + errVarB)
+        expArg  = (-(0.5 * rho2 / (1.0 - rho2)) *  
+                   (levels[iLevel]**2 / errVarA + 
+                    levelsBuddy[iLevel]**2 / errVarB - 
+                    2.0 * levels[iLevel] * levelsBuddy[iLevel] / covar))
+        expArg  = -0.5 * np.log(1.0 - rho2) + expArg
+        expArg  = min(80.0, max(-80.0, expArg))
+        Z       = 1.0 / (2.0 - (1.0 - pgeData[iLevel]) * 
+                         (1.0 - pgeBuddy[iLevel]) * (1.0 - expArg))
+        if Z < 0.0: Z = 1.0 # In case of rounding errors.
+        Z = Z**0.5
+        pgeData[iLevel] = pgeData[iLevel] * Z
+
+    return pgeData
+
+
+def assessBuddyDistance(p, buddy):
     """
     given a profile <p> and a possible buddy profile <buddy>,
     return None if <buddy> is not a valid buddy, or the distance
