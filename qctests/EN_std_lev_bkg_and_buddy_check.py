@@ -32,13 +32,12 @@ def test(p):
 
     # Unpack the results.
     levels, origLevels, assocLevels = result
-
     # Retrieve the background and observation error variances.
     bgev = EN_background_check.bgevStdLevels
     obev = EN_background_check.auxParam['obev']
 
     #find initial pge
-    pgeData = determine_pge(levels, levels, bgev, obev, p)
+    pgeData = determine_pge(levels, bgev, obev, p)
 
     # Find buddy.
     profiles = __main__.profiles
@@ -70,7 +69,7 @@ def test(p):
           if result is not None: 
             levelsBuddy, origLevelsBuddy, assocLevelsBuddy = result
             bgevBuddy = EN_background_check.bgevStdLevels
-            pgeBuddy  = determine_pge(levels, levelsBuddy, bgevBuddy, obev, pBuddy)
+            pgeBuddy  = determine_pge(levels, bgevBuddy, obev, pBuddy)
             pgeData   = determine_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, p, pBuddy, obev, bgev, bgevBuddy)
 
     # Assign the QC flags.
@@ -84,27 +83,52 @@ def test(p):
 
     return qc
 
-def determine_pge(levelsA, levelsB, bgev, obev, profile):
+def determine_pge(levels, bgev, obev, profile):
     '''
-
+    determine the probability of gross error per level given:
+    levels: a list of observed - background temperatures per level (ie the first return of stdLevelData)
+    bgev: list of background error variance per level
+    obev: list of observational error variances per level
+    profile: the wodpy profile object in question
     '''
-    pge = np.ma.array(np.ndarray(len(levelsB)))
+    pge = np.ma.array(np.ndarray(len(levels)))
     pge.mask = True
 
-    for iLevel, level in enumerate(levelsA):
-        if levelsB.mask[iLevel] or bgev.mask[iLevel]: continue
+    for iLevel, level in enumerate(levels):
+        if levels.mask[iLevel] or bgev.mask[iLevel]: continue
         bgevLevel = bgev[iLevel]
         if np.abs(profile.latitude() < 10.0): bgevLevel *= 1.5**2
         obevLevel = obev[iLevel]
         pge_est = EN_background_check.estimatePGE(profile.probe_type(), False)
 
-        evLevel = obevLevel + bgevLevel
+        kappa   = 0.1
+        evLevel = obevLevel + bgevLevel  #V from the text
         sdiff   = level**2 / evLevel
         pdGood  = np.exp(-0.5 * np.min([sdiff, 160.0])) / np.sqrt(2.0 * np.pi * evLevel)
-        pdTotal = 0.1 * pge_est + pdGood * (1.0 - pge_est)
-        pge[iLevel] = 0.1 * pge_est / pdTotal
+        pdTotal = kappa * pge_est + pdGood * (1.0 - pge_est)
+        pge[iLevel] = kappa * pge_est / pdTotal
 
     return pge
+
+def buddyCovariance(meso_ev_a, meso_ev_b, syn_ev_a, syn_ev_b):
+    '''
+    coavariance formula for buddy profiles, http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf pp.11
+    meso_ev_a == mesoscale error variance for profile a, etc.
+    '''
+
+    corScaleA = 300.0 # In km.             
+    corScaleB = 400.0 # In km.
+    corScaleT = 21600.0 # In secs.
+    mesSDist  = minDist / (1000.0 * corScaleA)
+    synSDist  = minDist / (1000.0 * corScaleB)
+    timeDiff2 = (timeDiff(profile, buddyProfile) / corScaleT)**2 
+
+    covar = (meso_ev_a * meso_ev_b *
+            (1.0 + mesSDist) * np.exp(-mesSDist - timeDiff2) + 
+            syn_ev_a * syn_ev_b *
+            (1.0 + synSDist) * np.exp(-synSDist - timeDiff2))
+
+    return covar
 
 def determine_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, profile, buddyProfile, obev, bgev, bgevBuddy):
     '''
@@ -119,17 +143,8 @@ def determine_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, profile, 
         # processing length scales are stretched in E/W direction
         # near the equator and this functionality could be added
         # later.
-        corScaleA = 300.0 # In km.             
-        corScaleB = 400.0 # In km.
-        corScaleT = 21600.0 # In secs.
-        mesSDist  = minDist / (1000.0 * corScaleA)
-        synSDist  = minDist / (1000.0 * corScaleB)
-        timeDiff2 = (timeDiff(profile, buddyProfile) / corScaleT)**2 
-        
-        covar = (np.sqrt(bgev[iLevel] * bgevBuddy[iLevel]) * 
-                 (1.0 + mesSDist) * np.exp(-mesSDist - timeDiff2) + 
-                 np.sqrt(bgev[iLevel] * bgevBuddy[iLevel]) *
-                 (1.0 + synSDist) * np.exp(-synSDist - timeDiff2))
+
+        covar = buddyCovariance(np.sqrt(bgev[iLevel]), np.sqrt(bgevBuddy[iLevel]), np.sqrt(bgev[iLevel]), np.sqrt(bgevBuddy[iLevel]))
 
         errVarA = obev[iLevel] + 2.0 * bgev[iLevel]
         errVarB = obev[iLevel] + 2.0 * bgevBuddy[iLevel]
@@ -147,7 +162,6 @@ def determine_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, profile, 
         pgeData[iLevel] = pgeData[iLevel] * Z
 
     return pgeData
-
 
 def assessBuddyDistance(p, buddy):
     """
