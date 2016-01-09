@@ -89,10 +89,20 @@ def test_assessBuddyDistance_haversine():
     assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) == haversine(0,0,1,1), 'haversine calculation inconsistent with cotede.qctests.possible_speed.haversine'
 
 
+def test_buddyCovariance_time():
+    '''
+    make sure buddyCovariance displays the correct behavior in time.
+    '''
 
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 12])
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 6, 12])
+    buddyCovariance_5days = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(100, p1, p2, 1, 1, 1, 1)
 
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 12])
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 11, 12])
+    buddyCovariance_10days = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(100, p1, p2, 1, 1, 1, 1)    
 
-
+    assert buddyCovariance_5days * numpy.exp(-3) == buddyCovariance_10days, 'incorrect timescale behavior'
 
 
 

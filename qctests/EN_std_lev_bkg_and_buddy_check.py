@@ -110,7 +110,7 @@ def determine_pge(levels, bgev, obev, profile):
 
     return pge
 
-def buddyCovariance(meso_ev_a, meso_ev_b, syn_ev_a, syn_ev_b):
+def buddyCovariance(minDist, profile, buddyProfile, meso_ev_a, meso_ev_b, syn_ev_a, syn_ev_b):
     '''
     coavariance formula for buddy profiles, http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf pp.11
     meso_ev_a == mesoscale error variance for profile a, etc.
@@ -118,7 +118,7 @@ def buddyCovariance(meso_ev_a, meso_ev_b, syn_ev_a, syn_ev_b):
 
     corScaleA = 100.0 # In km.             
     corScaleB = 400.0 # In km.
-    corScaleT = 432000.0 # In secs.
+    corScaleT = 432000.0 # 5 days in secs.
     mesSDist  = minDist / (1000.0 * corScaleA)
     synSDist  = minDist / (1000.0 * corScaleB)
     timeDiff2 = (timeDiff(profile, buddyProfile) / corScaleT)**2 
@@ -147,7 +147,7 @@ def determine_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, profile, 
         # near the equator and this functionality could be added
         # later.
 
-        covar = buddyCovariance(np.sqrt(bgev[iLevel]), np.sqrt(bgevBuddy[iLevel]), np.sqrt(bgev[iLevel]), np.sqrt(bgevBuddy[iLevel]))
+        covar = buddyCovariance(minDist, profile, buddyProfile, np.sqrt(bgev[iLevel]), np.sqrt(bgevBuddy[iLevel]), np.sqrt(bgev[iLevel]), np.sqrt(bgevBuddy[iLevel]))
         if covar is None:
             return []
 
@@ -167,41 +167,6 @@ def determine_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, profile, 
         pgeData[iLevel] = pgeData[iLevel] * Z
 
     return pgeData
-
-def assessBuddyDistance(p, buddy):
-    """
-    given a profile <p> and a possible buddy profile <buddy>,
-    return None if <buddy> is not a valid buddy, or the distance
-    to <p> if it is.
-    """
-
-    # Check that it is not the same profile and that they
-    # are near in time. The time criteria matches the EN 
-    # processing but would probably be better if it checked
-    # that the profiles were within a time threshold. The
-    # cruise is compared as two profiles from the same instrument
-    # should not be compared.
-    if (buddy.uid() == p.uid() or
-        buddy.year() != p.year() or
-        buddy.month() != p.month() or
-        buddy.cruise() == p.cruise()): return None
-    lat = p.latitude()
-    lon = p.longitude()
-    latComp = buddy.latitude()
-    lonComp = buddy.longitude()
-    # Do a rough check of distance.
-    latDiff = np.abs(latComp - lat)
-    if latDiff > 5: return None
-    # Do a more detailed check of distance.
-    # Check in case they are either side of the edge of the map.
-    if np.abs(lonComp - lon) > 180:
-        if lonComp < lon:
-            lonComp += 360.0
-        else:
-            lonComp -= 360.0
-    # Calculate distance and return.
-    return haversine(lat, lon, latComp, lonComp)
-
 
 def stdLevelData(p):
     """
@@ -260,7 +225,45 @@ def stdLevelData(p):
 
     return levels, origLevels, assocLevs
 
+def assessBuddyDistance(p, buddy):
+    """
+    given a profile <p> and a possible buddy profile <buddy>,
+    return None if <buddy> is not a valid buddy, or the distance
+    to <p> if it is.
+    """
+
+    # Check that it is not the same profile and that they
+    # are near in time. The time criteria matches the EN 
+    # processing but would probably be better if it checked
+    # that the profiles were within a time threshold. The
+    # cruise is compared as two profiles from the same instrument
+    # should not be compared.
+    if (buddy.uid() == p.uid() or
+        buddy.year() != p.year() or
+        buddy.month() != p.month() or
+        buddy.cruise() == p.cruise()): return None
+    lat = p.latitude()
+    lon = p.longitude()
+    latComp = buddy.latitude()
+    lonComp = buddy.longitude()
+    # Do a rough check of distance.
+    latDiff = np.abs(latComp - lat)
+    if latDiff > 5: return None
+    # Do a more detailed check of distance.
+    # Check in case they are either side of the edge of the map.
+    if np.abs(lonComp - lon) > 180:
+        if lonComp < lon:
+            lonComp += 360.0
+        else:
+            lonComp -= 360.0
+    # Calculate distance and return.
+    return haversine(lat, lon, latComp, lonComp)
+
 def timeDiff(p1, p2):
+    '''
+    returns the time difference, in seconds, between two profiles
+    returns None if the year, month or day in either profile is invalid
+    '''
 
     dts = []
     for prof in [p1, p2]:
