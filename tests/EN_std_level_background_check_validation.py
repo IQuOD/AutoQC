@@ -1,5 +1,6 @@
 import qctests.EN_std_lev_bkg_and_buddy_check
 import qctests.EN_background_check
+from cotede.qctests.possible_speed import haversine
 from util import main
 import util.testingProfile
 import numpy
@@ -42,3 +43,56 @@ def test_timeDiff():
 
     assert qctests.EN_std_lev_bkg_and_buddy_check.timeDiff(p1, p2) == 3600, 'incorrect time difference reported'
     assert qctests.EN_std_lev_bkg_and_buddy_check.timeDiff(p2, p1) == 3600, 'time differences should always be positive'
+
+def test_timeDiff_garbage_time():
+    '''
+    timeDiff returns none when it finds garbage times
+    '''
+
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, -1, 1, 12])
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 13])
+
+    assert qctests.EN_std_lev_bkg_and_buddy_check.timeDiff(p1, p2) is None, 'failed to reurn None when a nonsesne date was found'
+
+def test_assessBuddyDistance_invalid_buddies():
+    '''
+    check buddy distance rejects invalid buddy pairs
+    '''
+
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 13], uid=0, cruise=2)
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies with same uid'
+
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1901, 1, 1, 13], uid=1, cruise=2)
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies with different year'
+
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 2, 1, 13], uid=1, cruise=2)
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies with different month'
+
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 13], uid=1, cruise=1)
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies with same cruise'
+
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 5.01, 0, date=[1900, 1, 1, 13], uid=1, cruise=2)
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies too far apart in latitude'
+
+def test_assessBuddyDistance_haversine():
+    '''
+    make sure haversine calculation is consistent with rest of package
+    '''
+
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 1, 1, date=[1900, 1, 1, 13], uid=1, cruise=2)
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) == haversine(0,0,1,1), 'haversine calculation inconsistent with cotede.qctests.possible_speed.haversine'
+
+
+
+
+
+
+
+
+

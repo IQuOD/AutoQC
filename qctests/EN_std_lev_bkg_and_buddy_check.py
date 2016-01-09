@@ -116,12 +116,15 @@ def buddyCovariance(meso_ev_a, meso_ev_b, syn_ev_a, syn_ev_b):
     meso_ev_a == mesoscale error variance for profile a, etc.
     '''
 
-    corScaleA = 300.0 # In km.             
+    corScaleA = 100.0 # In km.             
     corScaleB = 400.0 # In km.
-    corScaleT = 21600.0 # In secs.
+    corScaleT = 432000.0 # In secs.
     mesSDist  = minDist / (1000.0 * corScaleA)
     synSDist  = minDist / (1000.0 * corScaleB)
     timeDiff2 = (timeDiff(profile, buddyProfile) / corScaleT)**2 
+
+    if timeDiff2 is None:
+        return None
 
     covar = (meso_ev_a * meso_ev_b *
             (1.0 + mesSDist) * np.exp(-mesSDist - timeDiff2) + 
@@ -145,6 +148,8 @@ def determine_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, profile, 
         # later.
 
         covar = buddyCovariance(np.sqrt(bgev[iLevel]), np.sqrt(bgevBuddy[iLevel]), np.sqrt(bgev[iLevel]), np.sqrt(bgevBuddy[iLevel]))
+        if covar is None:
+            return []
 
         errVarA = obev[iLevel] + 2.0 * bgev[iLevel]
         errVarB = obev[iLevel] + 2.0 * bgevBuddy[iLevel]
@@ -262,7 +267,8 @@ def timeDiff(p1, p2):
         year  = prof.year()
         month = prof.month()
         day   = prof.day()
-        if day == 0: day = 15
+        if not (year > 0) or not (1 <= month <= 12) or not (1 <= day <= 31):
+            return None 
         time  = prof.time()
         if time is None or time < 0 or time >= 24:
             hours   = 0
