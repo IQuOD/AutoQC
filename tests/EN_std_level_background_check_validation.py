@@ -102,7 +102,29 @@ def test_buddyCovariance_time():
     p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 11, 12])
     buddyCovariance_10days = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(100, p1, p2, 1, 1, 1, 1)    
 
-    assert buddyCovariance_5days * numpy.exp(-3) == buddyCovariance_10days, 'incorrect timescale behavior'
+    assert buddyCovariance_5days * numpy.exp(-3) - buddyCovariance_10days < 1e-12, 'incorrect timescale behavior'
 
+def test_buddyCovariance_mesoscale():
+    '''
+    make sure buddyCovariance displays the correct behavior in mesoscale correlation.
+    '''
 
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 12])
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 6, 12])
+    buddyCovariance_100km = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(100000, p1, p2, 1, 1, 0, 0)
+    buddyCovariance_200km = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(200000, p1, p2, 1, 1, 0, 0)
+  
 
+    assert buddyCovariance_100km * numpy.exp(-1) - buddyCovariance_200km < 1e-12, 'incorrect mesoscale correlation'
+
+def test_buddyCovariance_synoptic_scale():
+    '''
+    make sure buddyCovariance displays the correct behavior in synoptic scale correlation.
+    '''
+
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 12])
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 6, 12])
+    buddyCovariance_100km = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(100000, p1, p2, 0, 0, 1, 1)
+    buddyCovariance_500km = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(500000, p1, p2, 0, 0, 1, 1)
+  
+    assert buddyCovariance_100km * numpy.exp(-1) - buddyCovariance_500km < 1e-12, 'incorrect synoptic scale correlation'
