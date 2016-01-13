@@ -33,62 +33,6 @@ def test_determine_pge():
     expected = [1.0, 1.0, 1.0, 1.0]
     assert numpy.array_equal(qctests.EN_std_lev_bkg_and_buddy_check.determine_pge(levels, bgev, obev, p), expected), 'PGE of extreme departures from background not flagged as 1.0'
 
-def test_timeDiff():
-    '''
-    standard behavior of time difference calculator
-    '''
-
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 12])
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 13])
-
-    assert qctests.EN_std_lev_bkg_and_buddy_check.timeDiff(p1, p2) == 3600, 'incorrect time difference reported'
-    assert qctests.EN_std_lev_bkg_and_buddy_check.timeDiff(p2, p1) == 3600, 'time differences should always be positive'
-
-def test_timeDiff_garbage_time():
-    '''
-    timeDiff returns none when it finds garbage times
-    '''
-
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, -1, 1, 12])
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 13])
-
-    assert qctests.EN_std_lev_bkg_and_buddy_check.timeDiff(p1, p2) is None, 'failed to reurn None when a nonsesne date was found'
-
-def test_assessBuddyDistance_invalid_buddies():
-    '''
-    check buddy distance rejects invalid buddy pairs
-    '''
-
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 13], uid=0, cruise=2)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies with same uid'
-
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1901, 1, 1, 13], uid=1, cruise=2)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies with different year'
-
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 2, 1, 13], uid=1, cruise=2)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies with different month'
-
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 13], uid=1, cruise=1)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies with same cruise'
-
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 5.01, 0, date=[1900, 1, 1, 13], uid=1, cruise=2)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies too far apart in latitude'
-
-def test_assessBuddyDistance_haversine():
-    '''
-    make sure haversine calculation is consistent with rest of package
-    '''
-
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 1, 1, date=[1900, 1, 1, 13], uid=1, cruise=2)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) == haversine(0,0,1,1), 'haversine calculation inconsistent with cotede.qctests.possible_speed.haversine'
-
-
 def test_buddyCovariance_time():
     '''
     make sure buddyCovariance displays the correct behavior in time.
@@ -128,3 +72,82 @@ def test_buddyCovariance_synoptic_scale():
     buddyCovariance_500km = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(500000, p1, p2, 0, 0, 1, 1)
   
     assert buddyCovariance_100km * numpy.exp(-1) - buddyCovariance_500km < 1e-12, 'incorrect synoptic scale correlation'
+
+
+
+
+
+
+
+
+
+
+def test_filterLevels():
+    '''
+    check that filterLevels removes the expected elements from its arguments.
+    '''
+
+    preQC = [True, False, True, True, False]
+    origLevels = numpy.array([1,2,3,4,5])
+    diffLevels = numpy.array([9,8,7,6,0])
+
+    nLevels, origLevels, diffLevels = qctests.EN_std_lev_bkg_and_buddy_check.filterLevels(preQC, origLevels, diffLevels)
+
+    assert numpy.array_equal(origLevels, [2,5])
+    assert numpy.array_equal(diffLevels, [8,0])
+
+def test_assessBuddyDistance_invalid_buddies():
+    '''
+    check buddy distance rejects invalid buddy pairs
+    '''
+
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 13], uid=0, cruise=2)
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies with same uid'
+
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1901, 1, 1, 13], uid=1, cruise=2)
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies with different year'
+
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 2, 1, 13], uid=1, cruise=2)
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies with different month'
+
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 13], uid=1, cruise=1)
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies with same cruise'
+
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 5.01, 0, date=[1900, 1, 1, 13], uid=1, cruise=2)
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies too far apart in latitude'
+
+def test_assessBuddyDistance_haversine():
+    '''
+    make sure haversine calculation is consistent with rest of package
+    '''
+
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 1, 1, date=[1900, 1, 1, 13], uid=1, cruise=2)
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) == haversine(0,0,1,1), 'haversine calculation inconsistent with cotede.qctests.possible_speed.haversine'
+
+
+def test_timeDiff():
+    '''
+    standard behavior of time difference calculator
+    '''
+
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 12])
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 13])
+
+    assert qctests.EN_std_lev_bkg_and_buddy_check.timeDiff(p1, p2) == 3600, 'incorrect time difference reported'
+    assert qctests.EN_std_lev_bkg_and_buddy_check.timeDiff(p2, p1) == 3600, 'time differences should always be positive'
+
+def test_timeDiff_garbage_time():
+    '''
+    timeDiff returns none when it finds garbage times
+    '''
+
+    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, -1, 1, 12])
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 13])
+
+    assert qctests.EN_std_lev_bkg_and_buddy_check.timeDiff(p1, p2) is None, 'failed to reurn None when a nonsesne date was found'

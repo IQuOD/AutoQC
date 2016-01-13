@@ -70,7 +70,7 @@ def test(p):
             levelsBuddy, origLevelsBuddy, assocLevelsBuddy = result
             bgevBuddy = EN_background_check.bgevStdLevels
             pgeBuddy  = determine_pge(levels, bgevBuddy, obev, pBuddy)
-            pgeData   = determine_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, p, pBuddy, obev, bgev, bgevBuddy)
+            pgeData   = update_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, p, pBuddy, obev, bgev, bgevBuddy)
 
     # Assign the QC flags.
     for i, pge in enumerate(pgeData):
@@ -133,9 +133,9 @@ def buddyCovariance(minDist, profile, buddyProfile, meso_ev_a, meso_ev_b, syn_ev
 
     return covar
 
-def determine_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, profile, buddyProfile, obev, bgev, bgevBuddy):
+def update_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, profile, buddyProfile, obev, bgev, bgevBuddy):
     '''
-
+    update the PGE for the profile in question using the buddy pge.
     '''
 
     for iLevel in range(len(levelsBuddy)):
@@ -149,7 +149,7 @@ def determine_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, profile, 
 
         covar = buddyCovariance(minDist, profile, buddyProfile, np.sqrt(bgev[iLevel]), np.sqrt(bgevBuddy[iLevel]), np.sqrt(bgev[iLevel]), np.sqrt(bgevBuddy[iLevel]))
         if covar is None:
-            return []
+            continue;
 
         errVarA = obev[iLevel] + 2.0 * bgev[iLevel]
         errVarB = obev[iLevel] + 2.0 * bgevBuddy[iLevel]
@@ -192,13 +192,8 @@ def stdLevelData(p):
     if nLevels == 0: return None # Nothing more to do.
 
     # Remove any levels that failed previous QC.
-    use = np.ones(nLevels, dtype=bool)
-    for i, origLevel in enumerate(origLevels):
-        if preQC[origLevel]: use[i] = False
-    nLevels = np.count_nonzero(use)
+    nLevels, origLevels, diffLevels = filterLevels(preQC, origLevels, diffLevels)
     if nLevels == 0: return None
-    origLevels = origLevels[use]
-    diffLevels = diffLevels[use]
     
     # Get the set of standard levels.
     stdLevels = EN_background_check.auxParam['depth']
@@ -224,6 +219,23 @@ def stdLevelData(p):
     levels.mask[nPerLev == 0] = True
 
     return levels, origLevels, assocLevs
+
+def filterLevels(preQC, origLevels, diffLevels):
+    '''
+    preQC: list or array of bools
+    origLevels, diffLevels: arrays same length as preQC
+    return (origLevels, diffLevels) with all elements corresponding to a True entry in preQC removed.
+    '''
+
+    nLevels = len(origLevels)
+    use = np.ones(nLevels, dtype=bool)
+    for i, origLevel in enumerate(origLevels):
+        if preQC[i]: use[i] = False
+    nLevels = np.count_nonzero(use)
+    origLevels = origLevels[use]
+    diffLevels = diffLevels[use]
+
+    return nLevels, origLevels, diffLevels
 
 def assessBuddyDistance(p, buddy):
     """
