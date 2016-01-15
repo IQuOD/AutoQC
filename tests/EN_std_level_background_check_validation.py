@@ -4,7 +4,7 @@ from cotede.qctests.possible_speed import haversine
 from util import main
 import util.testingProfile
 import numpy
-import __main__
+import data.ds
 
 ##### EN_std_lev_bkg_and_buddy_check ---------------------------------------------------
 
@@ -14,7 +14,7 @@ def test_EN_std_level_bkg_and_buddy_check_temperature():
     '''
 
     p = util.testingProfile.fakeProfile([1.8, 1.8, 1.8, 7.1], [0.0, 2.5, 5.0, 7.5], latitude=55.6, longitude=12.9, date=[1900, 01, 15, 0], probe_type=7) 
-    __main__.profiles = [p]
+    data.ds.profiles = [p]
     qc = qctests.EN_std_lev_bkg_and_buddy_check.test(p)
     expected = [False, False, False, False]
     print qc
