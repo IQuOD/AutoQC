@@ -195,18 +195,72 @@ def stdLevelData(p):
     nLevels, origLevels, diffLevels = filterLevels(preQC, origLevels, diffLevels)
     if nLevels == 0: return None
     
+    # # Get the set of standard levels.
+    # stdLevels = EN_background_check.auxParam['depth']
+    
+    # # Create arrays to hold the standard level data and aggregate.
+    # nStdLevels = len(stdLevels)
+    # levels     = np.zeros(nStdLevels)
+    # nPerLev    = np.zeros(nStdLevels) 
+    # z          = p.z()
+    # assocLevs  = []
+    # for i, origLevel in enumerate(origLevels):
+    #     # Find the closest standard level.
+    #     j          = np.argmin(np.abs(z[origLevel] - stdLevels))
+    #     assocLevs.append(j)
+    #     levels[j]  += diffLevels[i]
+    #     nPerLev[j] += 1
+
+    # # Average the standard levels where there are data.
+    # iGT1 = nPerLev > 1
+    # levels[iGT1] /= nPerLev[iGT1]
+    # levels = np.ma.array(levels)
+    # levels.mask = False
+    # levels.mask[nPerLev == 0] = True
+
+    levels, assocLevs = meanDifferencesAtStandardLevels(origLevels, diffLevels, p.z())
+
+    return levels, origLevels, assocLevs
+
+def filterLevels(preQC, origLevels, diffLevels):
+    '''
+    preQC: list or array of bools indicating a QC state for each level, determined from other tests
+    origLevels: list of level indices that passed EN_background
+    diffLevels: correpsonding to origLevels.
+    return (nLevels, origLevels, diffLevels) with all elements corresponding to a True entry in preQC removed.
+    '''
+
+    nLevels = len(origLevels)
+    use = np.ones(nLevels, dtype=bool)
+    for i, origLevel in enumerate(origLevels):
+        if preQC[origLevel]: use[i] = False
+    nLevels = np.count_nonzero(use)
+    origLevels = origLevels[use]
+    diffLevels = diffLevels[use]
+
+    return nLevels, origLevels, diffLevels
+
+def meanDifferencesAtStandardLevels(origLevels, diffLevels, depths):
+    '''
+    origLevels: list of level indices under consideration
+    diffLevels: list of differences corresponding to origLevels
+    depths: list of depths of all levels in profile.
+    returns (levels, assocLevs), where
+    levels == a masked array of mean differences at each standard level 
+    assocLevs == a list of the indices of the closest standard levels to the levels indicated in origLevels 
+    '''
+
     # Get the set of standard levels.
     stdLevels = EN_background_check.auxParam['depth']
-
+    
     # Create arrays to hold the standard level data and aggregate.
     nStdLevels = len(stdLevels)
     levels     = np.zeros(nStdLevels)
     nPerLev    = np.zeros(nStdLevels) 
-    z          = p.z()
     assocLevs  = []
     for i, origLevel in enumerate(origLevels):
         # Find the closest standard level.
-        j          = np.argmin(np.abs(z[origLevel] - stdLevels))
+        j          = np.argmin(np.abs(depths[origLevel] - stdLevels))
         assocLevs.append(j)
         levels[j]  += diffLevels[i]
         nPerLev[j] += 1
@@ -218,24 +272,8 @@ def stdLevelData(p):
     levels.mask = False
     levels.mask[nPerLev == 0] = True
 
-    return levels, origLevels, assocLevs
+    return levels, assocLevs
 
-def filterLevels(preQC, origLevels, diffLevels):
-    '''
-    preQC: list or array of bools
-    origLevels, diffLevels: arrays same length as preQC
-    return (origLevels, diffLevels) with all elements corresponding to a True entry in preQC removed.
-    '''
-
-    nLevels = len(origLevels)
-    use = np.ones(nLevels, dtype=bool)
-    for i, origLevel in enumerate(origLevels):
-        if preQC[i]: use[i] = False
-    nLevels = np.count_nonzero(use)
-    origLevels = origLevels[use]
-    diffLevels = diffLevels[use]
-
-    return nLevels, origLevels, diffLevels
 
 def assessBuddyDistance(p, buddy):
     """

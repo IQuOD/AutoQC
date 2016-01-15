@@ -88,13 +88,35 @@ def test_filterLevels():
     '''
 
     preQC = [True, False, True, True, False]
-    origLevels = numpy.array([1,2,3,4,5])
-    diffLevels = numpy.array([9,8,7,6,0])
+    origLevels = numpy.array([0,2,3,4])
+    diffLevels = numpy.array([10,11,12,13])
 
     nLevels, origLevels, diffLevels = qctests.EN_std_lev_bkg_and_buddy_check.filterLevels(preQC, origLevels, diffLevels)
 
-    assert numpy.array_equal(origLevels, [2,5])
-    assert numpy.array_equal(diffLevels, [8,0])
+    assert numpy.array_equal(origLevels, [4])
+    assert numpy.array_equal(diffLevels, [13])
+
+def test_meanDifferencesAtStandardLevels():
+    '''
+    check a simple case for calculating mean level differences.
+    '''
+
+    stdLevels = qctests.EN_background_check.auxParam['depth']
+
+    origLevels = [0,2,3]
+    diffLevels = [3,5,7]
+    depths = [5, 5.1, 45, 46]
+
+    levels, assocLevs = qctests.EN_std_lev_bkg_and_buddy_check.meanDifferencesAtStandardLevels(origLevels, diffLevels, depths)
+
+    trueLevels = numpy.zeros(len(stdLevels))
+    trueLevels[0] = 3 # level 0 alone
+    trueLevels[4] = 6 # level 2 and 3 averaged
+    trueLevels = numpy.ma.array(trueLevels)
+    trueLevels.mask = False
+
+    assert numpy.array_equal(levels, trueLevels)
+    assert numpy.array_equal(assocLevs, [0,4,4]) # since 5 ~ first standard level, 5.1 isn't considered, and 45 and 46 are ~ 5th std. level.
 
 def test_assessBuddyDistance_invalid_buddies():
     '''
