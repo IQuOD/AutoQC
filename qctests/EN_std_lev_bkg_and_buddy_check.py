@@ -13,7 +13,7 @@ import EN_range_check
 import EN_spike_and_step_check
 import EN_stability_check
 import util.main as main
-import __main__
+import data.ds
 import numpy as np
 
 def test(p):
@@ -40,7 +40,7 @@ def test(p):
     pgeData = determine_pge(levels, bgev, obev, p)
 
     # Find buddy.
-    profiles = __main__.profiles
+    profiles = data.ds.profiles
     minDist  = 1000000000.0
     iMinDist = None
     for iProfile, profile in enumerate(profiles):
@@ -195,29 +195,6 @@ def stdLevelData(p):
     nLevels, origLevels, diffLevels = filterLevels(preQC, origLevels, diffLevels)
     if nLevels == 0: return None
     
-    # # Get the set of standard levels.
-    # stdLevels = EN_background_check.auxParam['depth']
-    
-    # # Create arrays to hold the standard level data and aggregate.
-    # nStdLevels = len(stdLevels)
-    # levels     = np.zeros(nStdLevels)
-    # nPerLev    = np.zeros(nStdLevels) 
-    # z          = p.z()
-    # assocLevs  = []
-    # for i, origLevel in enumerate(origLevels):
-    #     # Find the closest standard level.
-    #     j          = np.argmin(np.abs(z[origLevel] - stdLevels))
-    #     assocLevs.append(j)
-    #     levels[j]  += diffLevels[i]
-    #     nPerLev[j] += 1
-
-    # # Average the standard levels where there are data.
-    # iGT1 = nPerLev > 1
-    # levels[iGT1] /= nPerLev[iGT1]
-    # levels = np.ma.array(levels)
-    # levels.mask = False
-    # levels.mask[nPerLev == 0] = True
-
     levels, assocLevs = meanDifferencesAtStandardLevels(origLevels, diffLevels, p.z())
 
     return levels, origLevels, assocLevs
