@@ -59,7 +59,7 @@ def revert_order(p, data):
     datar.mask = True
 
     for i, datum in enumerate(data):
-        datar[i] = data[origlevels[i]]
+        datar[origlevels[i]] = datum
 
     return datar
 

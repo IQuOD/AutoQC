@@ -10,17 +10,17 @@ def test_ICDC_level_order_simple():
     '''Simple tests to ensure functionality works as expected.
     '''
     p = util.testingProfile.fakeProfile([1.0, 2.0, 3.0],
-                                        [2.0, 1.0, -1.0])
+                                        [2.0, -1.0, 1.0])
     qc              = ICDC.test(p)
     nlevels, zr, tr = ICDC.reordered_data(p)
     zreverted       = ICDC.revert_order(p, zr)    
-    zreverted_truth = np.ma.array([2.0, 1.0, -1.0], 
-                                  mask = [False, False, True])
+    zreverted_truth = np.ma.array([2.0, -1.0, 1.0], 
+                                  mask = [False, True, False])
 
-    assert np.array_equal(qc, [False, False, True]), 'QC error'
+    assert np.array_equal(qc, [False, True, False]), 'QC error'
     assert nlevels == 2, 'Subsetting of levels incorrect'
     assert np.array_equal(zr, [1.0, 2.0]), 'Depth reorder failed'
-    assert np.array_equal(tr, [2.0, 1.0]), 'Temperature reorder failed'
+    assert np.array_equal(tr, [3.0, 1.0]), 'Temperature reorder failed'
     assert np.array_equal(zreverted.data[zreverted.mask == False],                       
                           zreverted_truth.data[zreverted_truth.mask == False]),           'Revert data failed'
     assert np.array_equal(zreverted.mask,                       
