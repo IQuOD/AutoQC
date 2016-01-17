@@ -48,12 +48,12 @@ def test_ICDC_level_order():
 
         # Check the QC results are returned correctly.
         qc = ICDC.test(p)
-        assert np.array_equal(qc, qctruth), 'Example %i QC wrong' % i
+        assert np.array_equal(qc, qctruth), 'Example %i QC wrong' % (i + 1)
 
         # Check that the reordering is correct.
         nlevels, zr, tr = ICDC.reordered_data(p)
-        assert np.array_equal(zr, ztruth), 'Example %i zr wrong' % i
-        assert np.array_equal(tr, ttruth), 'Example %i tr wrong' % i
+        assert np.array_equal(zr, ztruth), 'Example %i zr wrong' % (i + 1)
+        assert np.array_equal(tr, ttruth), 'Example %i tr wrong' % (i + 1)
 
 # Data provided by Viktor Gouretski, ICDC, University of Hamburg.
 example1 = np.array([

@@ -55,7 +55,7 @@ def revert_order(p, data):
     level_order(p)
 
     datar      = np.ma.array(np.ndarray(p.n_levels()), 
-                             dtype=data.dtype)
+                             dtype = data.dtype)
     datar.mask = True
 
     for i, datum in enumerate(data):
@@ -73,74 +73,29 @@ def level_order(p):
     if uid == p.uid() and uid is not None:
         return None
 
-    # Extract data.
-    z        = p.z()
-    t        = p.t()
-    use      = np.ones(p.n_levels(), dtype=bool)
-    qc       = np.zeros(p.n_levels(), dtype=bool)
+    # Extract data and define the index for each level.
+    z          = p.z()
+    t          = p.t()
+    origlevels = np.arange(p.n_levels())
 
-    # Need to cope with occurrences of no data at a level.
-    isZ    = (z.mask==False)
-    isT    = (t.mask==False)
-    isData = isT & isZ
-    for i, isDatum in enumerate(isData):
-        if not isDatum: use[i] = False
+    # Implement the QC. For this test we only reject negative depths.
+    qc = z < 0
 
-    # Get the indices and data of the levels we are processing.
-    levels  = np.arange(p.n_levels())
-    levels  = levels[use]
-    z       = z[use]
-    t       = t[use]
-    nlevels = np.count_nonzero(use)
+    # Remove occurrences of no data at a level and rejected obs.
+    use        = (z.mask == False) & (t.mask == False) & (qc == False)
+    z          = z[use]
+    t          = t[use]
+    origlevels = origlevels[use]
+    nlevels    = np.count_nonzero(use)
 
-    # Implement the algorithm as provided in the Fortran version.
-
-    zr         = z.copy()
-    tr         = t.copy()
-    origlevels = levels.copy()
-    if nlevels <= 1: 
-        return None
-
-    irev = 0
-    for k in range(nlevels - 1):
-        if z[k+1] < z[k]: irev += 1
-    if irev == 0: return None
-
-    numord = order(zr, nlevels)
-
-    for k in range(nlevels):
-        ko    = numord[k]
-        zr[k] = z[ko]
-        tr[k] = t[ko]
-        origlevels[k] = levels[ko]
-        if zr[k] < 0:
-            qc[origlevels[k]] = True
-
-    # Remove negative depth values as do not want to process them
-    # again.
-    llpos      = zr >= 0.0
-    zr         = zr[llpos]
-    tr         = tr[llpos]
-    origlevels = origlevels[llpos]
-    nlevels    = np.count_nonzero(llpos)
+    if nlevels > 1:
+        # Sort the data. Using mergesort keeps levels with the same depth 
+        # in the same order.
+        isort      = np.argsort(z, kind='mergesort')
+        zr         = z[isort]
+        tr         = t[isort]
+        origlevels = origlevels[isort]
 
     return None
 
-def order(t, n):
-    '''Python implementation of program to bring 1-D array of 
-       values t to increasing order.'''
 
-    numord = np.ndarray(nlevels)
-    used   = np.zeros(nlevels, dtype=bool)
-    
-    for kk in range(n):
-        tmin = np.max(t) + 1 
-        for i in range(n):
-            if used[i]: continue
-            if t[i] < tmin: 
-                j    = i
-                tmin = t[i]
-        numord[kk] = j    
-        used[j]    = True
-
-    return numord
