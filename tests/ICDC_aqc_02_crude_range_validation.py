@@ -24,6 +24,7 @@ def test_ICDC_crude_range():
 
         assert np.array_equal(qc, qctruth), 'Example %i failed' % (i + 1)
 
+# Data provided by Viktor Gouretski, ICDC, University of Hamburg.
 example1 = np.array([
 [     .0,    28.600,  0],
 [   10.0,    28.600,  0],
