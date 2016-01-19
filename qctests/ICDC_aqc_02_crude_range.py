@@ -30,6 +30,7 @@ def test(p):
         zval = z[k]
         if tval < parminover or tval > parmaxover:
             qc[k] = True
+            continue
         
         for i, t1 in enumerate(tcrude1):
             t2 = tcrude2[i]
