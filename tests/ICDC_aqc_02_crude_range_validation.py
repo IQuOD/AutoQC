@@ -7,7 +7,8 @@ import numpy as np
 ##### --------------------------------------------------
 
 def test_ICDC_crude_range():
-    '''Simple tests to ensure functionality works as expected.
+    '''Make sure code processes data supplied by Viktor Gouretski
+       correctly.
     '''
 
     examples = [example1, example2, example3, 
