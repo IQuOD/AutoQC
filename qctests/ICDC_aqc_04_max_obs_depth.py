@@ -35,22 +35,22 @@ def test(p):
         db = 'XBT'
     elif probe_type == 3:
     	# DBT
-    	db = ''
+    	db = 'MBT'
     elif probe_type == 4:
         # CTD
         db = 'CTD'
     elif probe_type == 5:
         # STD
-        db = ''
+        db = 'OSD'
     elif probe_type == 6:
         # XCTD
-        db = ''
+        db = 'OSD'
     elif probe_type == 7:
         # Bottle/rossette/net
         db = 'OSD'
     elif probe_type == 8:
         # Underway/intake
-        db = ''
+        db = 'SUR' 
     elif probe_type == 9:
         # Profiling float
         db = 'PFL'
@@ -62,7 +62,7 @@ def test(p):
         db = 'DRB'
     elif probe_type == 12:
         # Towed CTD
-        db = ''
+        db = 'UOR'
     elif probe_type == 13:
         # Animal mounted
         db = 'APB'
@@ -74,7 +74,7 @@ def test(p):
         db = 'GLD'
     elif probe_type == 16:
         # MicroBT
-        db = ''
+        db = 'MBT'
     else:
         db = ''
 
