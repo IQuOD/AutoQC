@@ -1,7 +1,7 @@
 from wodpy import wod
 import glob, time
 import numpy as np
-import sys, os, json
+import sys, os, json, data.ds
 import util.main as main
 import pandas
 
@@ -79,6 +79,7 @@ if len(sys.argv)>2:
   # Identify data files and create a profile list.
   filenames = main.readInput('datafiles.json')
   profiles  = main.extractProfiles(filenames)
+  data.ds.profiles = profiles
   print('\n{} file(s) will be read containing {} profiles'.format(len(filenames), len(profiles)))
 
   # Parallel processing.

@@ -28,6 +28,8 @@ def test(p):
     qc = (t < parminover) | (t > parmaxover)
 
     for i, tval in enumerate(t):
+        if qc[i]: continue # Already rejected.
+    
         zval = z[i]
 
         if np.any((tval >= tcrude1) & (tval <= tcrude2) & 
