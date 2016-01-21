@@ -63,6 +63,13 @@ def revert_order(p, data):
 
     return datar
 
+def revert_qc_order(p, qc):
+    '''Return QC array. Missing data values are set to False.'''
+    
+    qcr = revert_order(p, qc)
+    qcr[qcr.mask] = False
+    return qcr
+
 def level_order(p):
     '''Reorders data into depth order and rejects levels with 
        negative depth.

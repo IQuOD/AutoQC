@@ -28,7 +28,7 @@ def test(p):
        are all set to the same value, determined by the location.
     ''' 
 
-    qc = np.zeros(p.n_levels())
+    qc = np.zeros(p.n_levels(), dtype=bool)
 
     # Ensure that lon is in the range -180 to 180 or 0 to 360 and lat is from -90 to 90.
     lat = p.latitude()

@@ -37,6 +37,10 @@
     "applies_to":["CoTeDe_fuzzy_logic"],
     "modules":["skfuzzy"],
     "data":["temperature_seasonal_5deg.nc"]
+  },
+  {
+    "applies_to":["loose_location_at_sea"],
+    "data":["etopo5.nc"]
   }
 ]
  
