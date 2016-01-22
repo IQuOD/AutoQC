@@ -102,6 +102,9 @@ def level_order(p):
         zr         = z[isort]
         tr         = t[isort]
         origlevels = origlevels[isort]
+    else:
+        zr         = z
+        tr         = t
 
     return None
 
