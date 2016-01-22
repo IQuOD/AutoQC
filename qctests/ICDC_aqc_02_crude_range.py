@@ -36,7 +36,7 @@ def test(p):
                   (zval <= zcrude1) & (zval >= zcrude2)):
             qc[i] = True 
 
-    return ICDC.revert_order(p, qc)
+    return ICDC.revert_qc_order(p, qc)
 
 # Ranges:
 tcrude1 = np.array(
