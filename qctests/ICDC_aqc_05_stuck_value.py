@@ -23,6 +23,7 @@ def test(p):
     '''Return quality control decisions.
     '''
 
+    # Default set of QC flags to return.
     qc = np.zeros(p.n_levels(), dtype=bool)
 
     # Set minimum allowed levels.      
@@ -59,9 +60,12 @@ def test(p):
     if n[i] < minlevs: return qc
     thick = z[i + n[i] - 1] - z[i]
     if thick >= 200.0: 
-        qc[i:i+n[i]] = True
+        # If setting the QC flags we need to be careful about level order.
+        qclo = qc[0:nlevels]
+        qclo[i:i+n[i]] = True
+        qc = ICDC.revert_qc_order(p, qclo)
 
-    return ICDC.revert_qc_order(p, qc)
+    return qc
 
 
 
