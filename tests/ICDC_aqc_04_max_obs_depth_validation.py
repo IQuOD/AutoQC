@@ -3,7 +3,7 @@ import qctests.ICDC_aqc_04_max_obs_depth as ICDC_mol
 import util.testingProfile
 import numpy as np
 
-##### ICDC crude range check.
+##### ICDC maximum observed depth check.
 ##### --------------------------------------------------
 
 def test_ICDC_max_obs_level():
