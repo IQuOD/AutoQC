@@ -64,7 +64,7 @@ def test(p):
         if spike > spikemax:
             qc[origlevels[i]] = True
 
-    return ICDC.revert_order(p, qc)
+    return ICDC.revert_qc_order(p, qc)
 
 
 
