@@ -121,10 +121,11 @@ def buddyCovariance(minDist, profile, buddyProfile, meso_ev_a, meso_ev_b, syn_ev
     corScaleT = 432000.0 # 5 days in secs.
     mesSDist  = minDist / (1000.0 * corScaleA)
     synSDist  = minDist / (1000.0 * corScaleB)
-    timeDiff2 = (timeDiff(profile, buddyProfile) / corScaleT)**2 
 
+    timeDiff2 = timeDiff(profile, buddyProfile) 
     if timeDiff2 is None:
         return None
+    timeDiff2 = (timeDiff2 / corScaleT)**2
 
     covar = (meso_ev_a * meso_ev_b *
             (1.0 + mesSDist) * np.exp(-mesSDist - timeDiff2) + 
