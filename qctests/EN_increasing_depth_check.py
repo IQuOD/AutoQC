@@ -74,7 +74,7 @@ def run_qc(p):
             except:
                 spikeqc = EN_spike_and_step_check.test(p)
             if spikeqc[currentLev]: qc[currentLev] = True
-            if spikeqc[currentLev]: qc[otherLev]   = True
+            if spikeqc[otherLev]:   qc[otherLev]   = True
             if spikeqc[currentLev] == False and spikeqc[otherLev] == False:
                 qc[currentLev] = True
                 qc[otherLev]   = True
