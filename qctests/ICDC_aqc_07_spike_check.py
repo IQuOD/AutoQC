@@ -39,30 +39,35 @@ def test(p):
     tuse = t[use]
     origlevels = (np.arange(nlevels))[use]
 
-    # Check for spikes.
-    for i in range(1, nuse - 1):
-        z13   = zuse[i+1] - zuse[i-1]
-        z12   = zuse[i] - zuse[i-1]
-        z23   = zuse[i+1] - zuse[i] 
-        v1    = tuse[i-1]
-        v2    = tuse[i]
-        v3    = tuse[i+1]
+    # Extract sections of the arrays. We are QCing the values
+    # in the z2 and v3 arrays.
+    z1 = zuse[0:-2]
+    z2 = zuse[1:-1]
+    z3 = zuse[2:]
+    v1 = tuse[0:-2]
+    v2 = tuse[1:-1]
+    v3 = tuse[2:]
+    ol = origlevels[1:-1]
 
-        a     = 0.5 * (v1 + v3)
-        q1    = np.abs(v2 - a)
-        q2    = np.abs(0.5 * (v3 - v1))
+    # Calculate the level of 'spike'.
+    z13 = z3 - z1
+    z12 = z2 - z1
+    z23 = z3 - z2
 
-        spike = q1 - q2
+    a  = 0.5 * (v1 + v3)
+    q1 = np.abs(v2 - a)
+    q2 = np.abs(0.5 * (v3 - v1))
 
-        if z[i] > 2000.0:
-            spikemax = 2.0
-        elif z[i] > 1000.0:
-            spikemax = 3.0
-        else:
-            spikemax = 4.0
+    spike = q1 - q2
 
-        if spike > spikemax:
-            qc[origlevels[i]] = True
+    # Define the threshold at each level.
+    spikemax = np.ndarray(nuse - 2)
+    spikemax[:]           = 4.0
+    spikemax[z2 > 1000.0] = 3.0
+    spikemax[z2 > 2000.0] = 2.0
+
+    # Set QC flags.
+    qc[ol[spike > spikemax]] = True
 
     return ICDC.revert_qc_order(p, qc)
 
