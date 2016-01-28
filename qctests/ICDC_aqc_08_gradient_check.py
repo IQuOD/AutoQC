@@ -1,12 +1,19 @@
 '''
-Python version of check_aqc_08_gradient_check. 
+Python version of check_aqc_08_gradient_check.f. 
 Details of the original code are:
 
-DATE:       JANUARY 27 2016
+c/ DATE:       JANUARY 28 2016
 
-AUTHOR:     Viktor Gouretski
+c/ AUTHOR:     Viktor Gouretski
 
-AUTHOR'S AFFILIATION:   Integrated Climate Data Center, University of Hamburg, Hamburg, Germany
+c/ AUTHOR'S AFFILIATION:   Integrated Climate Data Center, University of Hamburg, Hamburg, Germany
+
+c/ PROJECT:    International Quality Controlled Ocean DataBase (IQuOD)
+
+c/ TITLE:      check_aqc_08_gradient_check
+
+c/ PURPOSE:
+c    to check temperature profile for unrealistic vertical gradients
 '''
 
 import ICDC_aqc_01_level_order as ICDC
