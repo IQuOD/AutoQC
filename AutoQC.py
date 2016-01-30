@@ -34,6 +34,8 @@ def processFile(fName):
   currentFile  = ''
   f = None
   for iprofile, pinfo in enumerate(profiles):
+    # Do not process data twice if run in parallel.
+    if pinfo.file_name != fName: continue 
     # Load the profile data.
     p, currentFile, f = main.profileData(pinfo, currentFile, f)
     # Check that there are temperature data in the profile, otherwise skip.
