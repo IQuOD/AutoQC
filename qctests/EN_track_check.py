@@ -15,8 +15,8 @@ import math
 DistRes = 20000. # meters
 TimeRes = 600. # seconds
 
-ds.EN_track_headers = {}
-ds.EN_track_results = {}
+EN_track_headers = {}
+EN_track_results = {}
 
 def test(p):
     """ 
@@ -35,25 +35,25 @@ def test(p):
     # qc return objects) 
 
     # check if this profile has been examined already
-    if (cruise, uid) in ds.EN_track_results.keys():
-        return ds.EN_track_results[(cruise, uid)]
+    if (cruise, uid) in EN_track_results.keys():
+        return EN_track_results[(cruise, uid)]
 
     # some detector types cannot be assessed by this test; do not raise flag.
     if p.probe_type in [None,0]:
         return np.zeros(1, dtype=bool)
 
-    # the first time this test is run, sort ds.profiles into a cruise-keyed dictionary:
-    if ds.EN_track_headers == {}:
-        ds.EN_track_headers = main.sort_headers(ds.profiles)
+    # the first time this test is run, sort ds.threadProfiles into a cruise-keyed dictionary:
+    if EN_track_headers == {}:
+        EN_track_headers = main.sort_headers(ds.threadProfiles)
 
     # since we didn't find an answer already calculated,
     # we still need to do the calculation for this cruise;
-    # all the relevant headers are sitting in the ds.EN_track_headers list.
-    headers = ds.EN_track_headers[cruise]
+    # all the relevant headers are sitting in the EN_track_headers list.
+    headers = EN_track_headers[cruise]
 
     # start all as passing by default:
     for i in range(len(headers)):
-        ds.EN_track_results[(headers[i].cruise(), headers[i].uid())] = np.zeros(1, dtype=bool)
+        EN_track_results[(headers[i].cruise(), headers[i].uid())] = np.zeros(1, dtype=bool)
 
     # copy the list of headers;
     # remove entries as they are flagged.
@@ -67,9 +67,9 @@ def test(p):
     # if more than half got rejected, reject everyone
     if len(passedHeaders) < len(headers) / 2:
         for i in range(len(headers)):
-            ds.EN_track_results[(headers[i].cruise(), headers[i].uid())][0] = True        
+            EN_track_results[(headers[i].cruise(), headers[i].uid())][0] = True        
 
-    return ds.EN_track_results[(cruise, uid)]
+    return EN_track_results[(cruise, uid)]
 
 def findOutlier(headers):
     '''
@@ -95,7 +95,7 @@ def findOutlier(headers):
     if flag:
         rejects = chooseReject(headers, speeds, angles, iMax, maxSpeed)
         for reject in rejects:
-            ds.EN_track_results[(headers[reject].cruise(), headers[reject].uid())][0] = True
+            EN_track_results[(headers[reject].cruise(), headers[reject].uid())][0] = True
         return rejects
     else:
         return []
@@ -134,7 +134,8 @@ def detectExcessiveSpeed(speeds, angles, index, maxSpeed):
     '''
 
     flag = speeds[index] > maxSpeed
-    if index < len(angles) - 1:
+
+    if index < len(angles) and index > 0:
         flag = flag or ( (speeds[index] > 0.8*maxSpeed) and (angles[index]>math.pi/2 or angles[index-1]>math.pi/2) )
 
     return flag
