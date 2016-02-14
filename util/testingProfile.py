@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import numpy as np
 
 class fakeProfile:
@@ -87,6 +88,18 @@ class fakeProfile:
         """ Returns the time. """
         return self.primary_header['Time']
 
+    def datetime(self):
+        day = self.primary_header['Day']
+        if day == 0:
+            day = 15
+        time  = self.primary_header['Time']
+        if time is None or time < 0 or time >= 24:
+            time = 0
+
+        d = datetime(self.year(), self.month(), day) + \
+            timedelta(hours=time)
+        return d
+
     def var_data(self, dat):
         """ Returns the data values for a variable given the variable index. """
         data = np.ma.array(np.zeros(len(dat)), mask=True)
@@ -105,4 +118,9 @@ class fakeProfile:
                 pt = item['Value']
         return pt
 
+    def z_level_qc(self):
+        return np.zeros(self.depths.shape).astype('bool')
+
+    def t_qc_mask(self):
+        return np.zeros(self.temperatures.shape).astype('bool')
 
