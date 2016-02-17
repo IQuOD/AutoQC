@@ -25,6 +25,9 @@ def test(p):
     passed the check and True where it failed. 
     """
 
+    global EN_track_headers
+    global EN_track_results
+
     cruise = p.cruise()
     uid = p.uid()
 
@@ -100,6 +103,35 @@ def findOutlier(headers):
     else:
         return []
 
+def chooseReject(headers, speeds, angles, index, maxSpeed):
+    '''
+    decide which profile to reject, headers[index] or headers[index-1], or both,
+    and return a list of indices to reject.
+    '''
+
+    # chain of tests breaks when a reject is found:
+    reject = condition_a(headers, speeds, angles, index, maxSpeed)
+
+    # condition i needs to run at the end of the chain in all cases:
+    # if no decision, reject both:
+    if reject == -1:
+        reject = [index-1, index]
+    # if excessive speed is created by removing the flag, reject both instead 
+    # can't create new excessive speed by removing last profile.
+    elif reject < len(headers)-1: 
+        newHeaders = copy.deepcopy(headers)
+        del newHeaders[reject]
+        newSpeeds, newAngles = calculateTraj(newHeaders)
+        flag = detectExcessiveSpeed(newSpeeds, newAngles, reject, maxSpeed)
+        if flag:
+            reject = [index-1, index]
+        else:
+            reject = [reject]
+    else:
+        reject = [reject]
+
+    return reject
+
 def calculateTraj(headers):
     '''
     return a list of speeds and a list of angles describing the trajectory of the track described
@@ -117,7 +149,7 @@ def calculateTraj(headers):
 
         speeds[i] = trackSpeed(headers[i-1], headers[i])
         if i < len(headers)-1: # can't do angle on last point 
-            angles[i] = geo.haversineAngle(headers[i-1], headers[i], headers[i+1])
+            angles[i] = abs(math.pi - geo.haversineAngle(headers[i-1], headers[i], headers[i+1]))
 
     return speeds, angles
 
@@ -160,39 +192,9 @@ def trackSpeed(prevHeader, header):
 
     return speed
 
-def chooseReject(headers, speeds, angles, index, maxSpeed):
-    '''
-    decide which profile to reject, headers[index] or headers[index-1], or both,
-    and return a list of indices to reject.
-    '''
-
-    # chain of tests breaks when a reject is found:
-    reject = condition_a(headers, speeds, angles, index, maxSpeed)
-
-    # condition i needs to run at the end of the chain in all cases:
-    # if no decision, reject both:
-    if reject == -1:
-        reject = [index-1, index]
-    # if excessive speed is created by removing the flag, reject both instead 
-    # can't create new excessive speed by removing last profile.
-    elif reject < len(headers)-1: 
-        newHeaders = copy.deepcopy(headers)
-        del newHeaders[reject]
-        newSpeeds, newAngles = calculateTraj(newHeaders)
-        flag = detectExcessiveSpeed(newSpeeds, newAngles, reject, maxSpeed)
-        if flag:
-            reject = [index-1, index]
-        else:
-            reject = [reject]
-    else:
-        reject = [reject]
-
-    return reject
-
 def condition_a(headers, speeds, angles, index, maxSpeed):
     '''
     assess condition (a) from the text
-    todo: the analogy refered to in the text for the last element isn't obvious.
     '''
 
     if index == 1: # note 'M' in the text seems to count from 1, not 0.
