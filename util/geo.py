@@ -15,7 +15,11 @@ def arcHaversine(hs):
     inverts haversine
     '''
 
-    return 2 * math.asin(math.sqrt(hs))
+    sqrths = math.sqrt(hs)
+    if sqrths > 1:
+        sqrths = round(sqrths, 10)
+
+    return 2 * math.asin(sqrths)
 
 def haversineDistance(pro1, pro2):
     """

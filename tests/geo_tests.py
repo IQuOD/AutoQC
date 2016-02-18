@@ -77,3 +77,10 @@ def test_haversineAngle():
     C = util.testingProfile.fakeProfile([0], [0], latitude=90, longitude=20)
     angle = geo.haversineAngle(A,B,C) 
     assert angle - math.pi/2 < 0.000001, 'orthogonal great circles had an angle of %f between them.' % angle
+
+def test_archaversine_domain():
+    '''
+    make sure archaversine does something sensible if it ends up with an argument of 1+epislon or -1-epsilon
+    '''
+
+    assert geo.arcHaversine(1.00000000000000004) == geo.arcHaversine(1.0), 'archaversine fooled by floating point problems'

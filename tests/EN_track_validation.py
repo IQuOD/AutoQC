@@ -96,7 +96,108 @@ class TestClass():
 
         assert flag == 1, 'should have rejected the second profile due to high angle at third profile.'
 
+    def condition_a_nominal_test(self):
+        '''
+        condition a rejects the first profile if the second passes muster
+        '''
 
+        profiles = []
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=0, longitude=90, date=[1999, 12, 31, 0]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=0.5, longitude=90, date=[1999, 12, 31, 1]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=1, longitude=90, date=[1999, 12, 31, 2]))
 
+        speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
 
+        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 1, 15)
 
+        assert flag == 0, 'should have rejected the first profile since the second seems ok.'
+
+    def condition_a_fast_end_test(self):
+        '''
+        speed test at end of profile
+        '''
+
+        profiles = []
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 31, 5]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 6]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 7]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=19, longitude=90, date=[1999, 12, 31, 8]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=19.99, longitude=90, date=[1999, 12, 31, 9]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=20, longitude=90, date=[1999, 12, 31, 10]))
+
+        speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
+
+        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 5, 15)
+
+        assert flag == 4, 'should have rejected the second to last profile due to high speed from second to last to final profile.'
+
+    def condition_a_angle_end_test(self):
+        '''
+        angle test at end of profile
+        '''
+
+        profiles = []
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 31, 5]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 6]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 7]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=19, longitude=90, date=[1999, 12, 31, 8]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=20, longitude=90, date=[1999, 12, 31, 9]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=19, longitude=90, date=[1999, 12, 31, 10]))
+
+        speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
+
+        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 5, 15)
+
+        assert flag == 4, 'should have rejected the second to last profile due to high angle at final profile.'
+
+    def condition_a_nominal_end_test(self):
+        '''
+        condition a rejects the last profile if the second to last passes muster
+        '''
+
+        profiles = []
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 31, 5]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 6]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 7]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=19, longitude=90, date=[1999, 12, 31, 8]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=20, longitude=90, date=[1999, 12, 31, 9]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=21, longitude=90, date=[1999, 12, 31, 10]))
+
+        speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
+
+        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 5, 15)
+
+        assert flag == 5, 'should have rejected the last profile since the second to last seems ok.'
+
+    def condition_b_test(self):
+        '''
+        nominal behavior of condition b
+        '''
+
+        profiles = []
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 31, 5]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 6]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 7]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18.01, longitude=90, date=[1999, 12, 31, 8]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=20, longitude=90, date=[1999, 12, 31, 9]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=22, longitude=90, date=[1999, 12, 31, 10]))
+
+        speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
+
+        flag = qctests.EN_track_check.condition_b(profiles, speeds, angles, 4, 15)
+
+        assert flag == 4, 'speed 4 too fast, speed 5 too fast -> should reject 4'
+
+        profiles = []
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 31, 5]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 6]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17.01, longitude=90, date=[1999, 12, 31, 7]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18.01, longitude=90, date=[1999, 12, 31, 8]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=20, longitude=90, date=[1999, 12, 31, 9]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=21, longitude=90, date=[1999, 12, 31, 10]))
+
+        speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
+
+        flag = qctests.EN_track_check.condition_b(profiles, speeds, angles, 4, 15)
+
+        assert flag == 3, 'speed 4 too fast, speed 3 too fast -> should reject 3'
