@@ -14,7 +14,6 @@ def test_ICDC_gradient_check():
     lines = data.splitlines()
     for i, line in enumerate(lines):
         if line[0:2] == 'HH':
-            print line
             header  = line.split()
             nlevels = int(header[-1][:-3])
             

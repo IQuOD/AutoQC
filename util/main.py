@@ -213,14 +213,14 @@ def printSummary(truth, results, testNames):
 
   nProfiles = len(truth)
   print('Number of profiles tested was %i\n' % nProfiles)
-  print('%33s %7s %7s %7s %7s %7s' % ('NAME OF TEST', 'FAILS', 'TPR', 'FPR', 'TNR', 'FNR')) 
+  print('%35s %7s %7s %7s %7s %7s' % ('NAME OF TEST', 'FAILS', 'TPR', 'FPR', 'TNR', 'FNR')) 
   overallResults = np.zeros(nProfiles, dtype=bool)
   for i in range (0, len(testNames)):
     overallResults = np.logical_or(overallResults, results[i])
     tpr, fpr, fnr, tnr = calcRates(results[i], truth)
-    print('%33s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % (testNames[i], np.sum(results[i]), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
+    print('%35s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % (testNames[i], np.sum(results[i]), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
   tpr, fpr, fnr, tnr = calcRates(overallResults, truth)
-  print('%33s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % ('RESULT OF OR OF ALL:', np.sum(overallResults), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
+  print('%35s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % ('RESULT OF OR OF ALL:', np.sum(overallResults), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
 
 
 def combineArrays(parallelResults):
