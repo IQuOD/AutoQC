@@ -205,7 +205,7 @@ def condition_a(headers, speeds, angles, index, maxSpeed):
             return 0
     elif index == len(headers)-1 and len(headers)>3:  # why not >=? seems to cause problems, investigate.
         impliedSpeed = trackSpeed(headers[-3], headers[-1])
-        if impliedSpeed < maxSpeed and (speeds[-2] > maxSpeed or angles[-2]>45./180.*math.pi):
+        if impliedSpeed < maxSpeed and (speeds[-2] > maxSpeed or angles[-3]>45./180.*math.pi):
             return index-1
         else:
             return index
