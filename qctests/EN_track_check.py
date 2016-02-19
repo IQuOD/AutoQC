@@ -338,9 +338,9 @@ def condition_h(headers, speeds, angles, index, maxSpeed):
         PT1 = geo.deltaTime(headers[index-2], headers[index-1]) / geo.deltaTime(headers[index-2], headers[index+1])
         PT2 = geo.deltaTime(headers[index-2], headers[index]) / geo.deltaTime(headers[index-2], headers[index+1])
 
-        if math.abs(PD1-PT1) > 0.1 + math.abs(PD2-PT2):
+        if abs(PD1-PT1) > 0.1 + abs(PD2-PT2):
             return index-1
-        if math.abs(PD2 - PT2) > 0.1 + math.abs(PD1 - PT1):
+        if abs(PD2 - PT2) > 0.1 + abs(PD1 - PT1):
             return index
 
     return -1

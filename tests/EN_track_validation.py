@@ -351,3 +351,69 @@ class TestClass():
         flag = qctests.EN_track_check.condition_f(profiles, speeds, angles, 4, 15)
         
         assert flag == 4, 'speed 4 too fast, speed 5 very small -> should reject 4'
+
+    def condition_g_test(self):
+        '''
+        nominal behavior of condition g
+        '''
+
+        profiles = []
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 31, 5]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 31, 6]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 7]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=10, longitude=90, date=[1999, 12, 31, 8]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 9]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 10]))
+
+        speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
+    
+        flag = qctests.EN_track_check.condition_g(profiles, speeds, angles, 4, 15)
+
+        assert flag == 3, 'positions 2, 4 and 5 all closely clustered but 3 far away -> should reject 3'
+
+        profiles = []
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 31, 5]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 31, 6]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 7]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 8]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=10, longitude=90, date=[1999, 12, 31, 9]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 10]))
+
+        speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
+        
+        flag = qctests.EN_track_check.condition_g(profiles, speeds, angles, 4, 15)
+        
+        assert flag == 4, 'positions 2, 3 and 5 closely clustered but 4 far away -> should reject 4'
+
+    def condition_h_test(self):
+        '''
+        nominal behavior of condition h
+        '''
+
+        profiles = []
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 31, 5]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 31, 6]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 7]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 8]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 9]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18.5, longitude=90, date=[1999, 12, 31, 10]))
+
+        speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
+    
+        flag = qctests.EN_track_check.condition_h(profiles, speeds, angles, 4, 15)
+
+        assert flag == 3, 'nonsmooth behavior at profile 3 -> should reject 3'
+
+        profiles = []
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 31, 5]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 31, 6]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 7]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17.5, longitude=90, date=[1999, 12, 31, 8]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18.5, longitude=90, date=[1999, 12, 31, 9]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18.5, longitude=90, date=[1999, 12, 31, 10]))
+
+        speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
+        
+        flag = qctests.EN_track_check.condition_h(profiles, speeds, angles, 4, 15)
+        
+        assert flag == 4, 'nonsmooth behavior at 4 -> should reject 4'
