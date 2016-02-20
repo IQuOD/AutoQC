@@ -44,7 +44,7 @@
   },
   {
     "applies_to":["ICDC_aqc_09_local_climatology_check"],
-    "data":["climatological_t_median_and_amd_for_aqc.dat"]
+    "data":[["climatological_t_median_and_amd_for_aqc.dat", "climatological_t_median_and_amd_for_aqc.nc"]]
   }
 ]
  
