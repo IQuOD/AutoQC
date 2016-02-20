@@ -174,7 +174,7 @@ def read_ascii_and_convert_to_netcdf():
     zedqcv = nc.createVariable('zedqc', 'f4', ('ka',))
     zedqcv[:] = zedqc
     nc.fillValue = fillValue
-    nc.history = 'Created ' + time.ctime(time.time())
+    nc.history = 'Created ' + time.ctime(time.time()) + ' from climatological_t_median_and_amd_for_aqc.dat provided by Viktor Gouretski, Integrated Climate Data Center, University of Hamburg, Hamburg, Germany, February 2016'
     nc.close()
 
 def read_netcdf():
