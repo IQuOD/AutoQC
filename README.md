@@ -29,12 +29,12 @@ And you'll find AutoQC all set up and ready to use in the directory `/AutoQC`. N
 
 If you want to run AutoQC without Docker, have a look at the setup steps in `docker/Dockerfile`; these correspond to the same setup steps you'll need to do on a similar machine (ie on Debian with miniconda already installed).
 
-Data files originate as follows:
+Docker makes it very convenient for the project to run AutoQC, but note that the data files to run the full set of AutoQC checks are obtained as detailed below:
 
- - EN_bgcheck_info.nc: http://www.metoffice.gov.uk/hadobs/en4/data/EN_bgcheck_info.nc
- - temperature_seasonal_5deg.nc: http://data.nodc.noaa.gov/thredds/fileServer/woa/WOA09/NetCDFdata/temperature_seasonal_5deg.nc
- - etopo5.nc: http://oos.soest.hawaii.edu/thredds/ncss/etopo5?var=ROSE&disableLLSubset=on&disableProjSubset=on&horizStride=1&addLatLon=true
- - climatological_t_median_and_amd_for_aqc.nc: based on climatological_t_median_and_amd_for_aqc.dat provided by Viktor Gouretski, Integrated Climate Data Center, University of Hamburg, Hamburg, Germany, February 2016
+ - EN_bgcheck_info.nc (http://www.metoffice.gov.uk/hadobs/en4) from http://www.metoffice.gov.uk/hadobs/en4/data/EN_bgcheck_info.nc;
+ - temperature_seasonal_5deg.nc (https://www.nodc.noaa.gov/OC5/indprod.html) from http://data.nodc.noaa.gov/thredds/fileServer/woa/WOA09/NetCDFdata/temperature_seasonal_5deg.nc;
+ - etopo5.nc (http://www.ngdc.noaa.gov/mgg/global/etopo5.HTML) from http://oos.soest.hawaii.edu/thredds/ncss/etopo5?var=ROSE&disableLLSubset=on&disableProjSubset=on&horizStride=1&addLatLon=true;
+ - climatological_t_median_and_amd_for_aqc.nc: based on climatological_t_median_and_amd_for_aqc.dat provided by Viktor Gouretski, Integrated Climate Data Center, University of Hamburg, Hamburg, Germany, February 2016.
 
 ### AutoQC on AWS
 
