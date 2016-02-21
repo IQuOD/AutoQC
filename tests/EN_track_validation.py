@@ -5,32 +5,40 @@ import numpy, pandas
 import util.testingProfile
 import qctests.EN_track_check
 import util.geo
+import data.ds as ds
 
 class TestClass():
     distRes = 20000. #meters
     timeRes = 600.   #seconds
 
-    # some fake profiles
-    profiles = []
-    # first 5 profiles in a straight line
-    profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=0, longitude=90, date=[1999, 12, 31, 0]))
-    profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=1, longitude=90, date=[1999, 12, 31, 1]))
-    profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=2, longitude=90, date=[1999, 12, 31, 2]))
-    profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=3, longitude=90, date=[1999, 12, 31, 3]))
-    profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=4, longitude=90, date=[1999, 12, 31, 4]))
-    # reverse one
-    profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=3, longitude=90, date=[1999, 12, 31, 5]))
+    def setUp(self):
+        qctests.EN_track_check.EN_track_results = {}
+        qctests.EN_track_check.EN_track_headers = {}
 
+    def tearDown(self):
+        del qctests.EN_track_check.EN_track_results
+        del qctests.EN_track_check.EN_track_headers
 
     def trackSpeed_test(self):
         '''
         spot check on trackSpeed function
         '''
 
-        trueDistance = util.geo.haversineDistance(self.profiles[0], self.profiles[1])
+        # some fake profiles
+        profiles = []
+        # first 5 profiles in a straight line
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=0, longitude=90, date=[1999, 12, 31, 0]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=1, longitude=90, date=[1999, 12, 31, 1]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=2, longitude=90, date=[1999, 12, 31, 2]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=3, longitude=90, date=[1999, 12, 31, 3]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=4, longitude=90, date=[1999, 12, 31, 4]))
+        # reverse one
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=3, longitude=90, date=[1999, 12, 31, 5]))
+
+        trueDistance = util.geo.haversineDistance(profiles[0], profiles[1])
         trueSpeed = (trueDistance - self.distRes)/max(3600., self.timeRes)
 
-        assert qctests.EN_track_check.trackSpeed(self.profiles[0], self.profiles[1]) == trueSpeed
+        assert qctests.EN_track_check.trackSpeed(profiles[0], profiles[1]) == trueSpeed
 
     def detectExcessiveSpeed_test(self):
         '''
@@ -50,15 +58,24 @@ class TestClass():
         spot check on trajectory summary
         '''
 
+        # some fake profiles
+        profiles = []
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=0, longitude=90, date=[1999, 12, 31, 0]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=1, longitude=90, date=[1999, 12, 31, 1]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=2, longitude=90, date=[1999, 12, 31, 2]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=3, longitude=90, date=[1999, 12, 31, 3]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=4, longitude=90, date=[1999, 12, 31, 4]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=3, longitude=90, date=[1999, 12, 31, 5]))
+
         trueSpeeds = [-1]
         trueAngles = [-1, 0, 0, 0, math.pi, None]
 
-        for i in range(len(self.profiles)-1):
-            trueDistance = util.geo.haversineDistance(self.profiles[i], self.profiles[i+1])
+        for i in range(len(profiles)-1):
+            trueDistance = util.geo.haversineDistance(profiles[i], profiles[i+1])
             trueSpeed = (trueDistance - self.distRes)/max(3600., self.timeRes)
             trueSpeeds.append(trueSpeed)
 
-        speeds, angles = qctests.EN_track_check.calculateTraj(self.profiles)
+        speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
 
         assert numpy.array_equal(speeds, trueSpeeds)
         assert numpy.array_equal(angles, trueAngles)
@@ -417,3 +434,179 @@ class TestClass():
         flag = qctests.EN_track_check.condition_h(profiles, speeds, angles, 4, 15)
         
         assert flag == 4, 'nonsmooth behavior at 4 -> should reject 4'
+
+    ############################
+    # Integration Tests 
+    ############################
+
+    def all_for_one_test(self):
+        '''
+        10 profiles in a straight slow line should pass
+        '''
+
+        ds.threadProfiles = []
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 31, 5], cruise=1000, uid=1))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 31, 6], cruise=1000, uid=2))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 7], cruise=1000, uid=3))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17.5, longitude=90, date=[1999, 12, 31, 8], cruise=1000, uid=4))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 9], cruise=1000, uid=5))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18.5, longitude=90, date=[1999, 12, 31, 10], cruise=1000, uid=6))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=19, longitude=90, date=[1999, 12, 31, 11], cruise=1000, uid=7))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=19.5, longitude=90, date=[1999, 12, 31, 12], cruise=1000, uid=8))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=20, longitude=90, date=[1999, 12, 31, 13], cruise=1000, uid=9))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=20.5, longitude=90, date=[1999, 12, 31, 14], cruise=1000, uid=10))
+
+        # pass in any arbitrary profiles should catch all of them
+        qctests.EN_track_check.test(ds.threadProfiles[3])
+        truth = {}
+
+        for i in range(1,11):
+            truth[(1000, i)] = numpy.zeros(1, dtype=bool)
+
+        assert numpy.array_equal(truth, qctests.EN_track_check.EN_track_results), 'all profiles on a nominal profile should pass no matter which one is provided to EN_track'
+
+    def multi_track_test(self):
+        '''
+        a wild outlier on a different track shouldn't hurt anything
+        '''
+
+        ds.threadProfiles = []
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 31, 5], cruise=1000, uid=1))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 31, 6], cruise=1000, uid=2))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 7], cruise=1000, uid=3))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17.5, longitude=90, date=[1999, 12, 31, 8], cruise=1000, uid=4))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 9], cruise=1000, uid=5))
+
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=20.5, longitude=10, date=[1999, 12, 31, 9.5], cruise=1001, uid=11))
+
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18.5, longitude=90, date=[1999, 12, 31, 10], cruise=1000, uid=6))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=19, longitude=90, date=[1999, 12, 31, 11], cruise=1000, uid=7))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=19.5, longitude=90, date=[1999, 12, 31, 12], cruise=1000, uid=8))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=20, longitude=90, date=[1999, 12, 31, 13], cruise=1000, uid=9))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=20.5, longitude=90, date=[1999, 12, 31, 14], cruise=1000, uid=10))
+
+        qctests.EN_track_check.test(ds.threadProfiles[3])
+        truth = {}
+
+        for i in range(1,11):
+            truth[(1000, i)] = numpy.zeros(1, dtype=bool)
+
+        assert numpy.array_equal(truth, qctests.EN_track_check.EN_track_results), 'profiles from a different track should not cause failures'
+
+    def wild_outlier_test(self):
+        '''
+        flag an extreme outlier
+        '''
+
+        ds.threadProfiles = []
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 31, 5], cruise=1000, uid=1))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 31, 6], cruise=1000, uid=2))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 7], cruise=1000, uid=3))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17.5, longitude=90, date=[1999, 12, 31, 8], cruise=1000, uid=4))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 9], cruise=1000, uid=5))
+
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=10, date=[1999, 12, 31, 9.5], cruise=1000, uid=11))
+
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18.5, longitude=90, date=[1999, 12, 31, 10], cruise=1000, uid=6))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=19, longitude=90, date=[1999, 12, 31, 11], cruise=1000, uid=7))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=19.5, longitude=90, date=[1999, 12, 31, 12], cruise=1000, uid=8))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=20, longitude=90, date=[1999, 12, 31, 13], cruise=1000, uid=9))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=20.5, longitude=90, date=[1999, 12, 31, 14], cruise=1000, uid=10))
+
+        qctests.EN_track_check.test(ds.threadProfiles[3])
+
+        assert numpy.array_equal(numpy.ones(1, dtype=bool), qctests.EN_track_check.EN_track_results[(1000,11)]), 'should reject wild outlier'
+
+    def condition_i_gap_test(self):
+        '''
+        if removing a profile makes an excessive speed between m-1 and m+1, remove both m and m-1.
+        '''
+
+        ds.threadProfiles = []
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 30, 5], cruise=1000, uid=1))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 30, 6], cruise=1000, uid=2))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 30, 7], cruise=1000, uid=3))
+
+        #end of first pass: reject on (i)
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17.5, longitude=90, date=[1999, 12, 31, 8], cruise=1000, uid=4))
+
+        #first pass: reject on (b)
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18.5, longitude=90, date=[1999, 12, 31, 9], cruise=1000, uid=5))
+
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=19.5, longitude=90, date=[1999, 12, 31, 10], cruise=1000, uid=6))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=20, longitude=90, date=[1999, 12, 31, 11], cruise=1000, uid=7))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=20.5, longitude=90, date=[1999, 12, 31, 12], cruise=1000, uid=8))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=21, longitude=90, date=[1999, 12, 31, 13], cruise=1000, uid=9))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=21.5, longitude=90, date=[1999, 12, 31, 14], cruise=1000, uid=10))
+
+        qctests.EN_track_check.test(ds.threadProfiles[7])
+
+        truth = {}
+        for i in range(1,11):
+            truth[(1000, i)] = numpy.zeros(1, dtype=bool)
+        truth[(1000, 4)] = numpy.ones(1, dtype=bool)
+        truth[(1000, 5)] = numpy.ones(1, dtype=bool)
+
+        assert numpy.array_equal(truth, qctests.EN_track_check.EN_track_results), 'condition (b) & (i) reject'
+
+
+    def condition_c_integration_test(self):
+        '''
+        track passes until condition c
+        '''
+
+        ds.threadProfiles = []
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 30, 5], cruise=1000, uid=1))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 30, 6], cruise=1000, uid=2))
+
+        #first pass: reject on (c)
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 7], cruise=1000, uid=3))
+       
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 8], cruise=1000, uid=4))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18.5, longitude=90, date=[1999, 12, 31, 9], cruise=1000, uid=5))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=19, longitude=90, date=[1999, 12, 31, 10], cruise=1000, uid=6))
+
+        qctests.EN_track_check.test(ds.threadProfiles[3])
+
+        truth = {}
+        for i in range(1,7):
+            truth[(1000, i)] = numpy.zeros(1, dtype=bool)
+        truth[(1000, 3)] = numpy.ones(1, dtype=bool)
+
+        assert numpy.array_equal(truth, qctests.EN_track_check.EN_track_results), 'condition (c) reject'
+
+    def condition_d_integration_test(self):
+        '''
+        track passes until condition d
+        '''
+
+        ds.threadProfiles = []
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 30, 5], cruise=1000, uid=1))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 30, 6], cruise=1000, uid=2))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 7], cruise=1000, uid=3))
+
+        #first pass: reject on (d)
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 8], cruise=1000, uid=4))
+
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17.5, longitude=90, date=[1999, 12, 31, 9], cruise=1000, uid=5))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 10], cruise=1000, uid=6))
+
+        qctests.EN_track_check.test(ds.threadProfiles[5])
+
+        truth = {}
+        for i in range(1,7):
+            truth[(1000, i)] = numpy.zeros(1, dtype=bool)
+        truth[(1000, 4)] = numpy.ones(1, dtype=bool)
+
+        assert numpy.array_equal(truth, qctests.EN_track_check.EN_track_results), 'condition (d) reject'
+
+
+
+
+
+
+
+
+
+
+
