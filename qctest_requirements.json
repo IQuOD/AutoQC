@@ -18,7 +18,7 @@
     "modules":["cotede"]
   },
   {
-    "applies_to":["CoTeDe_*"],
+    "applies_to":["CoTeDe_*", "EN_std_lev_bkg_and_buddy_check"],
     "modules":["cotede"]
   },
   {
@@ -30,7 +30,7 @@
     "data":["temperature_seasonal_5deg.nc"]
   },
   {
-    "applies_to":["CoTeDe_location_at_sea_test"],
+    "applies_to":["CoTeDe_location_at_sea_test", "loose_location_at_sea"],
     "data":["etopo5.nc"]
   },
   {
@@ -39,8 +39,12 @@
     "data":["temperature_seasonal_5deg.nc"]
   },
   {
-    "applies_to":["loose_location_at_sea"],
-    "data":["etopo5.nc"]
+    "applies_to":["ICDC_aqc_0[23456789]_*"],
+    "qctests":["ICDC_aqc_01_level_order"]
+  },
+  {
+    "applies_to":["ICDC_aqc_09_local_climatology_check"],
+    "data":[["climatological_t_median_and_amd_for_aqc.dat", "climatological_t_median_and_amd_for_aqc.nc"]]
   }
 ]
  

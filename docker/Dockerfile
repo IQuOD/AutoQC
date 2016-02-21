@@ -15,4 +15,5 @@ RUN git clone https://github.com/IQuOD/AutoQC.git
 ADD EN_bgcheck_info.nc /AutoQC/data/.
 ADD temperature_seasonal_5deg.nc /AutoQC/data/.
 ADD etopo5.nc /AutoQC/data/.
+ADD climatological_t_median_and_amd_for_aqc.nc /AutoQC/data/.
 
