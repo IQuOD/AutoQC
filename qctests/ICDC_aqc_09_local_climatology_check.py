@@ -163,16 +163,31 @@ def read_ascii_and_convert_to_netcdf():
     kmdim = nc.createDimension('km', 16)
     kadim = nc.createDimension('ka', 60)
     mdim = nc.createDimension('m', 12)
-    tmedav = nc.createVariable('tmedA', 'f4', ('i', 'j', 'ka'))
-    tmedav[:, :, :] = tmedA 
-    tamdav = nc.createVariable('tamdA', 'f4', ('i', 'j', 'ka'))
-    tamdav[:, :, :] = tamdA 
-    tmedmv = nc.createVariable('tmedM', 'f4', ('i', 'j', 'km', 'm'))
-    tmedmv[:, :, :, :] = tmedM 
-    tamdmv = nc.createVariable('tamdM', 'f4', ('i', 'j', 'km', 'm'))
-    tamdmv[:, :, :, :] = tamdM 
+
+    sf = 0.0001
+    tmedav = nc.createVariable('tmedA', 'i4', ('i', 'j', 'ka'), zlib=True)
+    tmedav.add_offset = 0.0
+    tmedav.scale_factor = sf
+    tmedav[:, :, :] = tmedA
+
+    tamdav = nc.createVariable('tamdA', 'i4', ('i', 'j', 'ka'), zlib=True)
+    tamdav.add_offset = 0.0
+    tamdav.scale_factor = sf
+    tamdav[:, :, :] = tamdA
+
+    tmedmv = nc.createVariable('tmedM', 'i4', ('i', 'j', 'km', 'm'), zlib=True)
+    tmedmv.add_offset = 0.0
+    tmedmv.scale_factor = sf
+    tmedmv[:, :, :, :] = tmedM
+
+    tamdmv = nc.createVariable('tamdM', 'i4', ('i', 'j', 'km', 'm'), zlib=True)
+    tamdmv.add_offset = 0.0
+    tamdmv.scale_factor = sf
+    tamdmv[:, :, :, :] = tamdM
+
     zedqcv = nc.createVariable('zedqc', 'f4', ('ka',))
     zedqcv[:] = zedqc
+
     nc.fillValue = fillValue
     nc.history = 'Created ' + time.ctime(time.time()) + ' from climatological_t_median_and_amd_for_aqc.dat provided by Viktor Gouretski, Integrated Climate Data Center, University of Hamburg, Hamburg, Germany, February 2016'
     nc.close()
