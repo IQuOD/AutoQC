@@ -263,9 +263,9 @@ class TestClass():
         profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18.5, longitude=90, date=[1999, 12, 31, 10]))
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
-        print speeds
+
         flag = qctests.EN_track_check.condition_c(profiles, speeds, angles, 4, 15)
-        print flag
+
         assert flag == 4, 'speed 4 too fast, speed 2 to 4 too fast -> should reject 4'
 
     def condition_d_test(self):
@@ -600,7 +600,31 @@ class TestClass():
 
         assert numpy.array_equal(truth, qctests.EN_track_check.EN_track_results), 'condition (d) reject'
 
+    def condition_e_integration_test(self):
+        '''
+        track passes until condition e
+        '''
 
+        ds.threadProfiles = []
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 30, 5], cruise=1000, uid=1))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 30, 6], cruise=1000, uid=2))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 30, 7], cruise=1000, uid=3))
+
+        #first pass: reject on (e)
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 31, 8], cruise=1000, uid=4))
+       
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=15.5, longitude=90, date=[1999, 12, 31, 9], cruise=1000, uid=5))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=15, longitude=90, date=[2000, 01, 01, 10], cruise=1000, uid=6))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=14.5, longitude=90, date=[2000, 01, 01, 11], cruise=1000, uid=7))
+
+        qctests.EN_track_check.test(ds.threadProfiles[5])
+
+        truth = {}
+        for i in range(1,8):
+            truth[(1000, i)] = numpy.zeros(1, dtype=bool)
+        truth[(1000, 4)] = numpy.ones(1, dtype=bool)
+
+        assert numpy.array_equal(truth, qctests.EN_track_check.EN_track_results), 'condition (e) reject'
 
 
 

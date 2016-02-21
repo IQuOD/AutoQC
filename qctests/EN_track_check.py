@@ -97,6 +97,7 @@ def findOutlier(headers):
     # decide which profile to reject, flag it, and return a list of indices rejected at this step.
     if flag:
         rejects = chooseReject(headers, speeds, angles, iMax, maxSpeed)
+
         for reject in rejects:
             EN_track_results[(headers[reject].cruise(), headers[reject].uid())][0] = True
         return rejects
