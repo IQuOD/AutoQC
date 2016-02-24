@@ -173,6 +173,32 @@ def detectExcessiveSpeed(speeds, angles, index, maxSpeed):
 
     return flag
 
+def meanSpeed(speeds, headers, maxSpeed):
+    '''
+    determine mean speed, neglecting missing data, intervals less than 1h, and speeds over maxspeed, for use in condition (f)
+    '''
+
+    meanSpeed = 0
+    speedCount = 0
+    for iSpeed, speed in enumerate(speeds):
+        if speed == None or iSpeed == 0:
+            #missing values
+            continue
+        elif iSpeed > 0 and geo.deltaTime(headers[iSpeed-1], headers[iSpeed]) < 3600.:
+            #too close together in time
+            continue
+        elif speed > maxSpeed:
+            #too fast
+            continue
+        else:
+            meanSpeed += speed
+            speedCount += 1
+
+    if speedCount > 0:
+        meanSpeed = meanSpeed / speedCount
+
+    return meanSpeed
+
 
 def trackSpeed(prevHeader, header):
     '''
@@ -276,25 +302,12 @@ def condition_f(headers, speeds, angles, index, maxSpeed):
 
     if index>0 and index < len(speeds)-1:
 
-        # determine mean speed, neglecting missing data, intervals less than 1h, and speeds over maxspeed:
-        meanSpeed = 0
-        speedCount = 0
-        for iSpeed, speed in enumerate(speeds):
-            if speed == None:
-                continue
-            elif iSpeed > 0 and geo.deltaTime(headers[iSpeed-1], headers[iSpeed]) < 3600.:
-                continue
-            else:
-                meanSpeed += speed
-                speedCount += 1
+        ms = meanSpeed(speeds, headers, maxSpeed)
 
-        if speedCount > 0:
-            meanSpeed = meanSpeed / speedCount
-
-        if None not in [speeds[index-1], speeds[index+1]] and speeds[index-1] < min([speeds[index+1], 0.5*meanSpeed]):
+        if None not in [speeds[index-1], speeds[index+1]] and speeds[index-1] < min([speeds[index+1], 0.5*ms]):
             return index-1
 
-        if None not in [speeds[index-1], speeds[index+1]] and speeds[index+1] < min([speeds[index-1], 0.5*meanSpeed]):
+        if None not in [speeds[index-1], speeds[index+1]] and speeds[index+1] < min([speeds[index-1], 0.5*ms]):
             return index
 
     return condition_g(headers, speeds, angles, index, maxSpeed)
@@ -303,9 +316,9 @@ def condition_g(headers, speeds, angles, index, maxSpeed):
     '''
     assess condition (g) from the text
     '''
-
+    
     if index > 1 and index < len(headers) - 1:
-
+    
         dist1 = geo.haversineDistance(headers[index], headers[index-2]) + geo.haversineDistance(headers[index + 1], headers[index])
         dist2 = geo.haversineDistance(headers[index-1], headers[index-2]) + geo.haversineDistance(headers[index + 1], headers[index-1])
 
@@ -313,11 +326,13 @@ def condition_g(headers, speeds, angles, index, maxSpeed):
         distTol += geo.haversineDistance(headers[index], headers[index-1])
         distTol += geo.haversineDistance(headers[index+1], headers[index])
         distTol = max(DistRes, 0.1*distTol)
-
+        
         if dist1 < dist2 - distTol:
+            print index-1
             return index-1
 
         if dist2 < dist1 - distTol:
+            print index
             return index
 
     return condition_h(headers, speeds, angles, index, maxSpeed)
@@ -327,7 +342,7 @@ def condition_h(headers, speeds, angles, index, maxSpeed):
     assess condition (h) from the text
     typeo in text, implementation incomplete
     '''
-
+    print 'h'
     if index > 1 and index < len(headers) - 1:
 
         dist1 = geo.haversineDistance(headers[index], headers[index-2]) + geo.haversineDistance(headers[index + 1], headers[index])

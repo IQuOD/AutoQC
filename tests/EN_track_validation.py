@@ -80,6 +80,26 @@ class TestClass():
         assert numpy.array_equal(speeds, trueSpeeds)
         assert numpy.array_equal(angles, trueAngles)
 
+    def meanSpeed_test(self):
+        '''
+        make sure mean speed rejects speeds that are too fast
+        '''
+
+        profiles = []
+
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 31, 1]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 3]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 5]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=39, longitude=90, date=[1999, 12, 31, 7]))
+        profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=40, longitude=90, date=[1999, 12, 31, 9]))
+
+        speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
+        individualSpeed = qctests.EN_track_check.trackSpeed(profiles[0], profiles[1])
+
+        ms = qctests.EN_track_check.meanSpeed(speeds, profiles, 15)
+
+        assert ms - individualSpeed < 1E-10, 'all steps between profiles were equal except for one that should have been dropped => mean speed should equal speed between two adjacent profiles'
+
     def condition_a_fast_test(self):
         '''
         condition a checks that the speed from 2->3 isn't too fast
@@ -626,10 +646,57 @@ class TestClass():
 
         assert numpy.array_equal(truth, qctests.EN_track_check.EN_track_results), 'condition (e) reject'
 
+    def condition_f_integration_test(self):
+        '''
+        track passes until condition f
+        '''
 
+        ds.threadProfiles = []
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 31, 1], cruise=1000, uid=1))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 31, 2], cruise=1000, uid=2))
 
+        #first pass: reject on (f)
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 7], cruise=1000, uid=3))
+        
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 8], cruise=1000, uid=4))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18.5, longitude=90, date=[1999, 12, 31, 9], cruise=1000, uid=5))
 
+        qctests.EN_track_check.test(ds.threadProfiles[4])
 
+        truth = {}
+        for i in range(1,6):
+            truth[(1000, i)] = numpy.zeros(1, dtype=bool)
+        truth[(1000, 3)] = numpy.ones(1, dtype=bool)
+
+        assert numpy.array_equal(truth, qctests.EN_track_check.EN_track_results), 'condition (f) reject'
+
+    def condition_h_integration_test(self):
+        '''
+        track passes until condition h
+        '''
+
+        ds.threadProfiles = []
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 31, 9], cruise=1000, uid=1))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 12], cruise=1000, uid=2))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 15], cruise=1000, uid=3))
+
+        #first pass: reject on (h)
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=19, longitude=90, date=[1999, 12, 31, 16], cruise=1000, uid=4))
+        
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=20, longitude=90, date=[1999, 12, 31, 20], cruise=1000, uid=5))
+        #PD1: 1/3
+        #PD2: 2/3
+        #PT1: 3/8
+        #PT2: 1/2
+
+        qctests.EN_track_check.test(ds.threadProfiles[4])
+
+        truth = {}
+        for i in range(1,6):
+            truth[(1000, i)] = numpy.zeros(1, dtype=bool)
+        truth[(1000, 4)] = numpy.ones(1, dtype=bool)
+
+        assert numpy.array_equal(truth, qctests.EN_track_check.EN_track_results), 'condition (h) reject'
 
 
 
