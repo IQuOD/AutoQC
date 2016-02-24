@@ -112,7 +112,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
 
-        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 1, 15)
+        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 1, 15)[0]
 
         assert flag == 1, 'should have rejected the second profile due to high speed from second to third profile.'
 
@@ -129,7 +129,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
 
-        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 1, 15)
+        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 1, 15)[0]
 
         assert flag == 1, 'should have rejected the second profile due to high angle at third profile.'
 
@@ -145,7 +145,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
 
-        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 1, 15)
+        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 1, 15)[0]
 
         assert flag == 0, 'should have rejected the first profile due to high speed from first to third.'
 
@@ -161,7 +161,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
 
-        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 1, 15)
+        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 1, 15)[0]
 
         assert flag == 0, 'should have rejected the first profile since the second seems ok.'
 
@@ -180,7 +180,7 @@ class TestClass():
         
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
 
-        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 5, 15)
+        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 5, 15)[0]
         
         assert flag == 4, 'should have rejected the second to last profile due to high speed from third to last to second to last profile.'
 
@@ -199,7 +199,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
 
-        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 5, 15)
+        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 5, 15)[0]
 
         assert flag == 4, 'should have rejected the second to last profile due to high angle at third to final profile.'
 
@@ -218,7 +218,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
 
-        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 5, 15)
+        flag = qctests.EN_track_check.condition_a(profiles, speeds, angles, 5, 15)[0]
 
         assert flag == 5, 'should have rejected the last profile since the second to last seems ok.'
 
@@ -237,7 +237,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
 
-        flag = qctests.EN_track_check.condition_b(profiles, speeds, angles, 4, 15)
+        flag = qctests.EN_track_check.condition_b(profiles, speeds, angles, 4, 15)[0]
 
         assert flag == 3, 'speed 4 too fast, speed 3 too fast -> should reject 3'
 
@@ -251,7 +251,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
 
-        flag = qctests.EN_track_check.condition_b(profiles, speeds, angles, 4, 15)
+        flag = qctests.EN_track_check.condition_b(profiles, speeds, angles, 4, 15)[0]
 
         assert flag == 4, 'speed 4 too fast, speed 5 too fast -> should reject 4'
 
@@ -270,7 +270,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
         
-        flag = qctests.EN_track_check.condition_c(profiles, speeds, angles, 4, 15)
+        flag = qctests.EN_track_check.condition_c(profiles, speeds, angles, 4, 15)[0]
 
         assert flag == 3, 'speed 4 too fast, speed 3 to 5 too fast -> should reject 3'
 
@@ -284,7 +284,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
 
-        flag = qctests.EN_track_check.condition_c(profiles, speeds, angles, 4, 15)
+        flag = qctests.EN_track_check.condition_c(profiles, speeds, angles, 4, 15)[0]
 
         assert flag == 4, 'speed 4 too fast, speed 2 to 4 too fast -> should reject 4'
 
@@ -303,7 +303,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
         
-        flag = qctests.EN_track_check.condition_d(profiles, speeds, angles, 4, 15)
+        flag = qctests.EN_track_check.condition_d(profiles, speeds, angles, 4, 15)[0]
 
         assert flag == 3, 'speed 4 too fast, angle at 3 too large -> should reject 3'
 
@@ -317,7 +317,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
     
-        flag = qctests.EN_track_check.condition_d(profiles, speeds, angles, 4, 15)
+        flag = qctests.EN_track_check.condition_d(profiles, speeds, angles, 4, 15)[0]
         
         assert flag == 4, 'speed 4 too fast, angle at 4 too large -> should reject 4'
 
@@ -337,7 +337,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
     
-        flag = qctests.EN_track_check.condition_e(profiles, speeds, angles, 4, 15)
+        flag = qctests.EN_track_check.condition_e(profiles, speeds, angles, 4, 15)[0]
 
         assert flag == 3, 'speed 4 too fast, angle at 2 too large -> should reject 3'
 
@@ -352,7 +352,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
         
-        flag = qctests.EN_track_check.condition_e(profiles, speeds, angles, 4, 15)
+        flag = qctests.EN_track_check.condition_e(profiles, speeds, angles, 4, 15)[0]
         
         assert flag == 4, 'speed 4 too fast, angle at 5 too large -> should reject 4'
 
@@ -371,7 +371,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
     
-        flag = qctests.EN_track_check.condition_f(profiles, speeds, angles, 4, 15)
+        flag = qctests.EN_track_check.condition_f(profiles, speeds, angles, 4, 15)[0]
 
         assert flag == 3, 'speed 4 too fast, speed 3 very small -> should reject 3'
 
@@ -385,7 +385,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
         
-        flag = qctests.EN_track_check.condition_f(profiles, speeds, angles, 4, 15)
+        flag = qctests.EN_track_check.condition_f(profiles, speeds, angles, 4, 15)[0]
         
         assert flag == 4, 'speed 4 too fast, speed 5 very small -> should reject 4'
 
@@ -404,7 +404,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
     
-        flag = qctests.EN_track_check.condition_g(profiles, speeds, angles, 4, 15)
+        flag = qctests.EN_track_check.condition_g(profiles, speeds, angles, 4, 15)[0]
 
         assert flag == 3, 'positions 2, 4 and 5 all closely clustered but 3 far away -> should reject 3'
 
@@ -418,7 +418,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
         
-        flag = qctests.EN_track_check.condition_g(profiles, speeds, angles, 4, 15)
+        flag = qctests.EN_track_check.condition_g(profiles, speeds, angles, 4, 15)[0]
         
         assert flag == 4, 'positions 2, 3 and 5 closely clustered but 4 far away -> should reject 4'
 
@@ -437,7 +437,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
     
-        flag = qctests.EN_track_check.condition_h(profiles, speeds, angles, 4, 15)
+        flag = qctests.EN_track_check.condition_h(profiles, speeds, angles, 4, 15)[0]
 
         assert flag == 3, 'nonsmooth behavior at profile 3 -> should reject 3'
 
@@ -451,7 +451,7 @@ class TestClass():
 
         speeds, angles = qctests.EN_track_check.calculateTraj(profiles)
         
-        flag = qctests.EN_track_check.condition_h(profiles, speeds, angles, 4, 15)
+        flag = qctests.EN_track_check.condition_h(profiles, speeds, angles, 4, 15)[0]
         
         assert flag == 4, 'nonsmooth behavior at 4 -> should reject 4'
 
@@ -578,10 +578,9 @@ class TestClass():
         ds.threadProfiles = []
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 30, 5], cruise=1000, uid=1))
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 30, 6], cruise=1000, uid=2))
-
-        #first pass: reject on (c)
+        #first pass: reject profile[2] on (c)
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 7], cruise=1000, uid=3))
-       
+        #inital speed check: flag profile[3]
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 8], cruise=1000, uid=4))
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18.5, longitude=90, date=[1999, 12, 31, 9], cruise=1000, uid=5))
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=19, longitude=90, date=[1999, 12, 31, 10], cruise=1000, uid=6))
@@ -595,6 +594,10 @@ class TestClass():
 
         assert numpy.array_equal(truth, qctests.EN_track_check.EN_track_results), 'condition (c) reject'
 
+        speeds, angles = qctests.EN_track_check.calculateTraj(ds.threadProfiles)
+        flag = qctests.EN_track_check.condition_a(ds.threadProfiles, speeds, angles, 3, 15)[1]
+        assert flag == 'c', 'Correct profile flagged, but not by the expected step.'
+
     def condition_d_integration_test(self):
         '''
         track passes until condition d
@@ -604,10 +607,9 @@ class TestClass():
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 30, 5], cruise=1000, uid=1))
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 30, 6], cruise=1000, uid=2))
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 7], cruise=1000, uid=3))
-
-        #first pass: reject on (d)
+        #initial speed check: flag profile[3]
+        #first pass: reject profile[3] on (d)
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 8], cruise=1000, uid=4))
-
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17.5, longitude=90, date=[1999, 12, 31, 9], cruise=1000, uid=5))
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 10], cruise=1000, uid=6))
 
@@ -620,6 +622,10 @@ class TestClass():
 
         assert numpy.array_equal(truth, qctests.EN_track_check.EN_track_results), 'condition (d) reject'
 
+        speeds, angles = qctests.EN_track_check.calculateTraj(ds.threadProfiles)
+        flag = qctests.EN_track_check.condition_a(ds.threadProfiles, speeds, angles, 3, 15)[1]
+        assert flag == 'd', 'Correct profile flagged, but not by the expected step.'
+
     def condition_e_integration_test(self):
         '''
         track passes until condition e
@@ -629,10 +635,9 @@ class TestClass():
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 30, 5], cruise=1000, uid=1))
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 30, 6], cruise=1000, uid=2))
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 30, 7], cruise=1000, uid=3))
-
-        #first pass: reject on (e)
+        #first pass: reject profile[3] on (e)
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 31, 8], cruise=1000, uid=4))
-       
+        #initial speed check: flag profile[4]
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=15.5, longitude=90, date=[1999, 12, 31, 9], cruise=1000, uid=5))
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=15, longitude=90, date=[2000, 01, 01, 10], cruise=1000, uid=6))
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=14.5, longitude=90, date=[2000, 01, 01, 11], cruise=1000, uid=7))
@@ -646,6 +651,10 @@ class TestClass():
 
         assert numpy.array_equal(truth, qctests.EN_track_check.EN_track_results), 'condition (e) reject'
 
+        speeds, angles = qctests.EN_track_check.calculateTraj(ds.threadProfiles)
+        flag = qctests.EN_track_check.condition_a(ds.threadProfiles, speeds, angles, 4, 15)[1]
+        assert flag == 'e', 'Correct profile flagged, but not by the expected step.'
+
     def condition_f_integration_test(self):
         '''
         track passes until condition f
@@ -653,13 +662,12 @@ class TestClass():
 
         ds.threadProfiles = []
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 31, 1], cruise=1000, uid=1))
-        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 31, 2], cruise=1000, uid=2))
-
-        #first pass: reject on (f)
-        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 7], cruise=1000, uid=3))
-        
-        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 8], cruise=1000, uid=4))
-        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18.5, longitude=90, date=[1999, 12, 31, 9], cruise=1000, uid=5))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16.5, longitude=90, date=[1999, 12, 31, 3], cruise=1000, uid=2))
+        #first pass: reject profile[2] on (f)
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 8], cruise=1000, uid=3))
+        #initial speed check: flag profile[3]
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 9], cruise=1000, uid=4))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18.5, longitude=90, date=[1999, 12, 31, 11], cruise=1000, uid=5))
 
         qctests.EN_track_check.test(ds.threadProfiles[4])
 
@@ -670,6 +678,37 @@ class TestClass():
 
         assert numpy.array_equal(truth, qctests.EN_track_check.EN_track_results), 'condition (f) reject'
 
+        speeds, angles = qctests.EN_track_check.calculateTraj(ds.threadProfiles)
+        flag = qctests.EN_track_check.condition_a(ds.threadProfiles, speeds, angles, 3, 15)[1]
+        print flag
+        assert flag == 'f', 'Correct profile flagged, but not by the expected step.'
+
+    def condition_g_integration_test(self):
+        '''
+        track passes until condition g
+        '''
+
+        ds.threadProfiles = []
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1998, 12, 31, 1], cruise=1000, uid=1))
+        #first pass: reject profile[1] on (g)
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=89, date=[1999, 12, 31, 1], cruise=1000, uid=2))
+        #inital speed check: flag profile[2]
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 2], cruise=1000, uid=3))
+        ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=20, longitude=90, date=[2000, 12, 31, 3], cruise=1000, uid=4))
+
+        qctests.EN_track_check.test(ds.threadProfiles[3])
+
+        truth = {}
+        for i in range(1,5):
+            truth[(1000, i)] = numpy.zeros(1, dtype=bool)
+        truth[(1000, 2)] = numpy.ones(1, dtype=bool)
+
+        assert numpy.array_equal(truth, qctests.EN_track_check.EN_track_results), 'condition (g) reject'
+
+        speeds, angles = qctests.EN_track_check.calculateTraj(ds.threadProfiles)
+        flag = qctests.EN_track_check.condition_a(ds.threadProfiles, speeds, angles, 2, 15)[1]
+        assert flag == 'g', 'Correct profile flagged, but not by the expected step.'
+
     def condition_h_integration_test(self):
         '''
         track passes until condition h
@@ -679,10 +718,9 @@ class TestClass():
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=16, longitude=90, date=[1999, 12, 31, 9], cruise=1000, uid=1))
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=17, longitude=90, date=[1999, 12, 31, 12], cruise=1000, uid=2))
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=18, longitude=90, date=[1999, 12, 31, 15], cruise=1000, uid=3))
-
-        #first pass: reject on (h)
+        #initial speed check: flag profile [3]
+        #first pass: reject profile[3] on (h)
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=19, longitude=90, date=[1999, 12, 31, 16], cruise=1000, uid=4))
-        
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=20, longitude=90, date=[1999, 12, 31, 20], cruise=1000, uid=5))
         #PD1: 1/3
         #PD2: 2/3
@@ -698,6 +736,8 @@ class TestClass():
 
         assert numpy.array_equal(truth, qctests.EN_track_check.EN_track_results), 'condition (h) reject'
 
-
+        speeds, angles = qctests.EN_track_check.calculateTraj(ds.threadProfiles)
+        flag = qctests.EN_track_check.condition_a(ds.threadProfiles, speeds, angles, 3, 15)[1]
+        assert flag == 'h', 'Correct profile flagged, but not by the expected step.'
 
 

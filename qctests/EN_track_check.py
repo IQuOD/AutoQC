@@ -111,7 +111,7 @@ def chooseReject(headers, speeds, angles, index, maxSpeed):
     '''
 
     # chain of tests breaks when a reject is found:
-    reject = condition_a(headers, speeds, angles, index, maxSpeed)
+    reject = condition_a(headers, speeds, angles, index, maxSpeed)[0]
 
     # condition i needs to run at the end of the chain in all cases:
     # if no decision, reject both:
@@ -227,15 +227,15 @@ def condition_a(headers, speeds, angles, index, maxSpeed):
     if index == 1: # note 'M' in the text seems to count from 1, not 0.
         impliedSpeed = trackSpeed(headers[0], headers[2])
         if impliedSpeed < maxSpeed and (speeds[2]>maxSpeed or angles[2]>45./180.*math.pi):
-            return 1
+            return 1, 'a'
         else:
-            return 0
+            return 0, 'a'
     elif index == len(headers)-1 and len(headers)>3:  # why not >=? seems to cause problems, investigate.
         impliedSpeed = trackSpeed(headers[-3], headers[-1])
         if impliedSpeed < maxSpeed and (speeds[-2] > maxSpeed or angles[-3]>45./180.*math.pi):
-            return index-1
+            return index-1, 'a'
         else:
-            return index
+            return index, 'a'
     else:
         return condition_b(headers, speeds, angles, index, maxSpeed)
 
@@ -245,9 +245,9 @@ def condition_b(headers, speeds, angles, index, maxSpeed):
     '''
 
     if speeds[index-1] > maxSpeed:
-        return index-1
+        return index-1, 'b'
     elif index < len(speeds) - 1 and speeds[index+1] > maxSpeed:
-        return index
+        return index, 'b'
 
     return condition_c(headers, speeds, angles, index, maxSpeed)
 
@@ -259,12 +259,12 @@ def condition_c(headers, speeds, angles, index, maxSpeed):
     if index < len(headers)-1 and index > 0:
         impliedSpeed = trackSpeed(headers[index-1], headers[index+1])
         if impliedSpeed > maxSpeed:
-            return index-1
+            return index-1, 'c'
 
     if index > 1:
         impliedSpeed = trackSpeed(headers[index-2], headers[index])
         if impliedSpeed > maxSpeed:
-            return index
+            return index, 'c'
 
     return condition_d(headers, speeds, angles, index, maxSpeed)
 
@@ -275,10 +275,10 @@ def condition_d(headers, speeds, angles, index, maxSpeed):
     '''
 
     if None not in [angles[index-1], angles[index]] and angles[index-1] > 45./180.*math.pi + angles[index]:
-        return index-1
+        return index-1, 'd'
 
     if None not in [angles[index-1], angles[index]] and angles[index] > 45./180.*math.pi + angles[index-1]:
-        return index
+        return index, 'd'
 
     return condition_e(headers, speeds, angles, index, maxSpeed)
 
@@ -288,10 +288,10 @@ def condition_e(headers, speeds, angles, index, maxSpeed):
     '''
 
     if None not in [angles[index-2], angles[index+1]] and angles[index-2] > 45./180.*math.pi and angles[index-2] > angles[index+1]:
-        return index-1
+        return index-1, 'e'
 
     if None not in [angles[index+1]] and angles[index+1] > 45./180.*math.pi:
-        return index    
+        return index, 'e'
 
     return condition_f(headers, speeds, angles, index, maxSpeed)
 
@@ -305,10 +305,10 @@ def condition_f(headers, speeds, angles, index, maxSpeed):
         ms = meanSpeed(speeds, headers, maxSpeed)
 
         if None not in [speeds[index-1], speeds[index+1]] and speeds[index-1] < min([speeds[index+1], 0.5*ms]):
-            return index-1
+            return index-1, 'f'
 
         if None not in [speeds[index-1], speeds[index+1]] and speeds[index+1] < min([speeds[index-1], 0.5*ms]):
-            return index
+            return index, 'f'
 
     return condition_g(headers, speeds, angles, index, maxSpeed)
 
@@ -316,7 +316,7 @@ def condition_g(headers, speeds, angles, index, maxSpeed):
     '''
     assess condition (g) from the text
     '''
-    
+
     if index > 1 and index < len(headers) - 1:
     
         dist1 = geo.haversineDistance(headers[index], headers[index-2]) + geo.haversineDistance(headers[index + 1], headers[index])
@@ -326,14 +326,12 @@ def condition_g(headers, speeds, angles, index, maxSpeed):
         distTol += geo.haversineDistance(headers[index], headers[index-1])
         distTol += geo.haversineDistance(headers[index+1], headers[index])
         distTol = max(DistRes, 0.1*distTol)
-        
+
         if dist1 < dist2 - distTol:
-            print index-1
-            return index-1
+            return index-1, 'g'
 
         if dist2 < dist1 - distTol:
-            print index
-            return index
+            return index, 'g'
 
     return condition_h(headers, speeds, angles, index, maxSpeed)
 
@@ -342,7 +340,7 @@ def condition_h(headers, speeds, angles, index, maxSpeed):
     assess condition (h) from the text
     typeo in text, implementation incomplete
     '''
-    print 'h'
+    
     if index > 1 and index < len(headers) - 1:
 
         dist1 = geo.haversineDistance(headers[index], headers[index-2]) + geo.haversineDistance(headers[index + 1], headers[index])
@@ -355,11 +353,11 @@ def condition_h(headers, speeds, angles, index, maxSpeed):
         PT2 = geo.deltaTime(headers[index-2], headers[index]) / geo.deltaTime(headers[index-2], headers[index+1])
 
         if abs(PD1-PT1) > 0.1 + abs(PD2-PT2):
-            return index-1
+            return index-1, 'h'
         if abs(PD2 - PT2) > 0.1 + abs(PD1 - PT1):
-            return index
+            return index, 'h'
 
-    return -1
+    return -1, 'i'
 
 def checkOrder(profiles):
     '''
