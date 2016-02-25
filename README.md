@@ -9,7 +9,7 @@ Recent studies suggest that changes to global climate as have been seen at the E
 
 Recently, an international team of researchers has decided to work together to break down the barriers between the various groups and countries through the formation of the IQuOD (International Quality Controlled Dataset) initiative. One of the key aims is to intercompare the performance of the various automatic quality control tests that are presently being run to determine a best performing set. This work has started. However, it currently involves individuals running test datasets through their own systems and is being confounded by complications associated with the differences in the file formats and systems that are in use in the various labs and countries.
 
-The IQuOD proposal is to set up an open quality control benchmarking system.  Work will begin by implementing a battery of simple tests to run on some test data, and producing summary statistics and visualizations of the results.  Later goals include helping researchers either wrap their existing C, Fortran and Matlab test functions in Python for use in this test suite, or re-implementing those tests in native Python.
+The IQuOD proposal is to set up an open quality control benchmarking system.  Work will begin by implementing a battery of simple tests to run on some test data, and producing summary statistics and visualizations of the results.  Later goals include helping researchers either wrap their existing C, Fortran and MATLAB test functions in Python for use in this test suite, or re-implementing those tests in native Python.
 
 ## Dependencies & Setup:
 
@@ -27,7 +27,7 @@ docker run -i -t iquod/autoqc /bin/bash
 
 And you'll find AutoQC all set up and ready to use in the directory `/AutoQC`. Note that the version of AutoQC that ships with the docker image may be behind master on GitHub; you can always do `git pull origin master` from the `/AutoQC` directory inside the image, if you need an update.
 
-If you want to run AutoQC without Docker, have a look at the setup steps in `docker/Dockerfile`; these correspond to the same setup steps you'll need to do on a similar machine (ie on Debian with miniconda already installed).
+If you want to run AutoQC without Docker, have a look at the setup steps in `docker/Dockerfile`; these correspond to the same setup steps you'll need to do on a similar machine (i.e. on Debian with miniconda already installed).
 
 Docker makes it very convenient for the project to run AutoQC, but note that the data files to run the full set of AutoQC checks are obtained as detailed below:
 
@@ -61,7 +61,7 @@ where `name` names the output csv naming as `result-name.csv`, and `nProcessors`
  - automatically detects all quality control tests found in `/qctests`
  - takes the list of raw data files from `datafiles.json`, and decodes their contents into an array of profile objects
  - runs all the automatically detected tests over each of these profiles
- - return an array for each each test indicating which profiles excpetions were raised for, and an array indicating the expected result for each profile
+ - return an array for each test indicating which profiles excpetions were raised for, and an array indicating the expected result for each profile
 
 ###Testing Data
 Each quality control test must be written as its own file in `/qctests`, of the form `def test(p)`, where `p` is a profile object; each test returns a bool, where `True` indicates the test has *failed*.
