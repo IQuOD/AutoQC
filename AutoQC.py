@@ -33,9 +33,11 @@ def processFile(fName):
   firstProfile = True
   currentFile  = ''
   f = None
-  for iprofile, pinfo in enumerate(profiles):
-    # Do not process data twice if run in parallel.
-    if pinfo.file_name != fName: continue 
+
+  # keep a list of only the profiles in this thread
+  data.ds.threadProfiles = main.extractProfiles([fName])
+
+  for iprofile, pinfo in enumerate(data.ds.threadProfiles):
     # Load the profile data.
     p, currentFile, f = main.profileData(pinfo, currentFile, f)
     # Check that there are temperature data in the profile, otherwise skip.
