@@ -142,8 +142,8 @@ def calculateTraj(headers):
     by the time-ordered list of <headers>.
     '''
 
-    speeds = [-1]
-    angles = [-1]
+    speeds = [None]
+    angles = [None]
 
     # Find speed and angle for all profiles remaining in the list
     for i in range(1, len(headers)):
@@ -171,7 +171,7 @@ def detectExcessiveSpeed(speeds, angles, index, maxSpeed):
 
     flag = speeds[index] > maxSpeed
 
-    if index < len(angles) and index > 0:
+    if index > 0:
         flag = flag or ( (speeds[index] > 0.8*maxSpeed) and (angles[index]>math.pi/2 or angles[index-1]>math.pi/2) )
 
     return flag

@@ -67,8 +67,8 @@ class TestClass():
         profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=4, longitude=90, date=[1999, 12, 31, 4]))
         profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=3, longitude=90, date=[1999, 12, 31, 5]))
 
-        trueSpeeds = [-1]
-        trueAngles = [-1, 0, 0, 0, math.pi, None]
+        trueSpeeds = [None]
+        trueAngles = [None, 0, 0, 0, math.pi, None]
 
         for i in range(len(profiles)-1):
             trueDistance = util.geo.haversineDistance(profiles[i], profiles[i+1])
