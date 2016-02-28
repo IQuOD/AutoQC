@@ -755,7 +755,7 @@ class TestClass():
 
     def unusual_case_no_time_test(self):
         '''
-        spot check on handling of profiles with incomplete data
+        spot check on handling of profiles with incomplete data (missing time)
         '''
 
         # Some fake profiles
@@ -770,7 +770,7 @@ class TestClass():
 
     def unusual_case_identical_positions_test(self):
         '''
-        spot check on handling of profiles with incomplete data
+        spot check on handling of profiles with incomplete data (identical positions)
         '''
 
         # Some fake profiles
@@ -782,7 +782,7 @@ class TestClass():
 
     def unusual_case_identical_times_test(self):
         '''
-        spot check on handling of profiles with incomplete data
+        spot check on handling of profiles with incomplete data (identical times)
         '''
 
         # Some fake profiles

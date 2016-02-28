@@ -84,6 +84,9 @@ def findOutlier(headers):
     maxShipSpeed = 15. # m/s
     maxBuoySpeed = 2. # m/s
 
+    if headers == []:
+        return []
+
     # determine speeds and angles for list of headers
     speeds, angles = calculateTraj(headers)
 
@@ -224,7 +227,9 @@ def condition_a(headers, speeds, angles, index, maxSpeed):
     assess condition (a) from the text
     '''
 
-    if index == 1: # note 'M' in the text seems to count from 1, not 0.
+    if index == 1 and len(headers) == 2:
+        return 0, 'a'
+    elif index == 1 and len(headers) > 2: # note 'M' in the text seems to count from 1, not 0.
         impliedSpeed = trackSpeed(headers[0], headers[2])
         if impliedSpeed < maxSpeed and (speeds[2]>maxSpeed or angles[2]>45./180.*math.pi):
             return 1, 'a'
@@ -243,7 +248,6 @@ def condition_b(headers, speeds, angles, index, maxSpeed):
     '''
     assess condition (b) from the text
     '''
-
     if speeds[index-1] > maxSpeed:
         return index-1, 'b'
     elif index < len(speeds) - 1 and speeds[index+1] > maxSpeed:
@@ -287,11 +291,13 @@ def condition_e(headers, speeds, angles, index, maxSpeed):
     assess condition (e) from the text
     '''
 
-    if None not in [angles[index-2], angles[index+1]] and angles[index-2] > 45./180.*math.pi and angles[index-2] > angles[index+1]:
-        return index-1, 'e'
+    if len(headers) > max(2, index+1):
 
-    if None not in [angles[index+1]] and angles[index+1] > 45./180.*math.pi:
-        return index, 'e'
+        if None not in [angles[index-2], angles[index+1]] and angles[index-2] > 45./180.*math.pi and angles[index-2] > angles[index+1]:
+            return index-1, 'e'
+
+        if None not in [angles[index+1]] and angles[index+1] > 45./180.*math.pi:
+            return index, 'e'
 
     return condition_f(headers, speeds, angles, index, maxSpeed)
 
