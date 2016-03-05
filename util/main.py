@@ -249,7 +249,25 @@ def combineArrays(parallelResults):
 
   return truth, results, profileIDs
 
+def sort_headers(headers):
+  '''
+  takes a list of headers, and sorts them into a dictionary keyed by cruise number
+  containing a list of corresponding headers; 
+  header lists are then time sorted.
+  '''
 
+  sortedHeaders = {}
+
+  for header in headers:
+    if header.cruise() not in sortedHeaders.keys():
+      sortedHeaders[header.cruise()] = [header]
+    else:
+      sortedHeaders[header.cruise()].append(header)
+
+  for key in sortedHeaders.keys():
+    sortedHeaders[key] = sorted(sortedHeaders[key], key=lambda header: (header.year(), header.month(), header.day(), header.time()) )
+
+  return sortedHeaders
 
 
 

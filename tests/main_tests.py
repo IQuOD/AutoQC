@@ -3,6 +3,7 @@ import os
 from wodpy import wod
 import numpy, pandas
 from pandas.util.testing import assert_frame_equal
+import util.testingProfile
 
 class TestClass():
     def setUp(self):
@@ -208,6 +209,30 @@ class TestClass():
         assert numpy.array_equal(truth, [0,1,2,3,4,5,6,7])
         assert numpy.array_equal(results, [ [100,101, 200,201, 300,301, 400,401], [102,103, 202,203, 302,303, 402,403], [104,105, 204,205, 304,305, 404,405] ])
         assert numpy.array_equal(ids, [992, 993, 994, 995, 996, 997, 998, 999])
+
+    def sortHeaders_test(self):
+        '''
+        check basic behavior of header sorting
+        '''
+
+        p = []
+
+        p.append(util.testingProfile.fakeProfile([0], [0], date=[2004, 3, 17, 11.3], cruise=1))
+        p.append(util.testingProfile.fakeProfile([0], [0], date=[2004, 3, 17, 22.6], cruise=1))
+        p.append(util.testingProfile.fakeProfile([0], [0], date=[2004, 3, 17, 1.1], cruise=1))
+        p.append(util.testingProfile.fakeProfile([0], [0], date=[2004, 3, 17, 15.9], cruise=1))
+        p.append(util.testingProfile.fakeProfile([0], [0], date=[2005, 1, 11, 11.5], cruise=2))
+        p.append(util.testingProfile.fakeProfile([0], [0], date=[2005, 1, 11, 22.2], cruise=2))
+        p.append(util.testingProfile.fakeProfile([0], [0], date=[2005, 1, 11, 1.0], cruise=2))
+        p.append(util.testingProfile.fakeProfile([0], [0], date=[2005, 1, 11, 16.0], cruise=2))
+
+        sortedProfiles = main.sort_headers(p)
+
+        truth = {1: [p[2], p[0], p[3], p[1]],
+            2: [p[6], p[4], p[7], p[5]],
+        }
+
+        assert sortedProfiles == truth, 'incorrectly sorted profiles'
 
 def dummy(x):
     return [2*x, 3*x], [4*x, 5*x]
