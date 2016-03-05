@@ -31,6 +31,10 @@ def test(p):
     cruise = p.cruise()
     uid = p.uid()
 
+    # don't bother if cruise == 0 or None
+    if cruise in [0, None]:
+        return np.zeros(1, dtype=bool);
+
     # The headers from an entire cruise must be analyzed all at once;
     # we'll write the results to the global data store, in a dictionary
     # with ntuple keys (cruise, uid), and values as single element
@@ -42,7 +46,7 @@ def test(p):
         return EN_track_results[(cruise, uid)]
 
     # some detector types cannot be assessed by this test; do not raise flag.
-    if p.probe_type in [None,0]:
+    if p.probe_type in [None]:
         return np.zeros(1, dtype=bool)
 
     # the first time this test is run, sort ds.threadProfiles into a cruise-keyed dictionary:

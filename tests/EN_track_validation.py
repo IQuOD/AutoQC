@@ -790,7 +790,7 @@ class TestClass():
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=0, longitude=90, date=[1999, 12, 31, 0], cruise=1000, uid=1))
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=1, longitude=90, date=[1999, 12, 31, 0], cruise=1000, uid=2))
 
-        assert qctests.EN_track_check.test(ds.threadProfiles[0]) == False, 'Failed to handle identical times'
+        assert qctests.EN_track_check.test(ds.threadProfiles[0]) == True, 'Failed to handle identical times'
 
     def real_case_1_test(self):
         '''
