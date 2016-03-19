@@ -29,21 +29,28 @@ def get_qc(p, config, test):
     except NameError:
         cotede_results = [-1, '', None]
     
+    var = 'TEMP'
+
     # Check if we need to perform the quality control.
     if (p.uid() != cotede_results[0] or 
             config != cotede_results[1] or
                 p.uid() is None):
         inputs = Wod4CoTeDe(p)
-        if isinstance(config, dict):
-            cfg = config
-        else:
+        try:
+            try:
+                # Assumes config as the QC test group, like 'cotede',
+                #   and load only the desired 'test'
+                pqc = ProfileQC(inputs, cfg=load_cfg(config)[var][test])
+            except:
+                # In case of a full set, like full GTSPP suite of tests, in
+                #   that case test='overall', or a dictionary
+                pqc = ProfileQC(inputs, cfg=config)
+        except:
             with open('cotede_qc/qc_cfg/' + config + '.json') as f:
                 cfg = json.load(f)
-        cotede_results = [p.uid(), 
-                          config, 
-                          ProfileQC(inputs, cfg=cfg)]
-    
-    var = 'TEMP'
+                pqc = ProfileQC(inputs, cfg=cfg)
+
+        cotede_results = [p.uid(), config, pqc]
 
     # Get the QC results, which use the IOC conventions.
     qc_returned = cotede_results[2].flags[var][test]
