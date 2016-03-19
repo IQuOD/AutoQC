@@ -102,11 +102,7 @@ def get_qc(p, config, test):
                           config, 
                           ProfileQC(inputs, cfg=cfg)]
     
-    # Define where the QC results are found.
-    if test == 'location_at_sea':
-        var = 'common'
-    else:
-        var = 'TEMP'
+    var = 'TEMP'
 
     # Get the QC results, which use the IOC conventions.
     qc_returned = cotede_results[2].flags[var][test]
