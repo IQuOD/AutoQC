@@ -18,10 +18,13 @@ def test(p):
     isXBT = p.probe_type() == 2
 
     # initialize qc as a bunch of falses;
-    qc = numpy.zeros(len(t.data), dtype=bool)
+    qc = numpy.zeros(len(d.data), dtype=bool)
 
     # check for gaps in data
     isDepth = (d.mask==False)
+
+    if not isXBT:
+        return qc
 
     # flag any level that is shallower than 4m and is followed by a level shallower than 8m.
     for i in range(p.n_levels()):
