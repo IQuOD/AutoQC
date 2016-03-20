@@ -60,7 +60,7 @@ class DummyCNV(object):
             hours = int(time)
             minutesf = (time - hours) * 60
             minutes  = int(minutesf)
-            seconds  = int((minutesf - minutes) * 60)
+            seconds  = min(int(round((minutesf - minutes) * 60)), 59)
 
         self.attributes['datetime'] = datetime.datetime(year, month, day, hours, minutes, seconds)
 

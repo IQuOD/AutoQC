@@ -167,9 +167,18 @@ def checkQCTestRequirements(checks):
                 print('  ' + check + ' not available without module ' + module)
           if req.has_key('data'):
             for datafile in req['data']:
-              if os.path.isfile('data/' + datafile) == False:
+              if not isinstance(datafile, list):
+                datafile = [datafile]
+              matchedfile = False
+              for datafileitem in datafile:
+                if os.path.isfile('data/' + datafileitem): matchedfile=True
+              if matchedfile == False:
                 use = False
-                print('  ' + check + ' not available without file data/' + datafile)
+                comment = '  ' + check + ' not available without file'
+                for ifileitem, datafileitem in enumerate(datafile):
+                    if ifileitem > 0: comment += ' or'
+                    comment += ' data/' + datafileitem
+                print(comment)
           if req.has_key('qctests'):
             for qctest in req['qctests']:
               if qctest not in checks:
@@ -213,14 +222,14 @@ def printSummary(truth, results, testNames):
 
   nProfiles = len(truth)
   print('Number of profiles tested was %i\n' % nProfiles)
-  print('%30s %7s %7s %7s %7s %7s' % ('NAME OF TEST', 'FAILS', 'TPR', 'FPR', 'TNR', 'FNR')) 
+  print('%35s %7s %7s %7s %7s %7s' % ('NAME OF TEST', 'FAILS', 'TPR', 'FPR', 'TNR', 'FNR')) 
   overallResults = np.zeros(nProfiles, dtype=bool)
   for i in range (0, len(testNames)):
     overallResults = np.logical_or(overallResults, results[i])
     tpr, fpr, fnr, tnr = calcRates(results[i], truth)
-    print('%30s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % (testNames[i], np.sum(results[i]), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
+    print('%35s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % (testNames[i], np.sum(results[i]), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
   tpr, fpr, fnr, tnr = calcRates(overallResults, truth)
-  print('%30s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % ('RESULT OF OR OF ALL:', np.sum(overallResults), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
+  print('%35s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % ('RESULT OF OR OF ALL:', np.sum(overallResults), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
 
 
 def combineArrays(parallelResults):
@@ -240,7 +249,25 @@ def combineArrays(parallelResults):
 
   return truth, results, profileIDs
 
+def sort_headers(headers):
+  '''
+  takes a list of headers, and sorts them into a dictionary keyed by cruise number
+  containing a list of corresponding headers; 
+  header lists are then time sorted.
+  '''
 
+  sortedHeaders = {}
+
+  for header in headers:
+    if header.cruise() not in sortedHeaders.keys():
+      sortedHeaders[header.cruise()] = [header]
+    else:
+      sortedHeaders[header.cruise()].append(header)
+
+  for key in sortedHeaders.keys():
+    sortedHeaders[key] = sorted(sortedHeaders[key], key=lambda header: (header.year(), header.month(), header.day(), header.time()) )
+
+  return sortedHeaders
 
 
 

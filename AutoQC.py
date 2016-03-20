@@ -1,7 +1,7 @@
 from wodpy import wod
 import glob, time
 import numpy as np
-import sys, os, json
+import sys, os, json, data.ds
 import util.main as main
 import pandas
 
@@ -33,7 +33,11 @@ def processFile(fName):
   firstProfile = True
   currentFile  = ''
   f = None
-  for iprofile, pinfo in enumerate(profiles):
+
+  # keep a list of only the profiles in this thread
+  data.ds.threadProfiles = main.extractProfiles([fName])
+
+  for iprofile, pinfo in enumerate(data.ds.threadProfiles):
     # Load the profile data.
     p, currentFile, f = main.profileData(pinfo, currentFile, f)
     # Check that there are temperature data in the profile, otherwise skip.
@@ -79,6 +83,7 @@ if len(sys.argv)>2:
   # Identify data files and create a profile list.
   filenames = main.readInput('datafiles.json')
   profiles  = main.extractProfiles(filenames)
+  data.ds.profiles = profiles
   print('\n{} file(s) will be read containing {} profiles'.format(len(filenames), len(profiles)))
 
   # Parallel processing.
