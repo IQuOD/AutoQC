@@ -50,10 +50,25 @@ sudo yum update -y
 sudo yum install -y docker
 sudo service docker start
 sudo docker pull iquod/autoqc
-sudo docker run -i -t iquod/autoqc /bin/bash
 ```
 
-And once again, AutoQC will be all set up in `/AutoQC`.
+Next we need to add data to our instance; after uploading your files to an S3 bucket called `autoqc`, do:
+
+```
+aws configure
+(fill in permissions fields)
+mkdir data
+aws s3 sync s3://autoqc data
+cd data
+```
+
+Finally, launch your docker image with the `data` directory mounted inside it at `/rawdata`:
+
+```
+sudo docker run -v $PWD:/rawdata -i -t iquod/autoqc /bin/bash
+```
+
+And once again, AutoQC will be all set up in `/AutoQC`. Remember to `git pull` if necessary, and add any external data or parameter files to the correct places.
 
 ##Usage
 To execute the quality control checks,
