@@ -35,6 +35,11 @@ Docker makes it very convenient for the project to run AutoQC, but note that the
  - temperature_seasonal_5deg.nc (https://www.nodc.noaa.gov/OC5/indprod.html) from http://data.nodc.noaa.gov/thredds/fileServer/woa/WOA09/NetCDFdata/temperature_seasonal_5deg.nc;
  - etopo5.nc (http://www.ngdc.noaa.gov/mgg/global/etopo5.HTML) from http://oos.soest.hawaii.edu/thredds/ncss/etopo5?var=ROSE&disableLLSubset=on&disableProjSubset=on&horizStride=1&addLatLon=true;
  - climatological_t_median_and_amd_for_aqc.nc: based on climatological_t_median_and_amd_for_aqc.dat provided by Viktor Gouretski, Integrated Climate Data Center, University of Hamburg, Hamburg, Germany, February 2016.
+ - Seasonal WOA13 files (http://data.nodc.noaa.gov/thredds/fileServer/woa/WOA13/DATAv2/temperature/netcdf/decav/5deg/):
+   - woa13_decav_t13_5dv2.nc
+   - woa13_decav_t14_5dv2.nc
+   - woa13_decav_t15_5dv2.nc
+   - woa13_decav_t16_5dv2.nc
 
 ### AutoQC on AWS
 
