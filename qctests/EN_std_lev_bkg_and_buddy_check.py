@@ -16,11 +16,15 @@ import util.main as main
 import data.ds
 import numpy as np
 
-def test(p):
+def test(p, allow_level_reinstating=True):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 
     passed the check and True where it failed. 
+
+    If allow_level_reinstating is set to True then rejected levels can be
+    reprieved by comparing with levels above and below. NB this is done by
+    default in EN processing.
     """
 
     # Define an array to hold results.
@@ -32,7 +36,10 @@ def test(p):
 
     # Unpack the results.
     levels, origLevels, assocLevels = result
-    # Retrieve the background and observation error variances.
+    # Retrieve the background and observation error variances and
+    # the background values.
+    bgsl = EN_background_check.bgStdLevels
+    slev = EN_background_check.auxParam['depth']
     bgev = EN_background_check.bgevStdLevels
     obev = EN_background_check.auxParam['obev']
 
@@ -72,7 +79,49 @@ def test(p):
             pgeBuddy  = determine_pge(levels, bgevBuddy, obev, pBuddy)
             pgeData   = update_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, p, pBuddy, obev, bgev, bgevBuddy)
 
-    # Assign the QC flags.
+    # Check if levels should be reinstated.
+    if allow_level_reinstating:
+        if np.abs(p.latitude()) < 20.0:
+            depthTol = 300.0
+        else:
+            depthTol = 200.0
+        stdLevelFlags = pgeData >= 0.5
+        for i, slflag in enumerate(stdLevelFlags):
+            if slflag:
+                # Check for non rejected surrounding levels.
+                okbelow = False
+                if i > 0:
+                    if stdLevelFlags[i - 1] == False and levels.mask[i - 1] == False and bgsl.mask[i - 1] == False:
+                        okbelow = True
+                okabove = False
+                nsl = len(stdLevelFlags)
+                if i < nsl - 1:
+                    if stdLevelFlags[i + 1] == False and levels.mask[i + 1] == False and bgsl.mask[i + 1] == False:
+                        okabove = True
+                # Work out tolerances.
+                if slev[i] > depthTol + 100: 
+                    tolFactor = 0.5
+                elif slev[i] > depthTol:
+                    tolFactor = 1.0 - 0.005 * (slev[i] - depthTol)
+                else:
+                    tolFactor = 1.0
+                ttol = 0.5 * tolFactor 
+                if okbelow == True and okabove == True:
+                    xmax = levels[i - 1] + bgsl[i - 1] + ttol
+                    xmin = levels[i + 1] + bgsl[i + 1] - ttol
+                elif okbelow == True:
+                    xmax = levels[i - 1] + bgsl[i - 1] + ttol
+                    xmin = levels[i - 1] + bgsl[i - 1] - ttol
+                elif okabove == True:
+                    xmax = levels[i + 1] + bgsl[i + 1] + ttol
+                    xmin = levels[i + 1] + bgsl[i + 1] - ttol
+                else:
+                    continue
+                # Reassign PGE if level is within the tolerances.
+                if levels[i] + bgsl[i] >= xmin and levels[i] + bgsl[i] <= xmax:
+                    pgeData[i] = 0.49      
+
+    # Assign the QC flags to original levels.
     for i, pge in enumerate(pgeData):
         if pgeData.mask[i]: continue
         if pge < 0.5: continue
@@ -97,7 +146,7 @@ def determine_pge(levels, bgev, obev, profile):
     for iLevel, level in enumerate(levels):
         if levels.mask[iLevel] or bgev.mask[iLevel]: continue
         bgevLevel = bgev[iLevel]
-        if np.abs(profile.latitude() < 10.0): bgevLevel *= 1.5**2
+        if np.abs(profile.latitude()) < 10.0: bgevLevel *= 1.5**2
         obevLevel = obev[iLevel]
         pge_est = EN_background_check.estimatePGE(profile.probe_type(), False)
 
@@ -127,9 +176,9 @@ def buddyCovariance(minDist, profile, buddyProfile, meso_ev_a, meso_ev_b, syn_ev
         return None
     timeDiff2 = (timeDiff2 / corScaleT)**2
 
-    covar = (meso_ev_a * meso_ev_b *
+    covar = (np.sqrt(meso_ev_a * meso_ev_b) *
             (1.0 + mesSDist) * np.exp(-mesSDist - timeDiff2) + 
-            syn_ev_a * syn_ev_b *
+            np.sqrt(syn_ev_a * syn_ev_b) *
             (1.0 + synSDist) * np.exp(-synSDist - timeDiff2))
 
     return covar
@@ -148,12 +197,12 @@ def update_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, profile, bud
         # near the equator and this functionality could be added
         # later.
 
-        covar = buddyCovariance(minDist, profile, buddyProfile, np.sqrt(bgev[iLevel]), np.sqrt(bgevBuddy[iLevel]), np.sqrt(bgev[iLevel]), np.sqrt(bgevBuddy[iLevel]))
+        covar = buddyCovariance(minDist, profile, buddyProfile, bgev[iLevel]/2.0, bgevBuddy[iLevel]/2.0, bgev[iLevel]/2.0, bgevBuddy[iLevel]/2.0)
         if covar is None:
             continue;
 
-        errVarA = obev[iLevel] + 2.0 * bgev[iLevel]
-        errVarB = obev[iLevel] + 2.0 * bgevBuddy[iLevel]
+        errVarA = obev[iLevel] + bgev[iLevel]
+        errVarB = obev[iLevel] + bgevBuddy[iLevel]
         rho2    = covar**2 / (errVarA + errVarB)
         expArg  = (-(0.5 * rho2 / (1.0 - rho2)) *  
                    (levels[iLevel]**2 / errVarA + 
@@ -161,7 +210,7 @@ def update_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, profile, bud
                     2.0 * levels[iLevel] * levelsBuddy[iLevel] / covar))
         expArg  = -0.5 * np.log(1.0 - rho2) + expArg
         expArg  = min(80.0, max(-80.0, expArg))
-        Z       = 1.0 / (2.0 - (1.0 - pgeData[iLevel]) * 
+        Z       = 1.0 / (1.0 - (1.0 - pgeData[iLevel]) * 
                          (1.0 - pgeBuddy[iLevel]) * (1.0 - expArg))
         if Z < 0.0: Z = 1.0 # In case of rounding errors.
         Z = Z**0.5

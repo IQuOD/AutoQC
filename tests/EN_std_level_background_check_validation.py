@@ -6,7 +6,25 @@ import util.testingProfile
 import numpy
 import data.ds
 
+# Dummy functions to turn off functions that do not
+# work on a testing profile.
+def dummycatchflagsfunc(arg): 
+    pass
+def dummyprofiledatafunc(p, dummy1, dummy2):
+    fid = open('data/quota_subset.dat') # Need an open file handle for program to close. 
+    return p, '', fid
+realcatchflagsfunc = main.catchFlags
+realprofiledatafunc = main.profileData
+
 ##### EN_std_lev_bkg_and_buddy_check ---------------------------------------------------
+
+def setUp():
+    main.catchFlags = dummycatchflagsfunc
+    main.profileData = dummyprofiledatafunc
+
+def tearDown():
+    main.catchFlags = realcatchflagsfunc
+    main.profileData = realprofiledatafunc
 
 def test_EN_std_level_bkg_and_buddy_check_temperature():
     '''
@@ -72,15 +90,6 @@ def test_buddyCovariance_synoptic_scale():
     buddyCovariance_500km = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(500000, p1, p2, 0, 0, 1, 1)
   
     assert buddyCovariance_100km * numpy.exp(-1) - buddyCovariance_500km < 1e-12, 'incorrect synoptic scale correlation'
-
-
-
-
-
-
-
-
-
 
 def test_filterLevels():
     '''
@@ -173,3 +182,144 @@ def test_timeDiff_garbage_time():
     p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 13])
 
     assert qctests.EN_std_lev_bkg_and_buddy_check.timeDiff(p1, p2) is None, 'failed to reurn None when a nonsesne date was found'
+
+def test_EN_std_level_bkg_and_buddy_real_profiles_1():
+    '''
+    Make sure EN_std_level_background_check is flagging temperature excursions
+    '''
+
+    data.ds.profiles = [realProfile1]
+    qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile1)
+
+    assert numpy.array_equal(qc, truthQC1), 'mismatch between qc results and expected values'
+
+def test_EN_std_level_bkg_and_buddy_real_profiles_2():
+    '''
+    Make sure EN_std_level_background_check is flagging temperature excursions
+    '''
+
+    data.ds.profiles = [realProfile2, realProfile3]
+    qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile2, allow_level_reinstating=False)
+
+    assert numpy.array_equal(qc, truthQC2), 'mismatch between qc results and expected values'
+
+def test_EN_std_level_bkg_and_buddy_real_profiles_3():
+    '''
+    Make sure EN_std_level_background_check is flagging temperature excursions - ensure that level reinstating is working.
+    '''
+
+    data.ds.profiles = [realProfile2, realProfile3]
+    qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile2)
+    assert numpy.all(qc == False), 'mismatch between qc results and expected values'
+
+realProfile1 = util.testingProfile.fakeProfile(
+                [20.6900,      20.6900,      20.6900,      20.6900,
+                 20.6900,      20.6900,      20.6900,      20.6900,
+                 20.6900,      20.6600,      20.4300,      19.9100,
+                 19.6600,      19.5300,      19.3000,      19.2200,
+                 19.1300,      19.0400,      18.9600,      18.8200,
+                 18.7400,      18.4300,      18.0900,      17.6900,
+                 17.2300,      16.8300,      16.4200,      15.9900, 
+                 15.4600,      14.9400,      14.6400,      14.1800,
+                 13.7500,      13.2200,      12.7000,      12.0100,
+                 11.3000,      10.6400,      10.0000,      9.36000,
+                 8.66000,      8.37000,      7.58000,      6.86000,
+                 5.46000,      5.03000,      4.79000,      4.42000,
+                 4.10000,      3.66000,      3.53000,      3.42000,
+                 3.17000,      3.05000,      3.02000,      2.93000],
+                [5.00000,      9.00000,      15.0000,      21.0000,
+                 27.0000,      33.0000,      39.0000,      45.0000,   
+                 51.0000,      57.0000,      63.0000,      68.0000,
+                 74.0000,      80.0000,      86.0000,      92.0000,  
+                 98.0000,      104.000,      110.000,      116.000,
+                 122.000,      140.000,      170.000,      199.000,
+                 229.000,      259.000,      289.000,      318.000,
+                 348.000,      378.000,      407.000,      437.000,
+                 467.000,      511.000,      571.000,      630.000,
+                 690.000,      749.000,      808.000,      867.000,
+                 927.000,      986.000,      1045.00,      1104.00,
+                 1164.00,      1223.00,      1282.00,      1341.00,
+                 1400.00,      1460.00,      1519.00,      1578.00,
+                 1637.00,      1696.00,      1755.00,      1814.00],
+                date=[2000, 1, 15, 12], latitude=-39.889, longitude=17.650000,
+                cruise=1, uid=1)
+
+truthQC1=numpy.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+                      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1,
+                      1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=bool)
+
+realProfile2 = util.testingProfile.fakeProfile(
+                [21.4200,      21.1300,      20.4800,      19.8400,
+                 19.2000,      18.9400,      18.7600,      18.5000, 
+                 18.0700,      17.5900,      17.3400,      17.0000,
+                 16.8000,      16.6200,      16.5700,      16.4900,
+                 16.4500,      16.4100,      16.3900,      16.3500,
+                 16.3300,      16.3300,      16.3300,      16.3200,
+                 16.3000,      16.2800,      16.2700,      16.2400,
+                 16.2300,      16.2100,      16.2000,      16.1700, 
+                 16.1400,      16.1100,      16.0800,      16.0500,
+                 16.0200,      15.9900,      15.9700,      15.9400, 
+                 15.7500,      15.6000,      15.3700,      14.9300,
+                 14.7200,      14.4800,      14.1600,      13.8000,
+                 13.6600,      13.3100,      12.4700,      11.7400,
+                 10.9700,      10.4300,      9.69000,      8.42000,
+                 7.20000,      6.22000,      5.48000,      5.02000,
+                 4.59000,      4.18000,      4.05000,      4.01000],
+                [5.00000,      10.0000,      15.0000,      20.0000,
+                 25.0000,      30.0000,      35.0000,      40.0000,
+                 45.0000,      50.0000,      55.0000,      60.0000,
+                 65.0000,      70.0000,      74.0000,      79.0000, 
+                 84.0000,      89.0000,      94.0000,      99.0000, 
+                 104.000,      109.000,      114.000,      119.000,
+                 124.000,      129.000,      134.000,      139.000,
+                 144.000,      149.000,      154.000,      159.000,
+                 164.000,      169.000,      174.000,      179.000,
+                 184.000,      189.000,      194.000,      199.000,
+                 218.000,      238.000,      258.000,      278.000,
+                 298.000,      318.000,      337.000,      357.000,
+                 377.000,      397.000,      446.000,      496.000,  
+                 546.000,      595.000,      645.000,      694.000,
+                 744.000,      793.000,      842.000,      892.000,
+                 941.000,      991.000,      1040.00,      1068.00],
+               date=[2000,1,10,0], latitude=-30.229, longitude=2.658,
+               cruise=2, uid=2)
+
+truthQC2 = numpy.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0], 
+                       dtype=bool)
+
+realProfile3 = util.testingProfile.fakeProfile(
+                [22.9400,      21.8800,      21.1200,      20.6100,
+                 20.3600,      19.5500,      19.1200,      18.5600,
+                 17.9400,      17.6900,      17.4800,      17.2600,
+                 17.1000,      16.9000,      16.7400,      16.5800, 
+                 16.4200,      16.2900,      16.1900,      16.0700,
+                 15.9200,      15.3700,      14.5000,      13.8400,
+                 13.2600,      12.8200,      12.3100,      11.9200,
+                 11.4300,      10.9800,      10.4100,      9.77000, 
+                 8.75000,      7.66000,      6.77000,      5.91000,
+                 5.14000,      4.63000,      4.25000,      4.00000, 
+                 3.75000,      3.61000,      3.46000,      3.34000, 
+                 3.24000,      3.21000,      3.21000,      3.21000,
+                 3.18000,      3.12000,      3.08000,      3.06000, 
+                 3.04000,      3.02000,      2.97000,      2.88000],
+                [5.00000,      9.00000,      15.0000,      21.0000,
+                 27.0000,      33.0000,      39.0000,      45.0000,
+                 51.0000,      57.0000,      63.0000,      69.0000,
+                 74.0000,      80.0000,      86.0000,      92.0000,
+                 98.0000,      104.000,      110.000,      116.000,
+                 122.000,      140.000,      170.000,      200.000,
+                 229.000,      259.000,      289.000,      319.000,
+                 348.000,      378.000,      408.000,      438.000,
+                 482.000,      542.000,      601.000,      660.000,
+                 720.000,      779.000,      839.000,      898.000,
+                 957.000,      1017.00,      1076.00,      1135.00,
+                 1194.00,      1254.00,      1313.00,      1372.00,
+                 1431.00,      1491.00,      1550.00,      1609.00,
+                 1668.00,      1727.00,      1786.00,      1845.00],
+                date=[2000,1,10,0.1895833], latitude=-28.36, longitude=-0.752,
+                cruise=3, uid=3)
+
+
