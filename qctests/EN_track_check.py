@@ -31,6 +31,10 @@ def test(p):
     cruise = p.cruise()
     uid = p.uid()
 
+    # don't bother if cruise == 0 or None
+    if cruise in [0, None]:
+        return np.zeros(1, dtype=bool);
+
     # The headers from an entire cruise must be analyzed all at once;
     # we'll write the results to the global data store, in a dictionary
     # with ntuple keys (cruise, uid), and values as single element
@@ -42,7 +46,7 @@ def test(p):
         return EN_track_results[(cruise, uid)]
 
     # some detector types cannot be assessed by this test; do not raise flag.
-    if p.probe_type in [None,0]:
+    if p.probe_type in [None]:
         return np.zeros(1, dtype=bool)
 
     # the first time this test is run, sort ds.threadProfiles into a cruise-keyed dictionary:
@@ -83,6 +87,9 @@ def findOutlier(headers):
 
     maxShipSpeed = 15. # m/s
     maxBuoySpeed = 2. # m/s
+
+    if headers == []:
+        return []
 
     # determine speeds and angles for list of headers
     speeds, angles = calculateTraj(headers)
@@ -139,8 +146,8 @@ def calculateTraj(headers):
     by the time-ordered list of <headers>.
     '''
 
-    speeds = [-1]
-    angles = [-1]
+    speeds = [None]
+    angles = [None]
 
     # Find speed and angle for all profiles remaining in the list
     for i in range(1, len(headers)):
@@ -168,7 +175,7 @@ def detectExcessiveSpeed(speeds, angles, index, maxSpeed):
 
     flag = speeds[index] > maxSpeed
 
-    if index < len(angles) and index > 0:
+    if index > 0:
         flag = flag or ( (speeds[index] > 0.8*maxSpeed) and (angles[index]>math.pi/2 or angles[index-1]>math.pi/2) )
 
     return flag
@@ -224,7 +231,9 @@ def condition_a(headers, speeds, angles, index, maxSpeed):
     assess condition (a) from the text
     '''
 
-    if index == 1: # note 'M' in the text seems to count from 1, not 0.
+    if index == 1 and len(headers) == 2:
+        return 0, 'a'
+    elif index == 1 and len(headers) > 2: # note 'M' in the text seems to count from 1, not 0.
         impliedSpeed = trackSpeed(headers[0], headers[2])
         if impliedSpeed < maxSpeed and (speeds[2]>maxSpeed or angles[2]>45./180.*math.pi):
             return 1, 'a'
@@ -243,7 +252,6 @@ def condition_b(headers, speeds, angles, index, maxSpeed):
     '''
     assess condition (b) from the text
     '''
-
     if speeds[index-1] > maxSpeed:
         return index-1, 'b'
     elif index < len(speeds) - 1 and speeds[index+1] > maxSpeed:
@@ -287,11 +295,13 @@ def condition_e(headers, speeds, angles, index, maxSpeed):
     assess condition (e) from the text
     '''
 
-    if None not in [angles[index-2], angles[index+1]] and angles[index-2] > 45./180.*math.pi and angles[index-2] > angles[index+1]:
-        return index-1, 'e'
+    if len(headers) > max(2, index+1):
 
-    if None not in [angles[index+1]] and angles[index+1] > 45./180.*math.pi:
-        return index, 'e'
+        if None not in [angles[index-2], angles[index+1]] and angles[index-2] > 45./180.*math.pi and angles[index-2] > angles[index+1]:
+            return index-1, 'e'
+
+        if None not in [angles[index+1]] and angles[index+1] > 45./180.*math.pi:
+            return index, 'e'
 
     return condition_f(headers, speeds, angles, index, maxSpeed)
 

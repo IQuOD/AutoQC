@@ -35,6 +35,11 @@ Docker makes it very convenient for the project to run AutoQC, but note that the
  - temperature_seasonal_5deg.nc (https://www.nodc.noaa.gov/OC5/indprod.html) from http://data.nodc.noaa.gov/thredds/fileServer/woa/WOA09/NetCDFdata/temperature_seasonal_5deg.nc;
  - etopo5.nc (http://www.ngdc.noaa.gov/mgg/global/etopo5.HTML) from http://oos.soest.hawaii.edu/thredds/ncss/etopo5?var=ROSE&disableLLSubset=on&disableProjSubset=on&horizStride=1&addLatLon=true;
  - climatological_t_median_and_amd_for_aqc.nc: based on climatological_t_median_and_amd_for_aqc.dat provided by Viktor Gouretski, Integrated Climate Data Center, University of Hamburg, Hamburg, Germany, February 2016.
+ - Seasonal WOA13 files:
+   - [all](http://data.nodc.noaa.gov/thredds/fileServer/woa/WOA13/DATAv2/temperature/netcdf/decav/5deg/woa13_decav_t13_5dv2.nc)
+   - [four](http://data.nodc.noaa.gov/thredds/fileServer/woa/WOA13/DATAv2/temperature/netcdf/decav/5deg/woa13_decav_t14_5dv2.nc)
+   - [of](http://data.nodc.noaa.gov/thredds/fileServer/woa/WOA13/DATAv2/temperature/netcdf/decav/5deg/woa13_decav_t15_5dv2.nc)
+   - [these](http://data.nodc.noaa.gov/thredds/fileServer/woa/WOA13/DATAv2/temperature/netcdf/decav/5deg/woa13_decav_t16_5dv2.nc)
 
 ### AutoQC on AWS
 
@@ -45,10 +50,25 @@ sudo yum update -y
 sudo yum install -y docker
 sudo service docker start
 sudo docker pull iquod/autoqc
-sudo docker run -i -t iquod/autoqc /bin/bash
 ```
 
-And once again, AutoQC will be all set up in `/AutoQC`.
+Next we need to add data to our instance; after uploading your files to an S3 bucket called `autoqc`, do:
+
+```
+aws configure
+(fill in permissions fields)
+mkdir data
+aws s3 sync s3://autoqc data
+cd data
+```
+
+Finally, launch your docker image with the `data` directory mounted inside it at `/rawdata`:
+
+```
+sudo docker run -v $PWD:/rawdata -i -t iquod/autoqc /bin/bash
+```
+
+And once again, AutoQC will be all set up in `/AutoQC`. Remember to `git pull` if necessary, and add any external data or parameter files to the correct places.
 
 ##Usage
 To execute the quality control checks,

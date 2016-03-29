@@ -67,8 +67,8 @@ class TestClass():
         profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=4, longitude=90, date=[1999, 12, 31, 4]))
         profiles.append(util.testingProfile.fakeProfile([0], [0], latitude=3, longitude=90, date=[1999, 12, 31, 5]))
 
-        trueSpeeds = [-1]
-        trueAngles = [-1, 0, 0, 0, math.pi, None]
+        trueSpeeds = [None]
+        trueAngles = [None, 0, 0, 0, math.pi, None]
 
         for i in range(len(profiles)-1):
             trueDistance = util.geo.haversineDistance(profiles[i], profiles[i+1])
@@ -755,7 +755,7 @@ class TestClass():
 
     def unusual_case_no_time_test(self):
         '''
-        spot check on handling of profiles with incomplete data
+        spot check on handling of profiles with incomplete data (missing time)
         '''
 
         # Some fake profiles
@@ -770,7 +770,7 @@ class TestClass():
 
     def unusual_case_identical_positions_test(self):
         '''
-        spot check on handling of profiles with incomplete data
+        spot check on handling of profiles with incomplete data (identical positions)
         '''
 
         # Some fake profiles
@@ -782,7 +782,7 @@ class TestClass():
 
     def unusual_case_identical_times_test(self):
         '''
-        spot check on handling of profiles with incomplete data
+        spot check on handling of profiles with incomplete data (identical times)
         '''
 
         # Some fake profiles
@@ -790,7 +790,7 @@ class TestClass():
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=0, longitude=90, date=[1999, 12, 31, 0], cruise=1000, uid=1))
         ds.threadProfiles.append(util.testingProfile.fakeProfile([0], [0], latitude=1, longitude=90, date=[1999, 12, 31, 0], cruise=1000, uid=2))
 
-        assert qctests.EN_track_check.test(ds.threadProfiles[0]) == False, 'Failed to handle identical times'
+        assert qctests.EN_track_check.test(ds.threadProfiles[0]) == True, 'Failed to handle identical times'
 
     def real_case_1_test(self):
         '''
