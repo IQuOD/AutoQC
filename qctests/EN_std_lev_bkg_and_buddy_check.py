@@ -115,6 +115,8 @@ def test(p, allow_level_reinstating=True):
                 elif okabove == True:
                     xmax = levels[i + 1] + bgsl[i + 1] + ttol
                     xmin = levels[i + 1] + bgsl[i + 1] - ttol
+                else:
+                    continue
                 # Reassign PGE if level is within the tolerances.
                 if levels[i] + bgsl[i] >= xmin and levels[i] + bgsl[i] <= xmax:
                     pgeData[i] = 0.49      
