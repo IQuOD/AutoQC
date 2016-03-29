@@ -84,8 +84,11 @@ def deltaTime(earlier, later):
     eHour, eMinute, eSecond = parseTime(earlier.time())
     lHour, lMinute, lSecond = parseTime(later.time())
 
-    early = datetime(year=earlier.year(), month=earlier.month(), day=earlier.day(), hour=eHour, minute=eMinute, second=eSecond )
-    late = datetime(year=later.year(), month=later.month(), day=later.day(), hour=lHour, minute=lMinute, second=lSecond )
+    try:
+        early = datetime(year=earlier.year(), month=earlier.month(), day=earlier.day(), hour=eHour, minute=eMinute, second=eSecond )
+        late = datetime(year=later.year(), month=later.month(), day=later.day(), hour=lHour, minute=lMinute, second=lSecond )
+    except:
+        return None
 
     timeDiff = (late - early).total_seconds()
     assert timeDiff >= 0, 'early date %s is after later date %s' % (early, late)

@@ -17,6 +17,7 @@ TimeRes = 600. # seconds
 
 EN_track_headers = {}
 EN_track_results = {}
+threadFile       = {}
 
 def test(p):
     """ 
@@ -27,6 +28,7 @@ def test(p):
 
     global EN_track_headers
     global EN_track_results
+    global threadFile
 
     cruise = p.cruise()
     uid = p.uid()
@@ -50,8 +52,9 @@ def test(p):
         return np.zeros(1, dtype=bool)
 
     # the first time this test is run, sort ds.threadProfiles into a cruise-keyed dictionary:
-    if EN_track_headers == {}:
+    if ds.threadFile != threadFile:
         EN_track_headers = main.sort_headers(ds.threadProfiles)
+        threadFile = ds.threadFile
 
     # since we didn't find an answer already calculated,
     # we still need to do the calculation for this cruise;
