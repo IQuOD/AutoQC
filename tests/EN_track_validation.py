@@ -14,10 +14,14 @@ class TestClass():
     def setUp(self):
         qctests.EN_track_check.EN_track_results = {}
         qctests.EN_track_check.EN_track_headers = {}
+        qctests.EN_track_check.threadFile       = ''
+        ds.threadFile                           = 'test'
 
     def tearDown(self):
         del qctests.EN_track_check.EN_track_results
         del qctests.EN_track_check.EN_track_headers
+        del qctests.EN_track_check.threadFile
+        del ds.threadFile
 
     def trackSpeed_test(self):
         '''
