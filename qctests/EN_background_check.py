@@ -28,7 +28,7 @@ def run_qc(p):
     Performs the QC check.
     """
 
-    global qc, uid, origLevels, ptLevels, bgLevels, bgevStdLevels
+    global qc, uid, origLevels, ptLevels, bgLevels, bgStdLevels, bgevStdLevels
 
     # Define an array to hold results.
     qc = np.zeros(p.n_levels(), dtype=bool)
@@ -47,6 +47,7 @@ def run_qc(p):
     imonth = p.month() - 1
     clim = auxParam['clim'][:, ilat, ilon, imonth]
     bgev = auxParam['bgev'][:, ilat, ilon]
+    bgStdLevels   = clim # Save for use in another check.
     bgevStdLevels = bgev # Save the full column for use by another check.
     obev = auxParam['obev']
     depths = auxParam['depth']
@@ -89,7 +90,7 @@ def run_qc(p):
         # the variances are increased. NB multiplication factors are squared
         # because we are working with error variances instead of standard
         # deviations.
-        if np.abs(p.latitude() < 10.0): bgevLevel *= 1.5**2
+        if np.abs(p.latitude()) < 10.0: bgevLevel *= 1.5**2
         bgevLevel *= 2.0**2
         
         # Set up an initial estimate of probability of gross error. 
@@ -188,4 +189,5 @@ origLevels    = []
 ptLevels      = []
 bgLevels      = []
 bgevStdLevels = []
+bgStdLevels   = []
 

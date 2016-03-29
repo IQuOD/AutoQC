@@ -87,6 +87,9 @@ class fakeProfile:
         """ Returns the time. """
         return self.primary_header['Time']
 
+    def var_index(self):
+        return 1
+
     def var_data(self, dat):
         """ Returns the data values for a variable given the variable index. """
         data = np.ma.array(np.zeros(len(dat)), mask=True)
