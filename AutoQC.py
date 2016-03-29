@@ -36,6 +36,7 @@ def processFile(fName):
 
   # keep a list of only the profiles in this thread
   data.ds.threadProfiles = main.extractProfiles([fName])
+  data.ds.threadFile     = fName
 
   for iprofile, pinfo in enumerate(data.ds.threadProfiles):
     # Load the profile data.
