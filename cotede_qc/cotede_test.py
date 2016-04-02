@@ -110,11 +110,9 @@ def get_qc(p, config, test):
     # It looks like CoTeDe never returns a QC decision
     # of 2. If it ever does, we need to decide whether 
     # this counts as a pass or reject.
+    # Gui: Yes, some tests can return 2. My suggestions is to flag as good.
     qc = np.ma.zeros(p.n_levels(), dtype=bool)
-    if var == 'common':
-        if qc_returned == 3 or qc_returned == 4: qc[:] = True
-    else:
-        qc[np.logical_or(qc_returned == 3, qc_returned == 4)] = True
+    qc[np.logical_or(qc_returned == 3, qc_returned == 4)] = True
 
     return qc
 
