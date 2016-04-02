@@ -46,5 +46,16 @@ def test_EN_increasing_depth_flagging():
     print qc
     assert np.array_equal(qc, truth), 'Failed to incorrect depth'
 
+def test_EN_increasing_depth_all_zero():
+    '''
+    Check EN_increasing_depth_check flags all levels in a profile with all depths = 0
+    '''
 
+    p = util.testingProfile.fakeProfile([0]*1000, [0]*1000)
+    qc = qctests.EN_increasing_depth_check.test(p)
+    truth = np.ones(1000, dtype=bool)
+
+    print qc, truth
+
+    assert np.array_equal(qc, truth), 'Failed to flag all levels in profile with all 0 depths'  
 

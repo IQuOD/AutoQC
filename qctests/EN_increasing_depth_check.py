@@ -4,6 +4,7 @@ Implements the EN increasing depth check.
 
 import EN_spike_and_step_check
 import numpy as np
+from collections import Counter
 
 def test(p):
     """ 
@@ -29,6 +30,12 @@ def run_qc(p):
 
     # Initialize qc array.
     qc = np.zeros(n, dtype=bool)
+
+    # if all the depths are the same, flag all levels and finish immediately
+    most_common_depth = Counter(d.data).most_common(1)
+    if most_common_depth[0][1] == len(d.data):
+        qc = np.ones(n, dtype=bool)
+        return None
 
     # Basic check on each level.
     qc[d < 0]     = True
