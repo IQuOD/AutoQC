@@ -120,12 +120,12 @@ def test_CoTeDe_profile_envelop():
     qc = qctests.CoTeDe_profile_envelop.test(p)
     assert np.array_equal(qc, expected_qc_profile_envelop), 'mismatch between qc results and expected values'
 
-def test_CoTeDe_RoC():
+def test_CoTeDe_rate_of_change():
     '''
-    Make sure CoTeDe RoC is working as expected.
+    Make sure CoTeDe rate_of_change is working as expected.
     '''
-    import qctests.CoTeDe_RoC
-    qc = qctests.CoTeDe_RoC.test(p)
+    import qctests.CoTeDe_rate_of_change
+    qc = qctests.CoTeDe_rate_of_change.test(p)
     assert np.array_equal(qc, expected_qc_roc), 'mismatch between qc results and expected values'
 
 def test_CoTeDe_spike():
