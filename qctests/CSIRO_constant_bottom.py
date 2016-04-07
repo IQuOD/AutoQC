@@ -1,5 +1,5 @@
 """
-Implements the wire break test of DOI: 10.1175/JTECHO539.1
+Implements CSIRO's constant-bottom check
 All questionable features result in a flag, in order to minimize false negatives 
 """
 
@@ -14,18 +14,23 @@ def test(p):
 
     # Get temperature values from the profile.
     t = p.t()
+    # depths
+    d = p.z()
     # is this an xbt?
     isXBT = p.probe_type() == 2
+    latitude = p.latitude()
 
     # initialize qc as a bunch of falses;
     qc = numpy.zeros(len(t.data), dtype=bool)
 
     # check for gaps in data
     isTemperature = (t.mask==False)
+    isDepth = (d.mask==False)
+    isData = isTemperature & isDepth
 
-    # wire breaks at bottom of profile:
-    if isTemperature[-1] and isXBT:
-        if t.data[-1] < -2.8 or t.data[-1] > 36:
+    # constant temperature at bottom of profile, for latitude > -40 and bottom two depths at least 30m apart:
+    if isData[-1] and isData[-2] and isXBT:
+        if t.data[-1] == t.data[-2] and latitude > -40 and d.data[-1] - d.data[-2] > 30:
             qc[-1] = True
 
     return qc

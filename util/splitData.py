@@ -1,37 +1,43 @@
-# utility to split a raw datafile up into n roughly equal parts.
+# utility to split a raw datafile up into n roughly equal parts, keeping all profiles for a given cruise in the same file
 
-import main
 import math
 from wodpy import wod
 
-#filename = '../../AutoQC_raw/quota/quota_all.dat'
-#filename = '../data/quota_subset.dat'
-filename = '../../AutoQC_raw/quota/test/chunk.dat'
+filename = '../quota_all.dat'
 n = 30
 
 fid = open(filename)
 fid.read()
 fileSize = fid.tell()
-chunkSize = int(math.ceil(fileSize / n));
+chunkSize = int(math.ceil(fileSize / n)); # final files should be about this big
 
-fileNo = 0
-start = 0
-end = 0
-
-target = open('split-' + str(fileNo) + '.dat', 'w')
+# identify cruise numbers, profile start and profile end positions for all profiles
+markers = []
 fid.seek(0)
-while not (fid.read(1) == ''):
-    #write next chunk to open target
-    fid.seek(end)
+while True:
     start = fid.tell()
     profile = wod.WodProfile(fid)
     end = fid.tell()
-    fid.seek(start)
-    extract = fid.read(end-start)
-    target.write(extract)
+    markers.append( (profile.cruise(), start, end) )
+    if profile.is_last_profile_in_file(fid) == True:
+        break
+# sort by cruise number
+markers = sorted(markers, key=lambda x: x[0])
 
-    #wrap the file and start a new one once we've crossed the max size
-    if target.tell() > chunkSize:
+# write subfiles
+fileNo = 0
+currentCruise = None
+target = open('split-' + str(fileNo) + '.dat', 'w')
+for i in range(len(markers)):
+    lastCruise = currentCruise
+    currentCruise = markers[i][0]
+    # switch out to the next file when we pass chunksize AND are finished the current cruise
+    if target.tell() > chunkSize and currentCruise != lastCruise and None not in [lastCruise, currentCruise]:
         target.close()
         fileNo += 1
         target = open('split-' + str(fileNo) + '.dat', 'w')
+    fid.seek(markers[i][1])
+    extract = fid.read(markers[i][2]-markers[i][1])
+    target.write(extract)
+
+target.close()
