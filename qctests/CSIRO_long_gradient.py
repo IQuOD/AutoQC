@@ -28,11 +28,11 @@ def test(p):
     on_inv = False # are we currently in an inversion?
 
     for i in range(0, p.n_levels()-1 ):
-        if isData[i] and isData[i-1]:
+        if isData[i] and isData[i+1]:
             # not interested below 5m:
             if d.data[i] < 5: continue
 
-            if t.data[i+1] > t.data[1] and not on_inv:
+            if t.data[i+1] > t.data[i] and not on_inv:
                 # entering an inversion
                 start_inv_temp = t.data[i]
                 start_inv_depth = d.data[i]

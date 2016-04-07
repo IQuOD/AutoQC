@@ -26,11 +26,11 @@ def test(p):
     isData = isTemperature & isDepth
 
     for i in range(0, p.n_levels()-1 ):
-        if isData[i] and isData[i-1]:
+        if isData[i] and isData[i+1]:
             deltaD = (d.data[i+1] - d.data[i]) 
             deltaT = (t.data[i+1] - t.data[i])
             gradshort = deltaD / deltaT 
-            if (deltaT > 0.5 and deltaD < 30) or (gradshort > 0 and gradshort < 12.5):
+            if (deltaT > 0.5 and deltaD < 30) or abs(gradshort) < 0.4 or (gradshort > 0 and gradshort < 12.5):
                 if abs(deltaT) > 0.4:
                     qc[i] = True
 
