@@ -21,7 +21,7 @@
                 "medium": [0.07, 0.2, 2, 6],
                 "high": [2, 6, 1e30, 1e30]
                 },
-            "woa_relbias": {
+            "woa_normbias": {
                 "weight": 1,
                 "small": [-1e30, -1e30, 3, 4],
                 "medium": [3, 4, 5, 6],
