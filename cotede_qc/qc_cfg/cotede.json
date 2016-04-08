@@ -23,7 +23,10 @@
         },
     "gradient": 9.0,
     "digit_roll_over": 10,
-    "bin_spike": 10,
+    "bin_spike": {
+        "l": 5,
+        "threshold": 10
+        },
     "rate_of_change": 4,
     "profile_envelop": [
         ["> 0", "<= 25", -2, 37],
