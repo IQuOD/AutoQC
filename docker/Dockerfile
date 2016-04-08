@@ -8,7 +8,12 @@ RUN apt-get update
 # dependencies!
 RUN apt-get -y install libhdf5-serial-dev libnetcdf-dev unzip
 RUN conda install --yes python=2.7 pip nose Shapely netCDF4 matplotlib numpy scipy pyproj pandas
-RUN pip install wodpy cotede==0.15.3 gsw scikit-fuzzy pyWOA
+
+RUN pip install seabird>=0.6.3 gsw
+# Pypi is not working well. Temporary solution
+RUN pip install git+https://github.com/castelao/oceansdb.git@master#egg=oceansdb
+RUN pip install git+https://github.com/castelao/CoTeDe.git@master#egg=CoTeDe
+RUN pip install git+https://github.com/IQuOD/wodpy.git@master#egg=wodpy
 
 # fetch & setup AutoQC + data
 RUN git clone https://github.com/IQuOD/AutoQC.git
@@ -21,3 +26,4 @@ ADD woa13_decav_t16_5dv2.nc /AutoQC/data/.
 ADD etopo5.nc /AutoQC/data/.
 ADD climatological_t_median_and_amd_for_aqc.nc /AutoQC/data/.
 
+ADD bashrc ~/.bashrc

@@ -7,7 +7,7 @@
         "vars": {"woa_an": "t_mn", "woa_sd": "t_sd", "woa_n": "t_dd"},
         "url": ""
         },
-    "RoC": 4,
+    "rate_of_change": 4,
     "fuzzylogic": {
 	"output": {
             "small": [0.0, 0.225, 0.45],
@@ -21,13 +21,13 @@
                 "medium": [0.07, 0.2, 2, 6],
                 "high": [2, 6, 1e30, 1e30]
                 },
-            "woa_relbias": {
+            "woa_normbias": {
                 "weight": 1,
                 "small": [-1e30, -1e30, 3, 4],
                 "medium": [3, 4, 5, 6],
                 "high": [5, 6, 1e30, 1e30]
                 },
-            "RoC": {
+            "rate_of_change": {
                 "weight": 1,
                 "small": [-1e30, -1e30, 0.5, 1.5],
                 "medium": [0.5, 1.5, 3, 4],
