@@ -36,19 +36,31 @@ def get_qc(p, config, test):
             config != cotede_results[1] or
                 p.uid() is None):
         inputs = Wod4CoTeDe(p)
-        try:
+
+        # If config is a dictionary, use it.
+        if type(config) is not dict:
             try:
-                # Assumes config as the QC test group, like 'cotede',
-                #   and load only the desired 'test'
-                pqc = ProfileQC(inputs, cfg=load_cfg(config)[var][test])
+                # Load config from CoTeDe
+                cfg = load_cfg(config)
+
+                if test == config:
+                    # AutoQC runs only on TEMP, so clean the rest.
+                    for v in cfg.keys():
+                        if v not in ['main', var]:
+                            del(cfg[v])
+                # If is a specific test,
+                elif test != config:
+                    # Load from TEMP,
+                    try:
+                        cfg = {var: {test: cfg[var][test]}}
+                    # otherwise load it from main.
+                    except:
+                        cfg = {'main': {test: cfg['main'][test]}}
             except:
-                # In case of a full set, like full GTSPP suite of tests, in
-                #   that case test='overall', or a dictionary
-                pqc = ProfileQC(inputs, cfg=config)
-        except:
-            with open('cotede_qc/qc_cfg/' + config + '.json') as f:
-                cfg = json.load(f)
-                pqc = ProfileQC(inputs, cfg=cfg)
+                with open('cotede_qc/qc_cfg/' + config + '.json') as f:
+                    cfg = json.load(f)
+
+        pqc = ProfileQC(inputs, cfg=cfg)
 
         cotede_results = [p.uid(), config, pqc]
 
