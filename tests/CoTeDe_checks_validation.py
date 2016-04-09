@@ -112,12 +112,12 @@ def test_CoTeDe_location_at_sea_test_land_point():
     qc = qctests.CoTeDe_location_at_sea_test.test(pland)
     assert np.all(qc), 'mismatch between qc results and expected values'
 
-def test_CoTeDe_profile_envelop():
+def test_CoTeDe_GTSPP_profile_envelop():
     '''
     Make sure CoTeDe profile_envelop is working as expected.
     '''
-    import qctests.CoTeDe_profile_envelop
-    qc = qctests.CoTeDe_profile_envelop.test(p)
+    import qctests.CoTeDe_GTSPP_profile_envelop
+    qc = qctests.CoTeDe_GTSPP_profile_envelop.test(p)
     assert np.array_equal(qc, expected_qc_profile_envelop), 'mismatch between qc results and expected values'
 
 def test_CoTeDe_rate_of_change():
