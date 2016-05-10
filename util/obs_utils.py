@@ -1,6 +1,7 @@
 """A collection of utilities for handling (mainly subsurface ocean) observations"""
 
 import copy
+import gsw
 import numpy as np
 
 def t48tot68(t48):
@@ -81,101 +82,6 @@ def pottem(T, S, dStart, dEnd=0.0, pressure=False, lat=0.0):
 
     return POTTEM
 
-def _depth_to_pressure_scalar(Z, LAT):
-    """Convert a depth to a pressure.
-
-       Based on FNZTOP from the NEMOQC source code.
-
-       z:   the depth for conversion.
-       lat: latitude.
-
-       Values have to be scalars."""
-
-    #
-    #   CHECK VALUE fnztop = 10302.423165             - CRAY 64-BIT
-    #                  = 10302.4231650052           - IEEE 64 BIT
-    #   FOR Z=10000M, LAT=30.0
-    #
-
-    # Definitions
-    PI     = 3.14159265358979323846e0
-    RADIAN = PI / 180e0
-    G1     = 9.780318e0
-    G2     = 9.780318e0 * (5.3024e-3 - 5.9e-6 * 4.0e0)
-    G3     = -9.780318e0 * 5.9e-6 * 4.0e0
-    S      = 35.0e0
-    C1P5   = 1.5e0
-
-    AL     = 1e5 / (9.99842594e2+8.24493e-1*S 
-                -5.72466e-3*S**C1P5 + 4.8314e-4*S**2)
-    RK     = 1.965221e4 + 5.46746e1*S + 7.944e-2*S**C1P5
-    RA     = 3.239908e0 + 2.2838e-3*S + 1.91075e-4*S**C1P5
-    RB     = 8.50935e-5 - 9.9348e-7*S
-    DD     = np.sqrt(RA*RA-4.0e0*RK*RB)
-    C1     = 0.5e0/RB
-    C2     = RA/RK
-    C3     = RB/RK
-    C4     = RA/(2.0e0*RB*DD)
-    C5     = 2.0e0*RB/(RA-DD)
-    C6     = 2.0e0*RB/(RA+DD)
-    C7     = 0.5e0*2.226e-6
-
-    MLOOP=200
-    MCONV=5
-    EPS=1.0e-1
-
-    PA = np.zeros(MCONV)
-
-    P = Z
-    IA=0
-    EP=0.0
-
-    for I in range(1, MLOOP + 1):
-
-        X = np.sin(RADIAN*LAT)**2
-        GS = (G3*X+G2)*X+G1
-
-        PTEMP = P*1.0e-1
-
-        R1=(AL*(PTEMP-C1*np.log((C3*PTEMP+C2)*PTEMP+1.0e0) + 
-             C4*np.log((1.0e0 + C5*PTEMP)/(1.0e0+C6*PTEMP))))
-
-        ZZ = R1/(GS+C7*P)
-
-        # ZERRO ERROR
-
-        if (Z == ZZ): return P
-
-        EE = Z - ZZ
-        EA = np.abs(EE)
-
-        # SAVE NEW BEST VALUE
-        if (IA == 0 or EA < EP):
-
-            IA = 1
-            EP = EA
-            PA[IA - 1] = P
-
-        # LOOP FOR LIMIT CYCLE
-        elif (EA == EP):
-
-            for J in range(1, IA + 1):
-                if (P == PA[J - 1]): return P
-    
-            if (IA < MCONV):
-                IA = IA + 1
-                PA[IA - 1] = P
-        
-        # CORRECT P AND LOOP
-
-        P = P+EE
-
-    assert (EA <= EPS), 'Iteration has not converged'
-
-    P = PA[IA - 1]
-
-    return P
-    
 def depth_to_pressure(z, lat):
     """Converts depths to pressures.
        
@@ -184,96 +90,16 @@ def depth_to_pressure(z, lat):
 
     assert np.array(lat).size > 0 and np.array(z).size > 0, 'No value provided for z or lat'
 
-    # Rather inelegant way of getting this to work - 
-    # TODO : rework this.
-    if np.array(lat).size == 1 and np.array(z).size == 1:
-        p = _depth_to_pressure_scalar(z, lat)
-    elif np.array(lat).size > 1 and np.array(z).size == 1:
-        p = np.zeros(len(lat))
-        for i, l in enumerate(lat):
-            p[i] = _depth_to_pressure_scalar(z, l)
-    elif np.array(lat).size == 1 and np.array(z).size > 1:       
-        p = np.zeros(len(z))
-        for i, d in enumerate(z):
-            p[i] = _depth_to_pressure_scalar(d, lat)
-    else:
-        assert len(lat) == len(z), 'Number of lats does not match the number of depths'
-        p = np.zeros(len(z))
-        for i, d in enumerate(z):
-            p[i] = depth_to_pressure(d, lat[i])
+    p = gsw.p_from_z(-z, lat)
 
     return p
 
 def pressure_to_depth(p, lat):
 
-    """Function to convert from ocean pressure to depth.  Algorithm is
-       taken from Ops_OcnPresToDepth.f90 which forms part of the 
-       NEMOQC source code (correct as of revision 2468 of the trunk).
-
-       Inputs:
-         p   - Pressure scalar in decibars.
-         lat - Latitude in degrees.
-
-       Outputs:
-          The depth (in metres) corresponding to the input pressures are returned.
-
-       This routine will work with scalars or numpy arrays.
+    """Wrapper function to convert from ocean pressure to depth. 
     """
 
-    # Details of the algorithm from Ops_OcnPresToDepth.f90:
-    # ---------
-    # depth in meters from pressure in decibars using
-    # Saunder's and Fofonoff's method.
-    # deep-sea res., 1976,23,109-111.
-    # formula refitted for 1980 equation of state
-
-    # checkvalue: depth=9712.653 M for P=10000 decibars,
-    # latitude=30 deg
-
-    # above for standard ocean: T=0 deg. celcius;
-    # S=35 (PSS-78)
-
-    # gr=gravity variation with latitude: Anon (1970)
-    # Bulletin Geodesique
-
-    # Also ...
-    #
-    # Seawater Applications July 2002
-
-    # Sea-Bird uses the formula in UNESCO Technical Papers in 
-    # Marine Science No. 44. This is an empirical formula that 
-    # takes compressibility (that is, density) into account. 
-    # An ocean water
-    # column at 0 deg C (t = 0) and 35 PSU (s = 35) is assumed. 
-
-    # The gravity variation with latitude and pressure is computed as: 
-
-    #    g (m/sec2) = 9.780318 * [ 1.0 + ( 5.2788x10 -3  + 2.36x10 -5  * x) * x ] + 1.092x10 -6  * p 
-
-    #    where 
-    #    x = [sin (latitude / 57.29578) ] 2 
-    #    p = pressure (decibars) 
-
-    # Then, depth is calculated from pressure: 
-
-    #    depth (meters) = [(((-1.82x10 -15  * p + 2.279x10 -10 ) * p - 2.2512x10 -5  ) * p + 9.72659) * p] / g 
-
-    #    where 
-    #    p = pressure (decibars) 
-    #    g = gravity (m/sec2) 
-    # ---------
-
-    X = np.sin( lat / 57.29578e0 )
-
-    X = X**2
-
-    Gr = 9.780318e0 * ( 1.0e0 + ( 5.2788e-3 + 2.36e-5 * X ) * X ) + 1.092e-6 * p
-
-    Depth = ( ( ( -1.82e-15 * p + 2.279e-10 ) * p - 2.2512e-5 ) * p + 9.72659e0 ) * p
-
-    Depth /= Gr
-
-    return Depth
+    return -gsw.z_from_p(p, lat)
 
 def density(t, s, l, latitude=None):
     """Calculate the density/densities based on:

@@ -7,6 +7,7 @@ http://w3.jcommops.org/FTPRoot/Argo/Doc/argo-quality-control-manual.pdf page 8.
 """
 
 import numpy as np
+from util import obs_utils
 
 def test(p):
     """ 
@@ -16,7 +17,7 @@ def test(p):
     """
 
     # Get vertical coordinate values from the profile.
-    z = p.z()
+    z = obs_utils.depth_to_pressure(p.z(), p.latitude())
 
     # Make the quality control decisions. This should
     # return true where z decreases or stays the same.

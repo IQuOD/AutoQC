@@ -29,14 +29,6 @@ def pottem_test():
 
     assert True
 
-def depth_to_pressure_scalar_test():
-    '''
-    implements spot check suggested from original code,
-    to 6 places.
-    '''
-
-    assert np.round(1e6*outils._depth_to_pressure_scalar(10000, 30.0)) == 10302423165, 'failed to match expectation at test point'
-
 def depth_to_pressure_test():
     '''
     check behavior of depth_to_pressure for different input shapes.
@@ -44,7 +36,7 @@ def depth_to_pressure_test():
 
     lat = 30.0
     depth = 10000
-    truePressure = 10302423165
+    truePressure = 10300977189
 
     #two single value arrays
     assert np.round(1e6*outils.depth_to_pressure( np.array([depth]), np.array([lat]) )) == truePressure, 'failed to match expectation for 2 single-valued arrays'
@@ -70,12 +62,12 @@ def pressure_to_depth_test():
     '''
 
     # for scalars
-    assert np.round(outils.pressure_to_depth(10000, 30.0)*1000) == 9712653
+    assert np.round(outils.pressure_to_depth(10000, 30.0)*1000) == 9713735
 
     # for numpy arrays
     depths = outils.pressure_to_depth(np.array([10000, 10000, 10000]), np.array([30.0, 30.0, 30.0]))
     for i in range(len(depths)):
-        assert np.round(depths[i]*1000) == 9712653
+        assert np.round(depths[i]*1000) == 9713735
 
 
 def density_test():

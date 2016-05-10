@@ -10,7 +10,7 @@ def test_Argo_pressure_increasing_test_constantPressure():
     API test should flag only the subsequent levels of constant pressure.
     '''
 
-    p = util.testingProfile.fakeProfile([2,2,2], [100,100,100]) 
+    p = util.testingProfile.fakeProfile([2,2,2], [100,100,100], latitude=0.0) 
     qc = qctests.Argo_pressure_increasing_test.test(p)
     truth = numpy.zeros(3, dtype=bool)
     truth[1] = True
@@ -22,7 +22,7 @@ def test_Argo_pressure_increasing_test_pressureInversion():
     API test should flag only the subsequent levels of constant pressure.
     '''
 
-    p = util.testingProfile.fakeProfile([2,2,2], [100,200,100]) 
+    p = util.testingProfile.fakeProfile([2,2,2], [100,200,100], latitude=0.0) 
     qc = qctests.Argo_pressure_increasing_test.test(p)
     truth = numpy.zeros(3, dtype=bool)
     truth[1] = True

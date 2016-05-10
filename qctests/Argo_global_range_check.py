@@ -5,6 +5,8 @@ system.
 See Argo quality control manual (based on version 2.5).
 """
 
+from util import obs_utils
+
 def test(p):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
@@ -14,7 +16,7 @@ def test(p):
 
     # Get temperature and pressure values from the profile.
     t = p.t()
-    z = p.z()
+    z = obs_utils.depth_to_pressure(p.z(), p.latitude())
 
     # Make the quality control decisions. This should
     # return true if the temperature is outside -2.5 deg C
