@@ -23,7 +23,11 @@ ADD woa13_decav_t13_5dv2.nc /AutoQC/data/.
 ADD woa13_decav_t14_5dv2.nc /AutoQC/data/.
 ADD woa13_decav_t15_5dv2.nc /AutoQC/data/.
 ADD woa13_decav_t16_5dv2.nc /AutoQC/data/.
+ADD woa13_decav_s13_5dv2.nc /AutoQC/data/.
+ADD woa13_decav_s14_5dv2.nc /AutoQC/data/.
+ADD woa13_decav_s15_5dv2.nc /AutoQC/data/.
+ADD woa13_decav_s16_5dv2.nc /AutoQC/data/.
 ADD etopo5.nc /AutoQC/data/.
 ADD climatological_t_median_and_amd_for_aqc.nc /AutoQC/data/.
 
-ADD bashrc ~/.bashrc
+ADD bashrc /.bashrc
