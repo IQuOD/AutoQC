@@ -88,16 +88,11 @@ class fakeProfile:
         """ Returns the time. """
         return self.primary_header['Time']
 
-    def datetime(self):
-        day = self.primary_header['Day']
-        if day == 0:
-            day = 15
-        time  = self.primary_header['Time']
-        if time is None or time < 0 or time >= 24:
-            time = 0
+    def var_index(self):
+        return 1
 
-        d = datetime(self.year(), self.month(), day) + \
-            timedelta(hours=time)
+    def datetime(self):
+        d = datetime(self.year(), self.month(), self.day()) + timedelta(hours=self.time())
         return d
 
     def var_data(self, dat):
@@ -123,4 +118,3 @@ class fakeProfile:
 
     def t_qc_mask(self):
         return np.zeros(self.temperatures.shape).astype('bool')
-
