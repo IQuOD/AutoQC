@@ -41,3 +41,9 @@ def test_CSIRO_constant_bottom():
     qc = qctests.CSIRO_constant_bottom.test(p)
 
     assert numpy.array_equal(qc, truth), 'flagged a constant temperature not at the bottom of the profile'
+
+    # don't run with only one level
+    p = util.testingProfile.fakeProfile([0], [100], latitude=0, longitude=0, probe_type=2)
+    qc = qctests.CSIRO_constant_bottom.test(p)
+    truth = numpy.zeros(1, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'cant perform this check with a single-level profile'    
