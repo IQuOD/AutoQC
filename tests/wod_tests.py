@@ -3,7 +3,7 @@ from wodpy import wod
 
 class TestClass:
    def setUp(self):
-        filenames = main.readInput('datafiles.json')
+        filenames = ["data/quota_subset.dat"]
         profiles = main.extractProfiles(filenames)
 
         # identify and import tests
