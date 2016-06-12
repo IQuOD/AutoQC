@@ -1,6 +1,8 @@
 {
 "TEMP": {
-    "spike": 6.0,
+    "spike": {
+        "threshold":6.0
+        },
     "woa_normbias": {
         "sigma_threshold": 6,
         "file": "data/temperature_seasonal_5deg.nc",

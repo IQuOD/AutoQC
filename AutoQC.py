@@ -3,7 +3,7 @@ import glob, time
 import numpy as np
 import sys, os, json, data.ds
 import util.main as main
-import pandas
+import pandas, logging
 
 def run(test, profiles):
   '''
@@ -39,6 +39,8 @@ def processFile(fName):
   data.ds.threadFile     = fName
 
   for iprofile, pinfo in enumerate(data.ds.threadProfiles):
+    if iprofile >=10:
+      continue
     # Load the profile data.
     p, currentFile, f = main.profileData(pinfo, currentFile, f)
     # Check that there are temperature data in the profile, otherwise skip.
@@ -72,6 +74,8 @@ def processFile(fName):
 ########################################
 
 if len(sys.argv)>2:
+  # no debug messages by default
+  logging.disable('info')
   # Identify and import tests
   testNames = main.importQC('qctests')
   testNames.sort()
