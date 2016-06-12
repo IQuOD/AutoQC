@@ -28,6 +28,10 @@ def test(p):
     isDepth = (d.mask==False)
     isData = isTemperature & isDepth
 
+    # need more than one level
+    if len(isData) < 2:
+        return qc
+
     # constant temperature at bottom of profile, for latitude > -40 and bottom two depths at least 30m apart:
     if isData[-1] and isData[-2] and isXBT:
         if t.data[-1] == t.data[-2] and latitude > -40 and d.data[-1] - d.data[-2] > 30:
