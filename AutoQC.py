@@ -39,8 +39,6 @@ def processFile(fName):
   data.ds.threadFile     = fName
 
   for iprofile, pinfo in enumerate(data.ds.threadProfiles):
-    if iprofile >=10:
-      continue
     # Load the profile data.
     p, currentFile, f = main.profileData(pinfo, currentFile, f)
     # Check that there are temperature data in the profile, otherwise skip.
