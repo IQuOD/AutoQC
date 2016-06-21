@@ -1,4 +1,5 @@
 from cotede.qc import ProfileQC
+from cotede.utils import load_cfg
 import datetime
 import json
 import logging
