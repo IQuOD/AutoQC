@@ -58,7 +58,7 @@ def get_qc(p, config, test):
                     except:
                         # The dummy configuration ensures that the results from
                         # 'main' is copied into the results for var.
-                        cfg = {'main': {test: cfg['main'][test]}, var: {'dummy': None}}}
+                        cfg = {'main': {test: cfg['main'][test]}, var: {'dummy': None}}
             except:
                 with open('cotede_qc/qc_cfg/' + config + '.json') as f:
                     cfg = json.load(f)
