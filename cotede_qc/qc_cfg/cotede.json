@@ -11,17 +11,21 @@
         "vars": {"woa_an": "t_mn", "woa_sd": "t_sd", "woa_n": "t_dd"},
         "url": ""
         },
-    "spike": 6.0,
+    "spike": {
+        "threshold":6.0
+        },
     "spike_depthconditional": {
         "pressure_threshold": 500,
         "shallow_max": 6.0,
         "deep_max": 2.0
         },
     "tukey53H_norm": {
-        "k": 1.5,
+        "threshold": 1.5,
         "l": 12
         },
-    "gradient": 9.0,
+    "gradient": {
+        "threshold":9.0
+        },
     "digit_roll_over": 10,
     "bin_spike": {
         "l": 5,

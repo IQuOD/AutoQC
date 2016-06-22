@@ -3,7 +3,7 @@ import glob, time
 import numpy as np
 import sys, os, json, data.ds
 import util.main as main
-import pandas
+import pandas, logging
 
 def run(test, profiles):
   '''
@@ -72,6 +72,8 @@ def processFile(fName):
 ########################################
 
 if len(sys.argv)>2:
+  # no debug messages by default
+  logging.disable('info')
   # Identify and import tests
   testNames = main.importQC('qctests')
   testNames.sort()

@@ -4,8 +4,12 @@
         "minval": -2.0,
         "maxval": 40
         },
-    "gradient": 10.0,
-    "spike": 2.0,
+    "gradient": {
+        "threshold":10.0
+        },
+    "spike": {
+        "threshold":2.0
+        },
     "woa_normbias": {
         "sigma_threshold": 3,
         "file": "data/temperature_seasonal_5deg.nc",
