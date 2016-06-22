@@ -28,14 +28,15 @@ def get_qc(p, config, test):
     try: 
         cotede_results
     except NameError:
-        cotede_results = [-1, '', None]
+        cotede_results = [-1, '', {}, None]
     
     var = 'TEMP'
 
     # Check if we need to perform the quality control.
     if (p.uid() != cotede_results[0] or 
             config != cotede_results[1] or
-                p.uid() is None):
+                test not in cotede_results[2] or
+                   p.uid() is None):
         inputs = Wod4CoTeDe(p)
 
         # If config is a dictionary, use it.
@@ -56,17 +57,19 @@ def get_qc(p, config, test):
                         cfg = {var: {test: cfg[var][test]}}
                     # otherwise load it from main.
                     except:
-                        cfg = {'main': {test: cfg['main'][test]}}
+                        # The dummy configuration ensures that the results from
+                        # 'main' is copied into the results for var.
+                        cfg = {'main': {test: cfg['main'][test]}, var: {'dummy': None}}
             except:
                 with open('cotede_qc/qc_cfg/' + config + '.json') as f:
                     cfg = json.load(f)
 
         pqc = ProfileQC(inputs, cfg=cfg)
 
-        cotede_results = [p.uid(), config, pqc]
+        cotede_results = [p.uid(), config, pqc.flags[var].keys(), pqc]
 
     # Get the QC results, which use the IOC conventions.
-    qc_returned = cotede_results[2].flags[var][test]
+    qc_returned = cotede_results[3].flags[var][test]
 
     # It looks like CoTeDe never returns a QC decision
     # of 2. If it ever does, we need to decide whether 
