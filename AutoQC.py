@@ -92,9 +92,11 @@ if len(sys.argv)>2:
 
   # Parallel processing.
   print('\nPlease wait while QC is performed\n')
+  # old-style----------------------------------
   #processFile.parallel = main.parallel_function(processFile, sys.argv[2])
   #parallel_result = processFile.parallel(filenames)
-  
+
+  # tentative new-style------------------------
   pool = Pool(processes=int(sys.argv[2]))
   parallel_result = []
   def log_result(result):
@@ -104,7 +106,8 @@ if len(sys.argv)>2:
     pool.apply_async(processFile, (filenames[i],), callback = log_result)
   pool.close()
   pool.join()
- 
+  #--------------------------------------------  
+
   # Recombine results
   truth, results, profileIDs = main.combineArrays(parallel_result)
 
