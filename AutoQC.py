@@ -4,6 +4,7 @@ import numpy as np
 import sys, os, json, data.ds
 import util.main as main
 import pandas
+from multiprocessing import Pool
 
 def run(test, profiles):
   '''
@@ -39,6 +40,8 @@ def processFile(fName):
   data.ds.threadFile     = fName
 
   for iprofile, pinfo in enumerate(data.ds.threadProfiles):
+    if iprofile >= 10:
+      continue
     # Load the profile data.
     p, currentFile, f = main.profileData(pinfo, currentFile, f)
     # Check that there are temperature data in the profile, otherwise skip.
@@ -63,7 +66,7 @@ def processFile(fName):
     trueVerbose.append(truth[1][0])
     profileIDs.append(p.uid())
   # testResults[i][j] now contains a flag indicating the exception raised by test i on profile j
-
+  
   return trueResults, testResults, profileIDs
 
 
@@ -89,9 +92,19 @@ if len(sys.argv)>2:
 
   # Parallel processing.
   print('\nPlease wait while QC is performed\n')
-  processFile.parallel = main.parallel_function(processFile, sys.argv[2])
-  parallel_result = processFile.parallel(filenames)
+  #processFile.parallel = main.parallel_function(processFile, sys.argv[2])
+  #parallel_result = processFile.parallel(filenames)
+  
+  pool = Pool(processes=int(sys.argv[2]))
+  parallel_result = []
+  def log_result(result):
+    parallel_result.append(result)
 
+  for i in range(len(filenames)):
+    pool.apply_async(processFile, (filenames[i],), callback = log_result)
+  pool.close()
+  pool.join()
+ 
   # Recombine results
   truth, results, profileIDs = main.combineArrays(parallel_result)
 
