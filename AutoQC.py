@@ -3,7 +3,7 @@ import glob, time
 import numpy as np
 import sys, os, json, data.ds
 import util.main as main
-import pandas
+import pandas, psycopg2
 from multiprocessing import Pool
 
 def run(test, profiles):
@@ -96,24 +96,55 @@ if len(sys.argv)>2:
   #processFile.parallel = main.parallel_function(processFile, sys.argv[2])
   #parallel_result = processFile.parallel(filenames)
 
-  # tentative new-style------------------------
-  pool = Pool(processes=int(sys.argv[2]))
+  # new-style (per file)------------------------
+  # pool = Pool(processes=int(sys.argv[2]))
+  # parallel_result = []
+  # def log_result(result):
+  #   '''helper to run as callback after a file is processed'''
+  #   parallel_result.append(result)
+
+  # for i in range(len(filenames)):
+  #   pool.apply_async(processFile, (filenames[i],), callback = log_result)
+  # pool.close()
+  # pool.join()
+  # new-style (per db row)----------------------
   parallel_result = []
   def log_result(result):
+    '''helper to run as callback after a file is processed'''
     parallel_result.append(result)
 
-  for i in range(len(filenames)):
-    pool.apply_async(processFile, (filenames[i],), callback = log_result)
+  def process_row(i):
+    '''run all tests on the ith database row'''
+
+    # extract profile
+    cur.execute('SELECT * FROM demo LIMIT 1 OFFSET ' + str(i))
+    row = cur.fetchall()
+    profile = main.mock_wodpy(row[0])
+    print profile.uid()
+
+  conn = psycopg2.connect("dbname='root' user='root'")
+  cur = conn.cursor()
+  cur.execute('SELECT COUNT(*) FROM demo')
+  nRows = cur.fetchall()[0][0]
+
+  # launch async processes
+  pool = Pool(processes=int(sys.argv[2]))
+  for i in range(10):
+    pool.apply_async(process_row, (i,), callback = log_result)
   pool.close()
   pool.join()
-  #--------------------------------------------  
+  
+  
 
-  # Recombine results
-  truth, results, profileIDs = main.combineArrays(parallel_result)
 
-  # Print summary statistics and write output file.
-  main.printSummary(truth, results, testNames)
-  main.generateCSV(truth, results, testNames, profileIDs, sys.argv[1])
+  # -------------------------------------------
+
+  # # Recombine results
+  # truth, results, profileIDs = main.combineArrays(parallel_result)
+
+  # # Print summary statistics and write output file.
+  # main.printSummary(truth, results, testNames)
+  # main.generateCSV(truth, results, testNames, profileIDs, sys.argv[1])
 else:
   print 'Please add command line arguments to name your output file and set parallelization:'
   print 'python AutoQC myFile 4'
