@@ -1,3 +1,5 @@
+# usage: python build-db.py <wod ascii file name> <table name to append to>
+
 import psycopg2
 from wodpy import wod
 import sys
@@ -11,7 +13,7 @@ except:
 cur = conn.cursor()
 
 # set up our table
-query = """CREATE TABLE IF NOT EXISTS profiles(
+query = "CREATE TABLE IF NOT EXISTS " + sys.argv[2] + """(
             lat real, 
             long real, 
             uid integer,
@@ -23,7 +25,8 @@ query = """CREATE TABLE IF NOT EXISTS profiles(
             probetype integer,
             depth real[], 
             temperature real[],
-            salinity real[] 
+            salinity real[],
+            truth boolean
            );"""
 cur.execute(query)
 
@@ -35,8 +38,9 @@ while True:
     wodDict['z'] = "'{" + ",".join(map(str, wodDict['z'])) + "}'"
     wodDict['t'] = "'{" + ",".join(map(str, wodDict['t'])) + "}'"
     wodDict['s'] = "'{" + ",".join(map(str, wodDict['s'])) + "}'"
+    wodDict['truth'] = profile.t_level_qc(originator=True) >= 3
     
-    query = """INSERT INTO profiles VALUES(
+    query = "INSERT INTO " + sys.argv[2] + """ VALUES(
                 {p[latitude]}, 
                 {p[longitude]}, 
                 {p[uid]}, 
@@ -48,7 +52,8 @@ while True:
                 {p[probe_type]},
                 {p[z]}, 
                 {p[t]},
-                {p[s]}
+                {p[s]},
+                {p[truth]}
                )""".format(p=wodDict)
     query = query.replace('--', 'NULL')
     query = query.replace('None', 'NULL')
