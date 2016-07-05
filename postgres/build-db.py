@@ -38,7 +38,7 @@ while True:
     wodDict['z'] = "'{" + ",".join(map(str, wodDict['z'])) + "}'"
     wodDict['t'] = "'{" + ",".join(map(str, wodDict['t'])) + "}'"
     wodDict['s'] = "'{" + ",".join(map(str, wodDict['s'])) + "}'"
-    wodDict['truth'] = profile.t_level_qc(originator=True) >= 3
+    wodDict['truth'] = sum(profile.t_level_qc(originator=True) >= 3) >= 1
     
     query = "INSERT INTO " + sys.argv[2] + """ VALUES(
                 {p[latitude]}, 
