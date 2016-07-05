@@ -40,8 +40,6 @@ def processFile(fName):
   data.ds.threadFile     = fName
 
   for iprofile, pinfo in enumerate(data.ds.threadProfiles):
-    if iprofile >= 10:
-      continue
     # Load the profile data.
     p, currentFile, f = main.profileData(pinfo, currentFile, f)
     # Check that there are temperature data in the profile, otherwise skip.
@@ -129,7 +127,7 @@ if len(sys.argv)>2:
 
   # launch async processes
   pool = Pool(processes=int(sys.argv[2]))
-  for i in range(10):
+  for i in range(nRows):
     pool.apply_async(process_row, (i,), callback = log_result)
   pool.close()
   pool.join()
