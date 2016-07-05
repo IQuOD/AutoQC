@@ -73,7 +73,7 @@ def catchFlags(profile):
 
 def referenceResults(profiles):
   '''
-  extract the summary reference result for each profile:
+  extract the summary reference result for each profile: DEPRECATED
   '''
   refResult = []
   verbose = []
@@ -108,7 +108,7 @@ def generateCSV(truth, results, tests, primaryKeys, name):
 
 def parallel_function(f, nfold=2):
     '''
-    thanks http://scottsievert.github.io/blog/2014/07/30/simple-python-parallelism/
+    thanks http://scottsievert.github.io/blog/2014/07/30/simple-python-parallelism/ DEPRECATED
     '''
     def easy_parallize(f, sequence):
         """ assumes f takes sequence as input, easy w/ Python's scope """
@@ -251,9 +251,9 @@ def combineArrays(parallelResults):
 
 def sort_headers(headers):
   '''
-  takes a list of headers, and sorts them into a dictionary keyed by cruise number
+  takes a list of headers, and sorts them into a dictionary keyed by cruise number 
   containing a list of corresponding headers; 
-  header lists are then time sorted.
+  header lists are then time sorted. DEPRECATED
   '''
 
   sortedHeaders = {}
@@ -269,7 +269,13 @@ def sort_headers(headers):
 
   return sortedHeaders
 
+def mock_wodpy(row):
+  '''
+  given a single row from a postgres cursor, return an object that mocks
+  a wodpy object with the same values
+  '''
 
+  return testingProfile.fakeProfile(row[10], row[9], latitude=row[0], longitude=row[1], date=[row[4], row[5], row[6], row[7]], probe_type=row[8], salinities=row[11], pressures=None, uid=row[2], cruise=row[3])
 
 
 
