@@ -3,6 +3,7 @@
 import psycopg2
 from wodpy import wod
 import sys
+import util.main as main
 
 # connect to database and create a cursor by which to interact with it.
 try:
@@ -11,6 +12,10 @@ except:
     print "I am unable to connect to the database"
 
 cur = conn.cursor()
+
+# Identify tests
+testNames = main.importQC('qctests')
+testNames.sort()
 
 # set up our table
 query = "CREATE TABLE IF NOT EXISTS " + sys.argv[2] + """(
@@ -26,8 +31,15 @@ query = "CREATE TABLE IF NOT EXISTS " + sys.argv[2] + """(
             depth real[], 
             temperature real[],
             salinity real[],
-            truth boolean
-           );"""
+            truth boolean,
+        """
+for i in range(len(testNames)):
+    query += testNames[i].lower() + ' boolean'
+    if i<len(testNames)-1:
+        query += ','
+    else:
+        query += ');'
+
 cur.execute(query)
 
 # populate table from wod-ascii data
@@ -40,7 +52,7 @@ while True:
     wodDict['s'] = "'{" + ",".join(map(str, wodDict['s'])) + "}'"
     wodDict['truth'] = sum(profile.t_level_qc(originator=True) >= 3) >= 1
     
-    query = "INSERT INTO " + sys.argv[2] + """ VALUES(
+    query = "INSERT INTO " + sys.argv[2] + " (lat, long, uid, cruise, year, month, day, time, probetype, depth, temperature, salinity, truth) "  + """ VALUES(
                 {p[latitude]}, 
                 {p[longitude]}, 
                 {p[uid]}, 

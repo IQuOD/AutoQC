@@ -7,7 +7,8 @@ class fakeProfile:
     implementations of qc-tests.
     '''
 
-    def __init__(self, temperatures, depths, latitude=None, longitude=None, date=[1999, 12, 31, 0], probe_type=None, salinities=None, pressures=None, uid=None, cruise=None):
+    def __init__(self, temperatures, depths, latitude=None, longitude=None, date=[1999, 12, 31, 0], probe_type=None, salinities=None, pressures=None, uid=None, cruise=None, qcflag=False):
+        
         self.temperatures = temperatures
         if salinities is None:
             self.salinities = np.ma.array(temperatures, mask=True)
@@ -29,6 +30,7 @@ class fakeProfile:
         self.primary_header['Time'] = date[3]
         self.primary_header['WOD unique cast number'] = uid
         self.primary_header['Cruise number'] = cruise
+        self.primary_header['QC summary flag'] = qcflag
         
         self.secondary_header = {'entries':[]}
         if probe_type is not None:
@@ -118,3 +120,7 @@ class fakeProfile:
 
     def t_qc_mask(self):
         return np.zeros(self.temperatures.shape).astype('bool')
+
+    def qcflag(self):
+        """ Returns the time. """
+        return self.primary_header['QC summary flag']
