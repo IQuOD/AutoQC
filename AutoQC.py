@@ -82,34 +82,8 @@ if len(sys.argv)>2:
   for testName in testNames:
     print('  {}'.format(testName))
 
-  # Identify data files and create a profile list.
-  filenames = main.readInput('datafiles.json')
-  profiles  = main.extractProfiles(filenames)
-  data.ds.profiles = profiles
-  print('\n{} file(s) will be read containing {} profiles'.format(len(filenames), len(profiles)))
-
   # Parallel processing.
   print('\nPlease wait while QC is performed\n')
-  # old-style----------------------------------
-  #processFile.parallel = main.parallel_function(processFile, sys.argv[2])
-  #parallel_result = processFile.parallel(filenames)
-
-  # new-style (per file)------------------------
-  # pool = Pool(processes=int(sys.argv[2]))
-  # parallel_result = []
-  # def log_result(result):
-  #   '''helper to run as callback after a file is processed'''
-  #   parallel_result.append(result)
-
-  # for i in range(len(filenames)):
-  #   pool.apply_async(processFile, (filenames[i],), callback = log_result)
-  # pool.close()
-  # pool.join()
-  # new-style (per db row)----------------------
-  parallel_result = []
-  def log_result(result):
-    '''helper to run as callback after a file is processed'''
-    parallel_result.append(result)
 
   def process_row(i):
     '''run all tests on the ith database row'''
@@ -118,8 +92,22 @@ if len(sys.argv)>2:
     cur.execute('SELECT * FROM demo LIMIT 1 OFFSET ' + str(i))
     row = cur.fetchall()
     profile = main.mock_wodpy(row[0])
+    
+    # data pre-validation
+    # ---tbd---
+       
+    # run tests
+    results = [profile.qcflag()]
+    for itest, test in enumerate(testNames):
+      if test[0:5] != 'CSIRO':  # testing on CSIRO suite for now
+        continue
+      result = run(test, [profile])
+      query = "UPDATE demo SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile.uid()) + ";"
+      cur.execute(query)
+      
     print profile.uid()
 
+  # connect to database & determine how many profiles are present
   conn = psycopg2.connect("dbname='root' user='root'")
   cur = conn.cursor()
   cur.execute('SELECT COUNT(*) FROM demo')
@@ -127,13 +115,13 @@ if len(sys.argv)>2:
 
   # launch async processes
   pool = Pool(processes=int(sys.argv[2]))
-  for i in range(nRows):
-    pool.apply_async(process_row, (i,), callback = log_result)
+  for i in range(nRows):  # <-- this is not quite right; examine the list of uids printed in process_row, duplicates found.
+    pool.apply_async(process_row, (i,))
   pool.close()
   pool.join()
   
+  conn.commit()
   
-
 
   # -------------------------------------------
 

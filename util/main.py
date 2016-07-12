@@ -4,6 +4,7 @@ import json, os, glob, time, pandas, csv, sys, fnmatch
 import numpy as np
 from wodpy import wod
 from netCDF4 import Dataset
+import testingProfile
 
 def readInput(JSONlist):
     '''Create a list of data file names from a json array.'''
@@ -274,9 +275,8 @@ def mock_wodpy(row):
   given a single row from a postgres cursor, return an object that mocks
   a wodpy object with the same values
   '''
-
-  return testingProfile.fakeProfile(row[10], row[9], latitude=row[0], longitude=row[1], date=[row[4], row[5], row[6], row[7]], probe_type=row[8], salinities=row[11], pressures=None, uid=row[2], cruise=row[3])
-
+  
+  return testingProfile.fakeProfile(row[10], row[9], latitude=row[0], longitude=row[1], date=[row[4], row[5], row[6], row[7]], probe_type=row[8], salinities=row[11], pressures=None, uid=row[2], cruise=row[3], qcflag=row[12])
 
 
 
