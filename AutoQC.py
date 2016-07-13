@@ -85,11 +85,11 @@ if len(sys.argv)>2:
   # Parallel processing.
   print('\nPlease wait while QC is performed\n')
 
-  def process_row(i):
+  def process_row(uid):
     '''run all tests on the ith database row'''
 
     # extract profile
-    cur.execute('SELECT * FROM demo LIMIT 1 OFFSET ' + str(i))
+    cur.execute('SELECT * FROM demo WHERE uid = ' + str(uid) )
     row = cur.fetchall()
     profile = main.mock_wodpy(row[0])
     
@@ -107,16 +107,16 @@ if len(sys.argv)>2:
       
     print profile.uid()
 
-  # connect to database & determine how many profiles are present
+  # connect to database & fetch list of all uids
   conn = psycopg2.connect("dbname='root' user='root'")
   cur = conn.cursor()
-  cur.execute('SELECT COUNT(*) FROM demo')
-  nRows = cur.fetchall()[0][0]
+  cur.execute('SELECT uid FROM demo')
+  uids = cur.fetchall()
 
   # launch async processes
   pool = Pool(processes=int(sys.argv[2]))
-  for i in range(nRows):  # <-- this is not quite right; examine the list of uids printed in process_row, duplicates found.
-    pool.apply_async(process_row, (i,))
+  for i in range(len(uids)):
+    pool.apply_async(process_row, (uids[i][0],))
   pool.close()
   pool.join()
   
