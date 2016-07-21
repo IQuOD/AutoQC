@@ -5,6 +5,7 @@ import numpy as np
 from wodpy import wod
 from netCDF4 import Dataset
 import testingProfile
+from numbers import Number
 
 def readInput(JSONlist):
     '''Create a list of data file names from a json array.'''
@@ -278,10 +279,61 @@ def mock_wodpy(row):
   
   return testingProfile.fakeProfile(row[10], row[9], latitude=row[0], longitude=row[1], date=[row[4], row[5], row[6], row[7]], probe_type=row[8], salinities=row[11], pressures=None, uid=row[2], cruise=row[3], qcflag=row[12])
 
+def row2dict(row):
+  '''
+  given a single row from a postgres cursor, return a dictionary containing the row's info, keyed as a wodpy object
+  '''
 
+  profile = {
+    'latitude': row[0],
+    'longitude': row[1],
+    'uid': row[2],
+    'cruise': row[3],
+    'year': row[4],
+    'month': row[5],
+    'day': row[6],
+    'time': row[7],
+    'probe_type': row[8],
+    'z': row[9],
+    't': row[10],
+    's': row[11],
+    'qcflag': row[12],
+    'n_levels': row[13]
+  }
 
+  return profile
 
+def dataPresent(keys, level, profile):
+  '''
+  keys: tuple of key names found in the return object of row2dict
+  level: index number of level in question
+  profile: return object from row2dict
+  returns true if all the listed keys have a sensible value in the provided profile at the indicated level;
+  false otherwise.
+  '''
+  
+  present = True
+  
+  for key in keys:
+    if key in ['latitude', 'longitude', 'time']:
+      # must be float
+      present = present and isinstance(profile[key], Number)
 
+    elif key in ['uid', 'cruise', 'year', 'month', 'day', 'probe_type', 'n_levels']:
+      # muse be int
+      present = present and isinstance(profile[key], (int, long))
 
+    elif key in ['z', 't', 's']:
+      # must be float at given level
+      if level >= len(profile[key]):
+        return False
+      present = present and isinstance(profile[key][level], Number)
+      if key == 't':
+        # t = 99.9 indicates missing value
+        present = present and profile[key][level] != 99.9
+      
+    elif key in ['qcflag']:
+      # must be bool
+      present = present and isinstance(profile[key], bool)
 
-
+  return present

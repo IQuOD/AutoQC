@@ -32,6 +32,7 @@ query = "CREATE TABLE IF NOT EXISTS " + sys.argv[2] + """(
             temperature real[],
             salinity real[],
             truth boolean,
+            n_levels integer,
         """
 for i in range(len(testNames)):
     query += testNames[i].lower() + ' boolean'
@@ -52,7 +53,7 @@ while True:
     wodDict['s'] = "'{" + ",".join(map(str, wodDict['s'])) + "}'"
     wodDict['truth'] = sum(profile.t_level_qc(originator=True) >= 3) >= 1
     
-    query = "INSERT INTO " + sys.argv[2] + " (lat, long, uid, cruise, year, month, day, time, probetype, depth, temperature, salinity, truth) "  + """ VALUES(
+    query = "INSERT INTO " + sys.argv[2] + " (lat, long, uid, cruise, year, month, day, time, probetype, depth, temperature, salinity, truth, n_levels) "  + """ VALUES(
                 {p[latitude]}, 
                 {p[longitude]}, 
                 {p[uid]}, 
@@ -65,7 +66,8 @@ while True:
                 {p[z]}, 
                 {p[t]},
                 {p[s]},
-                {p[truth]}
+                {p[truth]},
+                {p[n_levels]}
                )""".format(p=wodDict)
     query = query.replace('--', 'NULL')
     query = query.replace('None', 'NULL')
