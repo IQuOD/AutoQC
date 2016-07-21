@@ -4,6 +4,7 @@ All questionable features result in a flag, in order to minimize false negatives
 """
 
 import numpy
+import util.main as main
 
 def test(p):
     """
@@ -13,26 +14,23 @@ def test(p):
     """
 
     # depths
-    d = p.z()
+    d = p['z']
     # is this an xbt?
-    isXBT = p.probe_type() == 2
+    isXBT = p['probe_type'] == 2
 
     # initialize qc as a bunch of falses;
-    qc = numpy.zeros(len(d.data), dtype=bool)
-
-    # check for gaps in data
-    isDepth = (d.mask==False)
+    qc = numpy.zeros(len(d), dtype=bool)
 
     if not isXBT:
         return qc
-
+   
     # flag any level that is shallower than 4m and is followed by a level shallower than 8m.
-    for i in range(p.n_levels()):
-        if isDepth[i]:
-            if d.data[i] < 4 and i < p.n_levels()-1: #only interested in depths less than 4m and not at the bottom of the profile.
-                if d.data[i+1] < 8:
+    for i in range(p['n_levels']):
+        if main.dataPresent(('z'), i, p):
+            if d[i] < 4 and i < p['n_levels']-1: #only interested in depths less than 4m and not at the bottom of the profile.
+                if d[i+1] < 8:
                     qc[i] = True
             else:
                 break
-
+           
     return qc

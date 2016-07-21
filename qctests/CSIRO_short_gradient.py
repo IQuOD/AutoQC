@@ -4,6 +4,7 @@ All questionable features result in a flag, in order to minimize false negatives
 """
 
 import numpy
+import util.main as main
 
 def test(p):
     """
@@ -13,22 +14,17 @@ def test(p):
     """
 
     # depths
-    d = p.z()
+    d = p['z']
     # temperatures
-    t = p.t()
-
+    t = p['t']
+    
     # initialize qc as a bunch of falses;
-    qc = numpy.zeros(len(t.data), dtype=bool)
+    qc = numpy.zeros(len(t), dtype=bool)
 
-    # check for gaps in data
-    isDepth = (d.mask==False)
-    isTemperature = (t.mask==False)
-    isData = isTemperature & isDepth
-
-    for i in range(0, p.n_levels()-1 ):
-        if isData[i] and isData[i+1]:
-            deltaD = (d.data[i+1] - d.data[i]) 
-            deltaT = (t.data[i+1] - t.data[i])
+    for i in range(0, p['n_levels']-1 ):
+        if main.dataPresent(('t', 'z'), i, p) and main.dataPresent(('t', 'z'), i+1, p):
+            deltaD = (d[i+1] - d[i]) 
+            deltaT = (t[i+1] - t[i])
             gradshort = deltaD / deltaT 
             if (deltaT > 0.5 and deltaD < 30) or abs(gradshort) < 0.4 or (gradshort > 0 and gradshort < 12.5):
                 if abs(deltaT) > 0.4:

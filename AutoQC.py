@@ -91,21 +91,22 @@ if len(sys.argv)>2:
     # extract profile
     cur.execute('SELECT * FROM demo WHERE uid = ' + str(uid) )
     row = cur.fetchall()
-    profile = main.mock_wodpy(row[0])
-    
+    profile = main.row2dict(row[0])
+
     # data pre-validation
     # ---tbd---
        
     # run tests
-    results = [profile.qcflag()]
+    results = [profile['qcflag']]
     for itest, test in enumerate(testNames):
       if test[0:5] != 'CSIRO':  # testing on CSIRO suite for now
         continue
+     
       result = run(test, [profile])
-      query = "UPDATE demo SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile.uid()) + ";"
+      query = "UPDATE demo SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile['uid']) + ";"
       cur.execute(query)
       
-    print profile.uid()
+    print profile['uid']
 
   # connect to database & fetch list of all uids
   conn = psycopg2.connect("dbname='root' user='root'")
