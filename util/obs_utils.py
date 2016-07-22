@@ -89,9 +89,9 @@ def depth_to_pressure(z, lat):
        lat:  scalar or numpy array of latitude (deg)."""
 
     assert np.array(lat).size > 0 and np.array(z).size > 0, 'No value provided for z or lat'
-
+   
     p = gsw.p_from_z(-z, lat)
-
+    
     return p
 
 def pressure_to_depth(p, lat):

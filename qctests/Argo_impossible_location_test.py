@@ -13,8 +13,8 @@ def test(p):
     """
 
     # Get the lat and long:
-    latitude = p.latitude()
-    longitude = p.longitude()
+    latitude = p['latitude']
+    longitude = p['longitude']
 
     # initialize qc as false:
     qc = numpy.zeros(1, dtype=bool)

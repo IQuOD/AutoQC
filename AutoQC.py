@@ -99,9 +99,9 @@ if len(sys.argv)>2:
     # run tests
     results = [profile['qcflag']]
     for itest, test in enumerate(testNames):
-      if test[0:5] != 'CSIRO':  # testing on CSIRO suite for now
+      if test[0:4] != 'Argo':  # testing on Argo suite for now
         continue
-     
+
       result = run(test, [profile])
       query = "UPDATE demo SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile['uid']) + ";"
       cur.execute(query)
