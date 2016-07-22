@@ -5,7 +5,7 @@ import psycopg2, pandas
 testNames = main.importQC('qctests')
 testNames.sort()
 
-testNames = [test for test in testNames if test[0:5] == 'CSIRO']
+testNames = [test for test in testNames if test[0:4] == 'Argo']
 
 # connect to database
 conn = psycopg2.connect("dbname='root' user='root'")
