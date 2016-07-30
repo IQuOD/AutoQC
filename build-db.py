@@ -19,20 +19,12 @@ testNames.sort()
 
 # set up our table
 query = "CREATE TABLE IF NOT EXISTS " + sys.argv[2] + """(
+            raw text,
+            truth boolean,
+            uid integer,
             lat real, 
             long real, 
-            uid integer,
             cruise integer,
-            year integer,
-            month integer,
-            day integer,
-            time real,
-            probetype integer,
-            depth real[], 
-            temperature real[],
-            salinity real[],
-            truth boolean,
-            n_levels integer,
         """
 for i in range(len(testNames)):
     query += testNames[i].lower() + ' boolean'
@@ -46,28 +38,26 @@ cur.execute(query)
 # populate table from wod-ascii data
 fid = open(sys.argv[1])
 while True:
+    # extract profile as wodpy object and raw text
+    start = fid.tell()
     profile = wod.WodProfile(fid)
+    end = fid.tell()
+    fid.seek(start)
+    raw = fid.read(end-start)
+    fid.seek(end)
+
+    # set up dictionary for populating query string
     wodDict = profile.npdict()
-    wodDict['z'] = "'{" + ",".join(map(str, wodDict['z'])) + "}'"
-    wodDict['t'] = "'{" + ",".join(map(str, wodDict['t'])) + "}'"
-    wodDict['s'] = "'{" + ",".join(map(str, wodDict['s'])) + "}'"
+    wodDict['raw'] = "'" + raw + "'"
     wodDict['truth'] = sum(profile.t_level_qc(originator=True) >= 3) >= 1
     
-    query = "INSERT INTO " + sys.argv[2] + " (lat, long, uid, cruise, year, month, day, time, probetype, depth, temperature, salinity, truth, n_levels) "  + """ VALUES(
+    query = "INSERT INTO " + sys.argv[2] + " (raw, truth, uid, lat, long, cruise) "  + """ VALUES(
+                {p[raw]},
+                {p[truth]},
+                {p[uid]},
                 {p[latitude]}, 
                 {p[longitude]}, 
-                {p[uid]}, 
-                {p[cruise]},
-                {p[year]},
-                {p[month]},
-                {p[day]},
-                {p[time]},
-                {p[probe_type]},
-                {p[z]}, 
-                {p[t]},
-                {p[s]},
-                {p[truth]},
-                {p[n_levels]}
+                {p[cruise]}
                )""".format(p=wodDict)
     query = query.replace('--', 'NULL')
     query = query.replace('None', 'NULL')

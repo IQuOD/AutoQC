@@ -5,7 +5,6 @@ Implements the regional range test on page 7 of http://w3.jcommops.org/FTPRoot/A
 import numpy
 import pyproj
 from shapely.geometry import Polygon, Point
-import util.main as main
 
 def test(p):
     """
@@ -21,18 +20,21 @@ def test(p):
     mediterraneanLong = [6.,  40., 35., 20., 15., 5.,  6.]
 
     # Get the lat and long and temp:
-    latitude = p['latitude']
-    longitude = p['longitude']
-    t = p['t']
-    
+    latitude = p.latitude()
+    longitude = p.longitude()
+    t = p.t()
+
+    # check for gaps in data
+    isTemperature = (t.mask==False)
+
     # initialize qc as false (all pass)
-    qc = numpy.zeros(p['n_levels'], dtype=bool)
+    qc = numpy.zeros(len(t), dtype=bool)
 
     isInRedSea = isInRegion(latitude, longitude, redSeaLat, redSeaLong)
     isInMediterranean = isInRegion(latitude, longitude, mediterraneanLat, mediterraneanLong)
 
-    for i in range(p['n_levels']):
-        if main.dataPresent(('t'), i, p):
+    for i in range(p.n_levels()):
+        if isTemperature[i]:
             if isInRedSea:
                 if t[i] < 21.7 or t[i] > 40.:
                     qc[i] = True

@@ -4,7 +4,6 @@ Implements the spike test on page 8 of http://w3.jcommops.org/FTPRoot/Argo/Doc/a
 
 import numpy
 from util import obs_utils
-import util.main as main
 
 def test(p):
     """
@@ -14,18 +13,25 @@ def test(p):
     """
 
     # Get temperature values from the profile.
-    t = p['t']
+    t = p.t()
     # Get pressure values (db) from the profile.
-    z = obs_utils.depth_to_pressure(numpy.asarray(p['z']), p['latitude'])
- 
+    z = obs_utils.depth_to_pressure(p.z(), p.latitude())
+
+    assert len(t.data) == len(z.data), 'Number of temperature measurements does not equal number of depth measurements.'
+
     # initialize qc as a bunch of falses;
     # implies all measurements pass when a spike can't be calculated, such as at edges & gaps in data:
-    qc = numpy.zeros(p['n_levels'], dtype=bool)
+    qc = numpy.zeros(len(t.data), dtype=bool)
 
-    for i in range(1,p['n_levels']-1):
-        if main.dataPresent(('t', 'z'), i, p) and main.dataPresent(('t'), i-1, p) and main.dataPresent(('t'), i+1, p):
+    # check for gaps in data
+    isTemperature = (t.mask==False)
+    isPressure = (z.mask==False)
+    isData = isTemperature & isPressure
 
-          isSpike = numpy.abs(t[i] - (t[i-1] + t[i+1])/2) - numpy.abs((t[i+1] - t[i-1])/2)
+    for i in range(1,len(t.data)-1):
+        if isData[i] & isTemperature[i-1] & isTemperature[i+1]:
+
+          isSpike = numpy.abs(t.data[i] - (t.data[i-1] + t.data[i+1])/2) - numpy.abs((t.data[i+1] - t.data[i-1])/2)
           if z.data[i] < 500:
               qc[i] = isSpike > 6.0
           else:
