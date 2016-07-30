@@ -5,6 +5,7 @@ import sys, os, json, data.ds
 import util.main as main
 import pandas, psycopg2
 from multiprocessing import Pool
+import tempfile
 
 def run(test, profiles):
   '''
@@ -87,33 +88,37 @@ if len(sys.argv)>2:
 
   def process_row(uid):
     '''run all tests on the ith database row'''
-
+  
     # extract profile
     cur.execute('SELECT * FROM demo WHERE uid = ' + str(uid) )
     row = cur.fetchall()
-    profile = main.row2dict(row[0])
+    fProfile = tempfile.TemporaryFile()
+    fProfile.write(row[0][0]) # a file-like object containing only the profile from the queried row
+    fProfile.seek(0)
+    profile = wod.WodProfile(fProfile)
+    fProfile.close()
 
     # data pre-validation
     # ---tbd---
        
     # run tests
-    results = [profile['qcflag']]
+    results = [row[0][1]]
     for itest, test in enumerate(testNames):
       if test[0:4] != 'Argo':  # testing on Argo suite for now
         continue
 
       result = run(test, [profile])
-      query = "UPDATE demo SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile['uid']) + ";"
+      query = "UPDATE demo SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile.uid()) + ";"
       cur.execute(query)
       
-    print profile['uid']
+    print profile.uid()
 
   # connect to database & fetch list of all uids
   conn = psycopg2.connect("dbname='root' user='root'")
   cur = conn.cursor()
   cur.execute('SELECT uid FROM demo')
   uids = cur.fetchall()
-
+  
   # launch async processes
   pool = Pool(processes=int(sys.argv[2]))
   for i in range(len(uids)):
