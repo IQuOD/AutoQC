@@ -4,7 +4,6 @@ All questionable features result in a flag, in order to minimize false negatives
 """
 
 import numpy
-import util.main as main
 
 def test(p):
     """
@@ -14,16 +13,19 @@ def test(p):
     """
 
     # Get temperature values from the profile.
-    t = p['t']
+    t = p.t()
     # is this an xbt?
-    isXBT = p['probe_type'] == 2
+    isXBT = p.probe_type() == 2
 
     # initialize qc as a bunch of falses;
-    qc = numpy.zeros(len(t), dtype=bool)
+    qc = numpy.zeros(len(t.data), dtype=bool)
+
+    # check for gaps in data
+    isTemperature = (t.mask==False)
 
     # wire breaks at bottom of profile:
-    if main.dataPresent(('t'), -1, p) and isXBT:
-        if t[-1] < -2.8 or t[-1] > 36:
+    if isTemperature[-1] and isXBT:
+        if t.data[-1] < -2.8 or t.data[-1] > 36:
             qc[-1] = True
 
     return qc
