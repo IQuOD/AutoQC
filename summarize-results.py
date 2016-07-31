@@ -5,8 +5,6 @@ import psycopg2, pandas
 testNames = main.importQC('qctests')
 testNames.sort()
 
-testNames = [test for test in testNames if test[0:5] == 'CSIRO']
-
 # connect to database
 conn = psycopg2.connect("dbname='root' user='root'")
 cur = conn.cursor()
@@ -15,7 +13,7 @@ cur = conn.cursor()
 query = 'SELECT truth'
 for test in testNames:
   query += ', ' + test.lower()
-query += ' FROM demo'
+query += ' FROM validate'
 
 cur.execute(query)
 rawresults = cur.fetchall()
