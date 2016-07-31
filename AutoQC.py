@@ -98,13 +98,17 @@ if len(sys.argv)>2:
     profile = wod.WodProfile(fProfile)
     fProfile.close()
 
-    # data pre-validation
-    # ---tbd---
-       
+    # Check that there are temperature data in the profile, otherwise skip.
+    if profile.var_index() is None:
+      return
+    main.catchFlags(profile)
+    if np.sum(profile.t().mask == False) == 0:
+      return
+
     # run tests
     results = [row[0][1]]
     for itest, test in enumerate(testNames):
-      if test[0:4] != 'Argo':  # testing on Argo suite for now
+      if test[0:5] != 'CSIRO':  # testing on Argo suite for now
         continue
 
       result = run(test, [profile])

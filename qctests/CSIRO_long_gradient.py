@@ -4,7 +4,6 @@ All questionable features result in a flag, in order to minimize false negatives
 """
 
 import numpy
-import util.main as main
 
 def test(p):
     """
@@ -14,31 +13,36 @@ def test(p):
     """
 
     # depths
-    d = p['z']
+    d = p.z()
     # temperatures
-    t = p['t']
+    t = p.t()
 
     # initialize qc as a bunch of falses;
-    qc = numpy.zeros(len(t), dtype=bool)
+    qc = numpy.zeros(len(t.data), dtype=bool)
+
+    # check for gaps in data
+    isDepth = (d.mask==False)
+    isTemperature = (t.mask==False)
+    isData = isTemperature & isDepth
 
     on_inv = False # are we currently in an inversion?
 
-    for i in range(0, p['n_levels']-1 ):
-       if main.dataPresent(('t', 'z'), i, p) and main.dataPresent(('t', 'z'), i+1, p): 
+    for i in range(0, p.n_levels()-1 ):
+        if isData[i] and isData[i+1]:
             # not interested below 5m:
-            if d[i] < 5: continue
+            if d.data[i] < 5: continue
 
-            if t[i+1] > t[i] and not on_inv:
+            if t.data[i+1] > t.data[i] and not on_inv:
                 # entering an inversion
-                start_inv_temp = t[i]
-                start_inv_depth = d[i]
+                start_inv_temp = t.data[i]
+                start_inv_depth = d.data[i]
                 potential_flag = i
                 on_inv = True
 
-            if t[i+1] < t[i] and on_inv:
+            if t.data[i+1] < t.data[i] and on_inv:
                 # exiting the inversion
-                end_inv_temp = t[i]
-                end_inv_depth = d[i]
+                end_inv_temp = t.data[i]
+                end_inv_depth = d.data[i]
                 on_inv = False
                 gradlong = (end_inv_depth - start_inv_depth) / (end_inv_temp - start_inv_depth)
 
