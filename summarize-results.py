@@ -4,6 +4,9 @@ import psycopg2, pandas
 # what tests are available
 testNames = main.importQC('qctests')
 testNames.sort()
+testNames.remove('EN_std_lev_bkg_and_buddy_check')
+testNames.remove('EN_track_check')
+
 
 # connect to database
 conn = psycopg2.connect("dbname='root' user='root'")
