@@ -90,7 +90,7 @@ if len(sys.argv)>2:
     '''run all tests on the ith database row'''
   
     # extract profile
-    cur.execute('SELECT * FROM demo WHERE uid = ' + str(uid) )
+    cur.execute('SELECT * FROM validate WHERE uid = ' + str(uid) )
     row = cur.fetchall()
     fProfile = tempfile.TemporaryFile()
     fProfile.write(row[0][0]) # a file-like object containing only the profile from the queried row
@@ -108,11 +108,9 @@ if len(sys.argv)>2:
     # run tests
     results = [row[0][1]]
     for itest, test in enumerate(testNames):
-      if test[0:5] != 'CSIRO':  # testing on Argo suite for now
-        continue
-
+      
       result = run(test, [profile])
-      query = "UPDATE demo SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile.uid()) + ";"
+      query = "UPDATE validate SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile.uid()) + ";"
       cur.execute(query)
       
     print profile.uid()
@@ -120,7 +118,7 @@ if len(sys.argv)>2:
   # connect to database & fetch list of all uids
   conn = psycopg2.connect("dbname='root' user='root'")
   cur = conn.cursor()
-  cur.execute('SELECT uid FROM demo')
+  cur.execute('SELECT uid FROM validate')
   uids = cur.fetchall()
   
   # launch async processes
