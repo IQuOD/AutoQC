@@ -30,14 +30,16 @@ if len(sys.argv) == 3:
     # set up our table
     query = "CREATE TABLE IF NOT EXISTS " + sys.argv[2] + """(
                 raw text,
-                truth boolean,
+                truth integer,
                 uid integer,
+                year integer,
+                month integer,
                 lat real, 
                 long real, 
                 cruise integer,
                 """
     for i in range(len(testNames)):
-        query += testNames[i].lower() + ' boolean'
+        query += testNames[i].lower() + ' integer'
         if i<len(testNames)-1:
             query += ','
         else:
@@ -47,8 +49,7 @@ if len(sys.argv) == 3:
 
     # populate table from wod-ascii data
     fid = open(sys.argv[1])
-    #while True:
-    for i in range(10):
+    while True:
         # extract profile as wodpy object and raw text
         start = fid.tell()
         profile = wod.WodProfile(fid)
@@ -62,10 +63,12 @@ if len(sys.argv) == 3:
         wodDict['raw'] = "'" + raw + "'"
         wodDict['truth'] = int(sum(profile.t_level_qc(originator=True) >= 3) >= 1)
     
-        query = "INSERT INTO " + sys.argv[2] + " (raw, truth, uid, lat, long, cruise) "  + """ VALUES(
+        query = "INSERT INTO " + sys.argv[2] + " (raw, truth, uid, year, month, lat, long, cruise) "  + """ VALUES(
                     {p[raw]},
                     {p[truth]},
                     {p[uid]},
+                    {p[year]},
+                    {p[month]},
                     {p[latitude]}, 
                     {p[longitude]}, 
                     {p[cruise]}

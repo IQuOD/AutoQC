@@ -12,7 +12,6 @@ except:
     import sqlite3 as db
     concom = 'qcresults.sqlite'
     dbtype = 'sqlite'
-print('Database type is ' + dbtype)
 from multiprocessing import Pool
 import tempfile
 
@@ -42,7 +41,6 @@ if len(sys.argv)>2:
   # Identify and import tests
   testNames = main.importQC('qctests')
   testNames.sort()
-  testNames.remove('EN_std_lev_bkg_and_buddy_check')
   testNames.remove('EN_track_check')
   print('{} quality control checks have been found'.format(len(testNames)))
   testNames = main.checkQCTestRequirements(testNames)
@@ -57,13 +55,7 @@ if len(sys.argv)>2:
     '''run all tests on the ith database row'''
   
     # extract profile
-    cur.execute('SELECT * FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid) )
-    row = cur.fetchall()
-    fProfile = tempfile.TemporaryFile()
-    fProfile.write(row[0][0]) # a file-like object containing only the profile from the queried row
-    fProfile.seek(0)
-    profile = wod.WodProfile(fProfile)
-    fProfile.close()
+    profile = main.get_profile_from_db(cur, uid)
 
     # Check that there are temperature data in the profile, otherwise skip.
     if profile.var_index() is None:
@@ -73,7 +65,6 @@ if len(sys.argv)>2:
       return
 
     # run tests
-    results = [row[0][1]]
     for itest, test in enumerate(testNames):
       
       result = run(test, [profile])
