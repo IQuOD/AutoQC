@@ -5,11 +5,11 @@ RUN conda config --set always_yes yes --set changeps1 no
 RUN conda update -q conda
 RUN apt-get update
 
-# dependencies!
-RUN apt-get -y install libhdf5-serial-dev libnetcdf-dev unzip
+# dependencies
+RUN apt-get -y install libhdf5-serial-dev libnetcdf-dev unzip postgresql libpq-dev python-dev nano
 RUN conda install --yes python=2.7 pip nose Shapely netCDF4 matplotlib numpy scipy pyproj pandas
 
-RUN pip install seabird>=0.6.3 gsw scikit-fuzzy
+RUN pip install seabird>=0.6.3 gsw scikit-fuzzy psycopg2
 # Pypi is not working well. Temporary solution
 RUN pip install git+https://github.com/castelao/oceansdb.git@master#egg=oceansdb
 RUN pip install git+https://github.com/castelao/CoTeDe.git@master#egg=CoTeDe
@@ -29,5 +29,8 @@ ADD woa13_decav_s15_5dv2.nc /AutoQC/data/.
 ADD woa13_decav_s16_5dv2.nc /AutoQC/data/.
 ADD etopo5.nc /AutoQC/data/.
 ADD climatological_t_median_and_amd_for_aqc.nc /AutoQC/data/.
+
+# set up database; load quota_subset.dat into a table 'demo'.
+RUN /etc/init.d/postgresql start && su postgres -c 'createuser -s root' && su postgres -c 'createdb root'
 
 ADD bashrc /.bashrc

@@ -1,9 +1,11 @@
 from wodpy import wod
 import glob, time
 import numpy as np
-import sys, os, json, data.ds
+import sys, os, data.ds
 import util.main as main
-import pandas
+import pandas, psycopg2
+from multiprocessing import Pool
+import tempfile
 
 def run(test, profiles):
   '''
@@ -23,50 +25,6 @@ def run(test, profiles):
     verbose.append(result)
   return [qcResults, verbose]
 
-def processFile(fName):
-  # run each test on each profile, and record its summary & verbose performance
-  testResults  = []
-  testVerbose  = []
-  trueResults  = []
-  trueVerbose  = []
-  profileIDs   = []
-  firstProfile = True
-  currentFile  = ''
-  f = None
-
-  # keep a list of only the profiles in this thread
-  data.ds.threadProfiles = main.extractProfiles([fName])
-  data.ds.threadFile     = fName
-
-  for iprofile, pinfo in enumerate(data.ds.threadProfiles):
-    # Load the profile data.
-    p, currentFile, f = main.profileData(pinfo, currentFile, f)
-    # Check that there are temperature data in the profile, otherwise skip.
-    if p.var_index() is None:
-      continue
-    main.catchFlags(p)
-    if np.sum(p.t().mask == False) == 0:
-      continue
-    # Run each test.    
-    for itest, test in enumerate(testNames):
-      result = run(test, [p])
-      if firstProfile:
-        testResults.append(result[0])
-        testVerbose.append(result[1])
-      else:
-        testResults[itest].append(result[0][0])
-        testVerbose[itest].append(result[1][0])
-    firstProfile = False
-    # Read the reference result.
-    truth = main.referenceResults([p])
-    trueResults.append(truth[0][0])
-    trueVerbose.append(truth[1][0])
-    profileIDs.append(p.uid())
-  # testResults[i][j] now contains a flag indicating the exception raised by test i on profile j
-
-  return trueResults, testResults, profileIDs
-
-
 ########################################
 # main
 ########################################
@@ -75,29 +33,59 @@ if len(sys.argv)>2:
   # Identify and import tests
   testNames = main.importQC('qctests')
   testNames.sort()
+  testNames.remove('EN_std_lev_bkg_and_buddy_check')
+  testNames.remove('EN_track_check')
   print('{} quality control checks have been found'.format(len(testNames)))
   testNames = main.checkQCTestRequirements(testNames)
   print('{} quality control checks are able to be run:'.format(len(testNames)))
   for testName in testNames:
     print('  {}'.format(testName))
 
-  # Identify data files and create a profile list.
-  filenames = main.readInput('datafiles.json')
-  profiles  = main.extractProfiles(filenames)
-  data.ds.profiles = profiles
-  print('\n{} file(s) will be read containing {} profiles'.format(len(filenames), len(profiles)))
-
   # Parallel processing.
   print('\nPlease wait while QC is performed\n')
-  processFile.parallel = main.parallel_function(processFile, sys.argv[2])
-  parallel_result = processFile.parallel(filenames)
 
-  # Recombine results
-  truth, results, profileIDs = main.combineArrays(parallel_result)
+  def process_row(uid):
+    '''run all tests on the ith database row'''
+  
+    # extract profile
+    cur.execute('SELECT * FROM validate WHERE uid = ' + str(uid) )
+    row = cur.fetchall()
+    fProfile = tempfile.TemporaryFile()
+    fProfile.write(row[0][0]) # a file-like object containing only the profile from the queried row
+    fProfile.seek(0)
+    profile = wod.WodProfile(fProfile)
+    fProfile.close()
 
-  # Print summary statistics and write output file.
-  main.printSummary(truth, results, testNames)
-  main.generateCSV(truth, results, testNames, profileIDs, sys.argv[1])
+    # Check that there are temperature data in the profile, otherwise skip.
+    if profile.var_index() is None:
+      return
+    main.catchFlags(profile)
+    if np.sum(profile.t().mask == False) == 0:
+      return
+
+    # run tests
+    results = [row[0][1]]
+    for itest, test in enumerate(testNames):
+      
+      result = run(test, [profile])
+      query = "UPDATE validate SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile.uid()) + ";"
+      cur.execute(query)
+      
+  # connect to database & fetch list of all uids
+  conn = psycopg2.connect("dbname='root' user='root'")
+  cur = conn.cursor()
+  cur.execute('SELECT uid FROM validate')
+  uids = cur.fetchall()
+  
+  # launch async processes
+  pool = Pool(processes=int(sys.argv[2]))
+  for i in range(len(uids)):
+    pool.apply_async(process_row, (uids[i][0],))
+  pool.close()
+  pool.join()
+  
+  conn.commit()
+  
 else:
   print 'Please add command line arguments to name your output file and set parallelization:'
   print 'python AutoQC myFile 4'
