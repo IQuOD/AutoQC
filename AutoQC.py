@@ -4,14 +4,7 @@ import numpy as np
 import sys, os, data.ds
 import util.main as main
 import pandas
-try:
-    import psycopg2 as db
-    dbtype = 'postgres'
-    concom = "dbname='root' user='root'"
-except:
-    import sqlite3 as db
-    concom = 'qcresults.sqlite'
-    dbtype = 'sqlite'
+import psycopg2
 from multiprocessing import Pool
 import tempfile
 
@@ -70,12 +63,9 @@ if len(sys.argv)>2:
       result = run(test, [profile])
       query = "UPDATE " + sys.argv[1] + " SET " + test.lower() + " = " + str(int(result[0][0])) + " WHERE uid = " + str(profile.uid()) + ";"
       cur.execute(query)
-      if dbtype == 'sqlite':
-          # Seem to need to do this after every update for sqlite database.
-          conn.commit()
       
   # connect to database & fetch list of all uids
-  conn = db.connect(concom)
+  conn = psycopg2.connect("dbname='root' user='root'")
   cur = conn.cursor()
   cur.execute('SELECT uid FROM ' + sys.argv[1])
   uids = cur.fetchall()

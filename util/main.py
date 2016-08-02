@@ -8,7 +8,6 @@ import testingProfile
 from numbers import Number
 import sys
 import tempfile
-from wodpy import wod
 
 def importQC(dir):
   '''
@@ -129,13 +128,13 @@ def calcRates(testResults, trueResults):
   return tpr, fpr, fnr, tnr 
 
 def get_profile_from_db(cur, uid):
-    # Given the database cursor and a unique id, return a WodPy profile object.
-    cur.execute('SELECT * FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid) )
-    row = cur.fetchall()
-    fProfile = tempfile.TemporaryFile()
-    fProfile.write(row[0][0]) # a file-like object containing only the profile from the queried row
-    fProfile.seek(0)
-    profile = wod.WodProfile(fProfile)
-    fProfile.close()
-    return profile
+  # Given the database cursor and a unique id, return a WodPy profile object.
+  cur.execute('SELECT * FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid) )
+  row = cur.fetchall()
+  fProfile = tempfile.TemporaryFile()
+  fProfile.write(row[0][0]) # a file-like object containing only the profile from the queried row
+  fProfile.seek(0)
+  profile = wod.WodProfile(fProfile)
+  fProfile.close()
+  return profile
 
