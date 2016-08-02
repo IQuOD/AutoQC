@@ -1,14 +1,6 @@
 import util.main as main
 import pandas
-import sys
-try:
-    import psycopg2 as db
-    dbtype = 'postgres'
-    concom = "dbname='root' user='root'"
-except:
-    import sqlite3 as db
-    concom = 'qcresults.sqlite'
-    dbtype = 'sqlite'
+import sys, psycopg2
 
 if len(sys.argv) == 2:
 
@@ -18,7 +10,7 @@ if len(sys.argv) == 2:
     testNames.remove('EN_track_check')
 
     # connect to database
-    conn = db.connect(concom)
+    conn = psycopg2.connect("dbname='root' user='root'")
     cur = conn.cursor()
 
     # extract matrix of test results and true flags into a dataframe

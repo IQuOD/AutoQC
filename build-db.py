@@ -1,23 +1,14 @@
 # usage: python build-db.py <wod ascii file name> <table name to append to>
 
-try:
-    import psycopg2 as db
-    dbtype = 'postgres'
-    concom = "dbname='root' user='root'"
-except:
-    import sqlite3 as db
-    concom = 'qcresults.sqlite'
-    dbtype = 'sqlite'
-print('Database type is ' + dbtype)
 from wodpy import wod
-import sys
+import sys, psycopg2
 import util.main as main
 
 if len(sys.argv) == 3:
 
     # connect to database and create a cursor by which to interact with it.
     try:
-        conn = db.connect(concom)
+        conn = psycopg2.connect("dbname='root' user='root'")
     except:
         print "I am unable to connect to the database"
 
@@ -49,7 +40,7 @@ if len(sys.argv) == 3:
 
     # populate table from wod-ascii data
     fid = open(sys.argv[1])
-    while True:
+    for xx in range(10):
         # extract profile as wodpy object and raw text
         start = fid.tell()
         profile = wod.WodProfile(fid)
@@ -90,4 +81,4 @@ if len(sys.argv) == 3:
 
 else:
 
-    print('Usage: python build-db.py inputdatafile databasetable')
+    print 'Usage: python build-db.py inputdatafile databasetable' 

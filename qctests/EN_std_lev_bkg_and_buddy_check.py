@@ -5,7 +5,7 @@ http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 """
 
 from cotede.qctests.possible_speed import haversine
-import datetime
+import datetime, psycopg2
 import EN_background_check
 import EN_constant_value_check
 import EN_increasing_depth_check
@@ -13,16 +13,7 @@ import EN_range_check
 import EN_spike_and_step_check
 import EN_stability_check
 import util.main as main
-import data.ds
 import numpy as np
-try:
-    import psycopg2 as db
-    dbtype = 'postgres'
-    concom = "dbname='root' user='root'"
-except:
-    import sqlite3 as db
-    concom = 'qcresults.sqlite'
-    dbtype = 'sqlite'
 import sys
 
 def test(p, allow_level_reinstating=True):
@@ -380,7 +371,7 @@ def get_profile_info():
     # to implement code tests.
     global profiles_info_list, cur
     if len(profiles_info_list) == 0:
-        conn = db.connect(concom)
+        conn = psycopg2.connect("dbname='root' user='root'")
         cur = conn.cursor()
         cur.execute('SELECT uid,year,month,cruise,lat,long FROM ' + sys.argv[1])
         profiles_info_list = cur.fetchall()
