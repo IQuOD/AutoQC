@@ -81,7 +81,7 @@ where `name` names the output csv naming as `result-name.csv`, and `nProcessors`
  - automatically detects all quality control tests found in `/qctests`
  - takes the list of raw data files from `datafiles.json`, and decodes their contents into an array of profile objects
  - runs all the automatically detected tests over each of these profiles
- - return an array for each test indicating which profiles excpetions were raised for, and an array indicating the expected result for each profile
+ - return an array for each test indicating which profiles exceptions were raised for, and an array indicating the expected result for each profile
 
 ###Testing Data
 Each quality control test must be written as its own file in `/qctests`, of the form `def test(p)`, where `p` is a profile object; each test returns a bool, where `True` indicates the test has *failed*.

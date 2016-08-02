@@ -3,7 +3,15 @@ import glob, time
 import numpy as np
 import sys, os, data.ds
 import util.main as main
-import pandas, psycopg2
+import pandas
+try:
+    import psycopg2 as db
+    dbtype = 'postgres'
+    concom = "dbname='root' user='root'"
+except:
+    import sqlite3 as db
+    concom = 'qcresults.sqlite'
+    dbtype = 'sqlite'
 from multiprocessing import Pool
 import tempfile
 
@@ -33,7 +41,6 @@ if len(sys.argv)>2:
   # Identify and import tests
   testNames = main.importQC('qctests')
   testNames.sort()
-  testNames.remove('EN_std_lev_bkg_and_buddy_check')
   testNames.remove('EN_track_check')
   print('{} quality control checks have been found'.format(len(testNames)))
   testNames = main.checkQCTestRequirements(testNames)
@@ -48,13 +55,7 @@ if len(sys.argv)>2:
     '''run all tests on the ith database row'''
   
     # extract profile
-    cur.execute('SELECT * FROM validate WHERE uid = ' + str(uid) )
-    row = cur.fetchall()
-    fProfile = tempfile.TemporaryFile()
-    fProfile.write(row[0][0]) # a file-like object containing only the profile from the queried row
-    fProfile.seek(0)
-    profile = wod.WodProfile(fProfile)
-    fProfile.close()
+    profile = main.get_profile_from_db(cur, uid)
 
     # Check that there are temperature data in the profile, otherwise skip.
     if profile.var_index() is None:
@@ -64,17 +65,19 @@ if len(sys.argv)>2:
       return
 
     # run tests
-    results = [row[0][1]]
     for itest, test in enumerate(testNames):
       
       result = run(test, [profile])
-      query = "UPDATE validate SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile.uid()) + ";"
+      query = "UPDATE " + sys.argv[1] + " SET " + test.lower() + " = " + str(int(result[0][0])) + " WHERE uid = " + str(profile.uid()) + ";"
       cur.execute(query)
+      if dbtype == 'sqlite':
+          # Seem to need to do this after every update for sqlite database.
+          conn.commit()
       
   # connect to database & fetch list of all uids
-  conn = psycopg2.connect("dbname='root' user='root'")
+  conn = db.connect(concom)
   cur = conn.cursor()
-  cur.execute('SELECT uid FROM validate')
+  cur.execute('SELECT uid FROM ' + sys.argv[1])
   uids = cur.fetchall()
   
   # launch async processes
@@ -88,5 +91,5 @@ if len(sys.argv)>2:
   
 else:
   print 'Please add command line arguments to name your output file and set parallelization:'
-  print 'python AutoQC myFile 4'
-  print 'will result in output written to results-myFile.csv, and will run the calculation parallelized across 4 cores.'
+  print 'python AutoQC databasetable 4'
+  print 'will result in output written to table in the database, and will run the calculation parallelized across 4 cores.'

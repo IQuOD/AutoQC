@@ -1,9 +1,0 @@
-{
-"TEMP": {
-    "density_inversion": {
-        "threshold": -0.03,
-        "flag_good": 1,
-        "flag_bad": 4
-        }
-    }
-}
