@@ -31,12 +31,12 @@ def test(p):
         return np.zeros(1, dtype=bool)
     
     # don't bother if this has already been analyzed
-    cur.execute('SELECT en_track_check FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid) + ';')
-    en_track_result = cur.fetchall()
-    if en_track_result[0][0] is not None:
-      result = np.zeros(1, dtype=bool)
-      result[0] = en_track_result[0][0]
-      return result
+    # cur.execute('SELECT en_track_check FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid) + ';')
+    # en_track_result = cur.fetchall()
+    # if en_track_result[0][0] is not None:
+    #   result = np.zeros(1, dtype=bool)
+    #   result[0] = en_track_result[0][0]
+    #   return result
 
     # some detector types cannot be assessed by this test; do not raise flag.
     if p.probe_type in [None]:
@@ -68,10 +68,10 @@ def test(p):
             EN_track_results[track_rows[i]['uid']][0] = True
 
     # write all to db
-    for i in range(len(track_rows)):
-        query = "UPDATE " + sys.argv[1] + " SET en_track_check " + " = " + str(EN_track_results[track_rows[i]['uid']][0]) + " WHERE uid = " + str(track_rows[i]['uid']) + ";"
-        cur.execute(query)
-    conn.commit()
+    # for i in range(len(track_rows)):
+    #     query = "UPDATE " + sys.argv[1] + " SET en_track_check " + " = " + str(EN_track_results[track_rows[i]['uid']][0]) + " WHERE uid = " + str(track_rows[i]['uid']) + ";"
+    #     cur.execute(query)
+    # conn.commit()
 
     return EN_track_results[uid]
 

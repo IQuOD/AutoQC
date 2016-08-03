@@ -79,5 +79,5 @@ if len(sys.argv)>2:
   
 else:
   print 'Please add command line arguments to name your output file and set parallelization:'
-  print 'python AutoQC databasetable 4'
-  print 'will result in output written to table in the database, and will run the calculation parallelized across 4 cores.'
+  print 'python AutoQC <test group> <database table>'
+  print 'will write qc results to <database table> in the database, and run the calculation parallelized across <number of threads> cores.'
