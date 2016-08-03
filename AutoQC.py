@@ -34,7 +34,6 @@ if len(sys.argv)>2:
   # Identify and import tests
   testNames = main.importQC('qctests')
   testNames.sort()
-  testNames.remove('EN_track_check')
   print('{} quality control checks have been found'.format(len(testNames)))
   testNames = main.checkQCTestRequirements(testNames)
   print('{} quality control checks are able to be run:'.format(len(testNames)))
@@ -45,8 +44,8 @@ if len(sys.argv)>2:
   print('\nPlease wait while QC is performed\n')
 
   def process_row(uid):
-    '''run all tests on the ith database row'''
-  
+    '''run all tests on the indicated database row'''
+    
     # extract profile
     profile = main.get_profile_from_db(cur, uid)
 
@@ -59,9 +58,8 @@ if len(sys.argv)>2:
 
     # run tests
     for itest, test in enumerate(testNames):
-      
       result = run(test, [profile])
-      query = "UPDATE " + sys.argv[1] + " SET " + test.lower() + " = " + str(int(result[0][0])) + " WHERE uid = " + str(profile.uid()) + ";"
+      query = "UPDATE " + sys.argv[1] + " SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile.uid()) + ";"
       cur.execute(query)
       
   # connect to database & fetch list of all uids

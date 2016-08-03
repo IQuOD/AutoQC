@@ -7,7 +7,6 @@ if len(sys.argv) == 2:
     # what tests are available
     testNames = main.importQC('qctests')
     testNames.sort()
-    testNames.remove('EN_track_check')
 
     # connect to database
     conn = psycopg2.connect("dbname='root' user='root'")
