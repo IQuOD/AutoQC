@@ -128,13 +128,40 @@ def calcRates(testResults, trueResults):
   return tpr, fpr, fnr, tnr 
 
 def get_profile_from_db(cur, uid):
-  # Given the database cursor and a unique id, return a WodPy profile object.
+  '''
+  Given the database cursor and a unique id, return a WodPy profile object.
+  '''
+ 
   cur.execute('SELECT * FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid) )
   row = cur.fetchall()
+  return text2wod(row[0][0])
+
+def text2wod(raw):
+  '''
+  given the raw text of a wod ascii profile, return a wodpy object representing the same.
+  '''
+  
   fProfile = tempfile.TemporaryFile()
-  fProfile.write(row[0][0]) # a file-like object containing only the profile from the queried row
+  fProfile.write(raw) # a file-like object containing only the profile from the queried row
   fProfile.seek(0)
   profile = wod.WodProfile(fProfile)
   fProfile.close()
+ 
   return profile
 
+def dictify(rows, keys):
+  '''
+  given a list of rows from the db, return a list of dicts in the same order
+  representing the same information keyed by the key names found in the tuple <keys>
+  '''
+
+  dicts = []
+
+  for i in range(len(rows)):
+    d = {}
+    for j in range(len(keys)):
+      d[keys[j]] = rows[i][j]
+
+    dicts.append(d)
+
+  return dicts

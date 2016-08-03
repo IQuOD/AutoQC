@@ -50,7 +50,7 @@ def haversineAngle(pro1, pro2, pro3):
     with that passing through pro2 and pro3 (all the pro* are WOD profiles or headers)
     return None if any required information is missing.
     '''
-
+    
     if None in [pro1.latitude(), pro1.longitude()]:
         return None
     if None in [pro2.latitude(), pro2.longitude()]:

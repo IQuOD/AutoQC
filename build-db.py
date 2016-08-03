@@ -21,16 +21,18 @@ if len(sys.argv) == 3:
     # set up our table
     query = "CREATE TABLE IF NOT EXISTS " + sys.argv[2] + """(
                 raw text,
-                truth integer,
+                truth boolean,
                 uid integer,
                 year integer,
                 month integer,
+                day integer,
+                time real,
                 lat real, 
                 long real, 
                 cruise integer,
                 """
     for i in range(len(testNames)):
-        query += testNames[i].lower() + ' integer'
+        query += testNames[i].lower() + ' boolean'
         if i<len(testNames)-1:
             query += ','
         else:
@@ -55,18 +57,20 @@ if len(sys.argv) == 3:
         # Below avoids failures if all profile data are missing.
         # We have no use for this profile in that case so skip it.
         try:
-            wodDict['truth'] = int(sum(profile.t_level_qc(originator=True) >= 3) >= 1)
+            wodDict['truth'] = sum(profile.t_level_qc(originator=True) >= 3) >= 1
         except:
             if profile.is_last_profile_in_file(fid) == True:
                 break
             continue
 
-        query = "INSERT INTO " + sys.argv[2] + " (raw, truth, uid, year, month, lat, long, cruise) "  + """ VALUES(
+        query = "INSERT INTO " + sys.argv[2] + " (raw, truth, uid, year, month, day, time, lat, long, cruise) "  + """ VALUES(
                     {p[raw]},
                     {p[truth]},
                     {p[uid]},
                     {p[year]},
                     {p[month]},
+                    {p[day]},
+                    {p[time]},
                     {p[latitude]}, 
                     {p[longitude]}, 
                     {p[cruise]}
