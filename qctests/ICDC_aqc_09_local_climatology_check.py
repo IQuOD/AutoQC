@@ -50,34 +50,37 @@ def test(p):
         (lat >= 40.0 and lat <= 50.0 and lon >= -95.0 and lon <= -75.0)):
         return defaultqc
 
+    # parameters
+    nc = Dataset('data/climatological_t_median_and_amd_for_aqc.nc', 'r')
+
     # Get range.
-    ranges = get_climatology_range(nlevels, z, lat, lon, p.month())
+    ranges = get_climatology_range(nlevels, z, lat, lon, p.month(), nc)
     if ranges is None:
         return defaultqc
 
     # Perform the QC.
     tmin, tmax = ranges
-    qc = ((t < tmin) | (t > tmax)) & (tmin != fillValue) & (tmax != fillValue) 
+    qc = ((t < tmin) | (t > tmax)) & (tmin != nc.fillValue) & (tmax != nc.fillValue) 
+
+    nc.close()   
 
     return ICDC.revert_qc_order(p, qc)
 
-def get_climatology_range(nlevels, z, lat, lon, month):
-
-    # Define arrays for the results.
-    tmin = np.ndarray(nlevels)
-    tmax = np.ndarray(nlevels)
-    tmin[:] = fillValue
-    tmax[:] = fillValue
+def get_climatology_range(nlevels, z, lat, lon, month, nc):
 
     # parameters
-    nc = Dataset('data/climatological_t_median_and_amd_for_aqc.nc', 'r')
     tmedA = nc.variables['tmedA'][:, :, :]
     tamdA = nc.variables['tamdA'][:, :, :]
     tmedM = nc.variables['tmedM'][:, :, :, :]
     tamdM = nc.variables['tamdM'][:, :, :, :]
     zedqc = nc.variables['zedqc'][:]
     fillValue = nc.fillValue
-    nc.close()
+
+    # Define arrays for the results.
+    tmin = np.ndarray(nlevels)
+    tmax = np.ndarray(nlevels)
+    tmin[:] = fillValue
+    tmax[:] = fillValue
 
     # Global ranges - data outside these bounds are assumed not valid.
     parminover = -2.3
