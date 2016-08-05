@@ -38,6 +38,9 @@ def get_qc(p, config, test):
                 test not in cotede_results[2] or
                    p.uid() is None):
         inputs = Wod4CoTeDe(p)
+        dt = inputs.attributes['datetime']
+        if dt.year < 1900:
+           inputs.attributes['datetime'] = dt.replace(year=1900)
 
         # If config is a dictionary, use it.
         if type(config) is not dict:
