@@ -42,6 +42,7 @@ if len(sys.argv) == 3:
 
     # populate table from wod-ascii data
     fid = open(sys.argv[1])
+
     while True:
         # extract profile as wodpy object and raw text
         start = fid.tell()
