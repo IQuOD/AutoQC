@@ -56,9 +56,16 @@ if len(sys.argv) == 3:
         wodDict['raw'] = "'" + raw + "'"
         # Below avoids failures if all profile data are missing.
         # We have no use for this profile in that case so skip it.
+        donotuse = False
         try:
             wodDict['truth'] = sum(profile.t_level_qc(originator=True) >= 3) >= 1
         except:
+            donotuse = True
+        # Cannot process profiles collected before 1900 at present as datetime strftime
+        # function used by CoTeDe gives an error.
+        if profile.year() < 1900:
+            donotuse = True
+        if donotuse:
             if profile.is_last_profile_in_file(fid) == True:
                 break
             continue
