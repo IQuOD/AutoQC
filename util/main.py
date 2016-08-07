@@ -177,7 +177,6 @@ def dbinteract(command, tries=0):
   conn.autocommit = True
   cur = conn.cursor()
   try:
-    print 'attempting', command, tries
     cur.execute(command)
     cur.close()
     conn.close()
