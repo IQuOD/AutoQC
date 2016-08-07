@@ -21,6 +21,7 @@ def test(p):
     """
     
     conn = psycopg2.connect("dbname='root' user='root'")
+    conn.autocommit = True
     cur = conn.cursor()
    
     cruise = p.cruise()
@@ -68,10 +69,9 @@ def test(p):
             EN_track_results[track_profiles[i].uid()][0] = True
 
     # write all to db
-    # for i in range(len(track_rows)):
-    #     query = "UPDATE " + sys.argv[1] + " SET en_track_check " + " = " + str(EN_track_results[track_rows[i]['uid']][0]) + " WHERE uid = " + str(track_rows[i]['uid']) + ";"
-    #     cur.execute(query)
-    # conn.commit()
+    for i in range(len(track_profiles)):
+        query = "UPDATE " + sys.argv[1] + " SET en_track_check " + " = " + str(EN_track_results[track_profiles[i].uid()][0]) + " WHERE uid = " + str(track_profiles[i].uid()) + ";"
+        main.dbinteract(query)
 
     return EN_track_results[uid]
 

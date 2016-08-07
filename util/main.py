@@ -7,7 +7,7 @@ from netCDF4 import Dataset
 import testingProfile
 from numbers import Number
 import sys
-import tempfile
+import tempfile, psycopg2
 
 def importQC(dir):
   '''
@@ -165,3 +165,29 @@ def dictify(rows, keys):
     dicts.append(d)
 
   return dicts
+
+def dbinteract(command, tries=0):
+  '''
+  execute the given command with the cursor provided;
+  catch errors and retry a maximum number of times.
+  '''
+
+  max_retry = 99
+  conn = psycopg2.connect("dbname='root' user='root'")
+  conn.autocommit = True
+  cur = conn.cursor()
+  try:
+    print 'attempting', command, tries
+    cur.execute(command)
+    cur.close()
+    conn.close()
+  except psycopg2.Error as e:
+    conn.rollback()
+    cur.close()
+    conn.close()
+    if tries < max_retries:
+      dbinteract(cur, command, tries+1)
+    else:
+      return -1
+
+  return tries

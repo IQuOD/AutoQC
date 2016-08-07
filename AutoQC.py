@@ -34,6 +34,7 @@ if len(sys.argv)>2:
   # Identify and import tests
   testNames = main.importQC('qctests')
   testNames.sort()
+  testNames.remove('ICDC_aqc_09_local_climatology_check')
   print('{} quality control checks have been found'.format(len(testNames)))
   testNames = main.checkQCTestRequirements(testNames)
   print('{} quality control checks are able to be run:'.format(len(testNames)))
@@ -66,6 +67,7 @@ if len(sys.argv)>2:
       
   # connect to database & fetch list of all uids
   conn = psycopg2.connect("dbname='root' user='root'")
+  conn.autocommit = True
   cur = conn.cursor()
   cur.execute('SELECT uid FROM ' + sys.argv[1])
   uids = cur.fetchall()
@@ -76,9 +78,7 @@ if len(sys.argv)>2:
     pool.apply_async(process_row, (uids[i][0],))
   pool.close()
   pool.join()
-  
-  conn.commit()
-  
+    
 else:
   print 'Please add command line arguments to name your output file and set parallelization:'
   print 'python AutoQC <test group> <database table>'
