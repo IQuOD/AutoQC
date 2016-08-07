@@ -32,12 +32,12 @@ def test(p):
         return np.zeros(1, dtype=bool)
 
     # don't bother if this has already been analyzed
-    # cur.execute('SELECT en_track_check FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid) + ';')
-    # en_track_result = cur.fetchall()
-    # if en_track_result[0][0] is not None:
-    #   result = np.zeros(1, dtype=bool)
-    #   result[0] = en_track_result[0][0]
-    #   return result
+    cur.execute('SELECT en_track_check FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid) + ';')
+    en_track_result = cur.fetchall()
+    if en_track_result[0][0] is not None:
+      result = np.zeros(1, dtype=bool)
+      result[0] = en_track_result[0][0]
+      return result
 
     # some detector types cannot be assessed by this test; do not raise flag.
     if p.probe_type in [None]:
