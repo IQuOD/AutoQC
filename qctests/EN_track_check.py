@@ -20,39 +20,35 @@ def test(p):
     passed the check and True where it failed. 
     """
     
-    conn = psycopg2.connect("dbname='root' user='root'")
-    conn.autocommit = True
-    cur = conn.cursor()
-   
     cruise = p.cruise()
     uid = p.uid()
     
     # don't bother if cruise == 0 or None
     if cruise in [0, None]:
         return np.zeros(1, dtype=bool)
-
+    
     # don't bother if this has already been analyzed
-    cur.execute('SELECT en_track_check FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid) + ';')
-    en_track_result = cur.fetchall()
+    command = 'SELECT en_track_check FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid) + ';'
+    en_track_result = main.dbinteract(command)
     if en_track_result[0][0] is not None:
       result = np.zeros(1, dtype=bool)
       result[0] = en_track_result[0][0]
       return result
-
+    
     # some detector types cannot be assessed by this test; do not raise flag.
     if p.probe_type in [None]:
         return np.zeros(1, dtype=bool)
-
+    
     # fetch all profiles on track, sorted chronologically, earliest first (None sorted as highest)
-    cur.execute('SELECT raw FROM ' + sys.argv[1] + ' WHERE cruise = ' + str(cruise) + 'ORDER BY year, month, day, time ASC;')
-    track_rows = cur.fetchall()
+    command = 'SELECT raw FROM ' + sys.argv[1] + ' WHERE cruise = ' + str(cruise) + 'ORDER BY year, month, day, time ASC;'
+    track_rows = main.dbinteract(command)
     track_profiles = [main.text2wod(raw[0]) for raw in track_rows]
-
+   
     # start all as passing by default:
     EN_track_results = {}
     for i in range(len(track_profiles)):
         EN_track_results[track_profiles[i].uid()] = np.zeros(1, dtype=bool)
-
+    
     # copy the list of headers;
     # remove entries as they are flagged.
     passed_profiles = copy.deepcopy(track_profiles)
@@ -62,12 +58,12 @@ def test(p):
         passed_index = [x for x in range(len(passed_profiles)) if x not in rejects ]
         passed_profiles = [passed_profiles[index] for index in passed_index ]
         rejects = findOutlier(passed_profiles, EN_track_results)
-
+    
     # if more than half got rejected, reject everyone
     if len(passed_profiles) < len(track_rows) / 2:
         for i in range(len(track_profiles)):
             EN_track_results[track_profiles[i].uid()][0] = True
-
+   
     # write all to db
     for i in range(len(track_profiles)):
         query = "UPDATE " + sys.argv[1] + " SET en_track_check " + " = " + str(EN_track_results[track_profiles[i].uid()][0]) + " WHERE uid = " + str(track_profiles[i].uid()) + ";"

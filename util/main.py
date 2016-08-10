@@ -178,15 +178,19 @@ def dbinteract(command, tries=0):
   cur = conn.cursor()
   try:
     cur.execute(command)
+    try:
+      result = cur.fetchall()
+    except:
+      result = None
     cur.close()
     conn.close()
+    return result
   except psycopg2.Error as e:
+    print 'failed', command, 'on try number', tries
     conn.rollback()
     cur.close()
     conn.close()
     if tries < max_retries:
-      dbinteract(cur, command, tries+1)
+      dbinteract(command, tries+1)
     else:
       return -1
-
-  return tries
