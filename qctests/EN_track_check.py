@@ -23,8 +23,8 @@ def test(p):
     cruise = p.cruise()
     uid = p.uid()
     
-    # don't bother if cruise == 0 or None
-    if cruise in [0, None]:
+    # don't bother if cruise == 0 or None, or if timestamp is corrupt
+    if (cruise in [0, None]) or (None in [p.year(), p.month(), p.day(), p.time()]):
         return np.zeros(1, dtype=bool)
     
     # don't bother if this has already been analyzed
@@ -40,7 +40,7 @@ def test(p):
         return np.zeros(1, dtype=bool)
     
     # fetch all profiles on track, sorted chronologically, earliest first (None sorted as highest)
-    command = 'SELECT raw FROM ' + sys.argv[1] + ' WHERE cruise = ' + str(cruise) + 'ORDER BY year, month, day, time ASC;'
+    command = 'SELECT raw FROM ' + sys.argv[1] + ' WHERE cruise = ' + str(cruise) + ' and year is not null and month is not null and day is not null and time is not null ORDER BY year, month, day, time ASC;'
     track_rows = main.dbinteract(command)
     track_profiles = [main.text2wod(raw[0]) for raw in track_rows]
    
