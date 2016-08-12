@@ -36,33 +36,31 @@ import time
 def test(p, parameters):
     '''Return quality control decisions.
     '''
-   
+    
     # The test is run on re-ordered data.
     nlevels, z, t = ICDC.reordered_data(p)
-
+    
     # Define default QC.
     defaultqc = np.zeros(p.n_levels(), dtype=bool)
-
+    
     # No check for the Caspian Sea or Great Lakes.
     lat = p.latitude()
     lon = p.longitude()
     if ((lat >= 35.0 and lat <= 45.0 and lon >= 45.0 and lon <= 60.0) or
         (lat >= 40.0 and lat <= 50.0 and lon >= -95.0 and lon <= -75.0)):
         return defaultqc
-
+    
     # parameters
     nc = parameters['nc']
-
+    
     # Get range.
     ranges = get_climatology_range(nlevels, z, lat, lon, p.month(), nc)
     if ranges is None:
         return defaultqc
-
+    
     # Perform the QC.
     tmin, tmax = ranges
     qc = ((t < tmin) | (t > tmax)) & (tmin != nc.fillValue) & (tmax != nc.fillValue) 
-
-    nc.close()   
 
     return ICDC.revert_qc_order(p, qc)
 
