@@ -8,7 +8,7 @@ import psycopg2
 from multiprocessing import Pool
 import tempfile
 
-def run(test, profiles):
+def run(test, profiles, parameters):
   '''
   run <test> on a list of <profiles>, return an array summarizing when exceptions were raised
   '''
@@ -16,7 +16,7 @@ def run(test, profiles):
   verbose = []
   exec('from qctests import ' + test)
   for profile in profiles:
-    exec('result = ' + test + '.test(profile)')
+    exec('result = ' + test + '.test(profile, parameters)')
 
     #demand tests returned bools:
     for i in result:
@@ -34,7 +34,7 @@ if len(sys.argv)>2:
   # Identify and import tests
   testNames = main.importQC('qctests')
   testNames.sort()
-  testNames.remove('ICDC_aqc_09_local_climatology_check')
+  testNames = ['ICDC_aqc_01_level_order', 'ICDC_aqc_04_max_obs_depth', 'ICDC_aqc_06_n_temperature_extrema', 'ICDC_aqc_08_gradient_check', 'ICDC_aqc_02_crude_range', 'ICDC_aqc_05_stuck_value',	'ICDC_aqc_07_spike_check', 'ICDC_aqc_09_local_climatology_check']
   print('{} quality control checks have been found'.format(len(testNames)))
   testNames = main.checkQCTestRequirements(testNames)
   print('{} quality control checks are able to be run:'.format(len(testNames)))
@@ -46,7 +46,7 @@ if len(sys.argv)>2:
 
   def process_row(uid):
     '''run all tests on the indicated database row'''
-    
+  
     # extract profile
     profile = main.get_profile_from_db(cur, uid)
 
@@ -61,9 +61,18 @@ if len(sys.argv)>2:
     print uid
     for itest, test in enumerate(testNames):
       print test
-      result = run(test, [profile])
+      result = run(test, [profile], parameterStore)
       query = "UPDATE " + sys.argv[1] + " SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile.uid()) + ";"
       cur.execute(query)
+
+  # set up global parmaeter store
+  parameterStore = {}
+  for test in testNames:
+    exec('from qctests import ' + test)
+    try:
+      exec(test + '.loadParameters(parameterStore)')
+    except:
+      print 'No parameters to load for', test
       
   # connect to database & fetch list of all uids
   conn = psycopg2.connect("dbname='root' user='root'")

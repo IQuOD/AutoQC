@@ -16,7 +16,7 @@ import util.main as main
 import numpy as np
 import sys
 
-def test(p, allow_level_reinstating=True):
+def test(p, parameters, allow_level_reinstating=True):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 
@@ -223,12 +223,12 @@ def stdLevelData(p):
     """
 
     # Combine other QC results.
-    preQC = (EN_background_check.test(p) | 
-             EN_constant_value_check.test(p) | 
-             EN_increasing_depth_check.test(p) | 
-             EN_range_check.test(p) |
-             EN_spike_and_step_check.test(p) | 
-             EN_stability_check.test(p))
+    preQC = (EN_background_check.test(p, parameters) | 
+             EN_constant_value_check.test(p, parameters) | 
+             EN_increasing_depth_check.test(p, parameters) | 
+             EN_range_check.test(p, parameters) |
+             EN_spike_and_step_check.test(p, parameters) | 
+             EN_stability_check.test(p, parameters))
 
     # Get the data stored by the EN background check.
     # As it was run above we know that the data held by the

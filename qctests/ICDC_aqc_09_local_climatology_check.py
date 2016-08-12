@@ -33,10 +33,10 @@ import numpy as np
 import os
 import time
 
-def test(p):
+def test(p, parameters):
     '''Return quality control decisions.
     '''
-
+   
     # The test is run on re-ordered data.
     nlevels, z, t = ICDC.reordered_data(p)
 
@@ -51,7 +51,7 @@ def test(p):
         return defaultqc
 
     # parameters
-    nc = Dataset('data/climatological_t_median_and_amd_for_aqc.nc', 'r')
+    nc = parameters['nc']
 
     # Get range.
     ranges = get_climatology_range(nlevels, z, lat, lon, p.month(), nc)
@@ -135,6 +135,10 @@ def get_climatology_range(nlevels, z, lat, lon, month, nc):
         tmax[k] = tmaxa
 
     return tmin, tmax
+
+def loadParameters(parameterStore):
+
+  parameterStore['nc'] = Dataset('data/climatological_t_median_and_amd_for_aqc.nc', 'r')
 
 # def read_ascii_and_convert_to_netcdf():
 #     '''Coverts the ASCII data file to netCDF on first read.

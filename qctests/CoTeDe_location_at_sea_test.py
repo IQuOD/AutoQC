@@ -1,6 +1,6 @@
 from cotede_qc.cotede_test import get_qc
 
-def test(p):
+def test(p, parameters):
     '''Run the CoTeDe location at sea QC.'''
 
     config   = 'cotede'

@@ -9,7 +9,7 @@ import numpy as np
 from qctests.EN_background_check import auxParam
 from qctests.EN_background_check import findGridCell
 
-def test(p, *args):
+def test(p, parameters):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 

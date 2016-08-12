@@ -10,7 +10,7 @@ remove these elements and include them within the background check code.
 
 import numpy as np
 
-def test(p, suspect=False):
+def test(p, parameters, suspect=False):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 

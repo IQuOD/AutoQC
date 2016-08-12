@@ -7,7 +7,7 @@ See Argo quality control manual (based on version 2.5).
 
 from util import obs_utils
 
-def test(p):
+def test(p, parameters):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 

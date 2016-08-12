@@ -1,6 +1,6 @@
 from cotede_qc.cotede_test import get_qc
 
-def test(p):
+def test(p, parameters):
     '''Run the CoTeDe Morello 2014 QC.'''
 
     config   = 'morello2014'

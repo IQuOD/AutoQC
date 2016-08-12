@@ -21,10 +21,10 @@ import ICDC_aqc_01_level_order as ICDC
 import numpy as np
 from util.wod import wod_database
 
-def test(p):
+def test(p, parameters):
     '''Return quality control decisions.
     '''
-
+    
     # Get WOD database.
     db = wod_database(p)
 

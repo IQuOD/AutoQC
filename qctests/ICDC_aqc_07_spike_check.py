@@ -20,10 +20,10 @@ c    to check temperature profile for spikes
 import ICDC_aqc_01_level_order as ICDC
 import numpy as np
 
-def test(p):
+def test(p, parameters):
     '''Return quality control decisions.
     '''
-
+    
     # The test is run on re-ordered data.
     nlevels, z, t = ICDC.reordered_data(p)
     qc = np.zeros(nlevels, dtype=bool)

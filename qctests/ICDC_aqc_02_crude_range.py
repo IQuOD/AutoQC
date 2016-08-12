@@ -19,10 +19,10 @@ c    to check weather the temperature value is within the crude range
 import ICDC_aqc_01_level_order as ICDC
 import numpy as np
 
-def test(p):
+def test(p, parameters):
     '''Return a set of QC decisions. 
     '''
-
+    
     nlevels, z, t = ICDC.reordered_data(p)
 
     qc = (t < parminover) | (t > parmaxover)
