@@ -11,7 +11,7 @@ def test_Argo_pressure_increasing_test_constantPressure():
     '''
 
     p = util.testingProfile.fakeProfile([2,2,2], [100,100,100], latitude=0.0) 
-    qc = qctests.Argo_pressure_increasing_test.test(p)
+    qc = qctests.Argo_pressure_increasing_test.test(p, None)
     truth = numpy.zeros(3, dtype=bool)
     truth[1] = True
     truth[2] = True
@@ -23,7 +23,7 @@ def test_Argo_pressure_increasing_test_pressureInversion():
     '''
 
     p = util.testingProfile.fakeProfile([2,2,2], [100,200,100], latitude=0.0) 
-    qc = qctests.Argo_pressure_increasing_test.test(p)
+    qc = qctests.Argo_pressure_increasing_test.test(p, None)
     truth = numpy.zeros(3, dtype=bool)
     truth[1] = True
     truth[2] = True

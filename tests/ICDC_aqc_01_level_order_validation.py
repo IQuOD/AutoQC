@@ -11,7 +11,7 @@ def test_ICDC_level_order_simple():
     '''
     p = util.testingProfile.fakeProfile([1.0, 2.0, 3.0],
                                         [2.0, -1.0, 1.0])
-    qc              = ICDC.test(p)
+    qc              = ICDC.test(p, None)
     nlevels, zr, tr = ICDC.reordered_data(p)
     zreverted       = ICDC.revert_order(p, zr)    
     zreverted_truth = np.ma.array([2.0, -1.0, 1.0], 
@@ -47,7 +47,7 @@ def test_ICDC_level_order():
         p = util.testingProfile.fakeProfile(torig, zorig) 
 
         # Check the QC results are returned correctly.
-        qc = ICDC.test(p)
+        qc = ICDC.test(p, None)
         assert np.array_equal(qc, qctruth), 'Example %i QC wrong' % (i + 1)
 
         # Check that the reordering is correct.

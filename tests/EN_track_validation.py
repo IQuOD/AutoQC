@@ -817,7 +817,7 @@ class TestClass():
 
     #     tcqc = []
     #     for p in ds.threadProfiles:
-    #         tcqc.append(qctests.EN_track_check.test(p)[0])
+    #         tcqc.append(qctests.EN_track_check.test(p, None)[0])
 
     #     assert numpy.array_equal(qc, tcqc), 'QC results do not match those produced by EN system'
 
@@ -871,7 +871,7 @@ class TestClass():
 
     #     tcqc = []
     #     for p in ds.threadProfiles:
-    #         tcqc.append(qctests.EN_track_check.test(p)[0])
+    #         tcqc.append(qctests.EN_track_check.test(p, None)[0])
 
     #     assert numpy.array_equal(qc, tcqc), 'QC results do not match those produced by EN system'
 
@@ -949,7 +949,7 @@ class TestClass():
 
     #     tcqc = []
     #     for p in ds.threadProfiles:
-    #         tcqc.append(qctests.EN_track_check.test(p)[0])
+    #         tcqc.append(qctests.EN_track_check.test(p, None)[0])
 
     #     assert numpy.array_equal(qc, tcqc), 'QC results do not match those produced by EN system'
 
@@ -984,7 +984,7 @@ class TestClass():
 
     #     tcqc = []
     #     for p in ds.threadProfiles:
-    #         tcqc.append(qctests.EN_track_check.test(p)[0])
+    #         tcqc.append(qctests.EN_track_check.test(p, None)[0])
 
     #     assert numpy.array_equal(qc, tcqc), 'QC results do not match those produced by EN system'
 
@@ -1010,7 +1010,7 @@ class TestClass():
 
     #     tcqc = []
     #     for p in ds.threadProfiles:
-    #         tcqc.append(qctests.EN_track_check.test(p)[0])
+    #         tcqc.append(qctests.EN_track_check.test(p, None)[0])
 
     #     assert numpy.array_equal(qc, tcqc), 'QC results do not match those produced by EN system'
 

@@ -11,7 +11,7 @@ def test_CSIRO_surface_spikes():
 
     # nominal
     p = util.testingProfile.fakeProfile([0,0,0], [1,2,3], probe_type=2) 
-    qc = qctests.CSIRO_surface_spikes.test(p)
+    qc = qctests.CSIRO_surface_spikes.test(p, None)
     truth = numpy.zeros(3, dtype=bool)
     truth[0] = True
     truth[1] = True
@@ -20,14 +20,14 @@ def test_CSIRO_surface_spikes():
 
     # inappropriate probe type
     p = util.testingProfile.fakeProfile([0,0,0], [1,2,3], probe_type=1) 
-    qc = qctests.CSIRO_surface_spikes.test(p)
+    qc = qctests.CSIRO_surface_spikes.test(p, None)
     truth = numpy.zeros(3, dtype=bool)
 
     assert numpy.array_equal(qc, truth), 'flagged shallow profiles for an inappropriate probe type' 
 
     # no cluster
     p = util.testingProfile.fakeProfile([0,0,0], [1,20,30], probe_type=1) 
-    qc = qctests.CSIRO_surface_spikes.test(p)
+    qc = qctests.CSIRO_surface_spikes.test(p, None)
     truth = numpy.zeros(3, dtype=bool)
 
     assert numpy.array_equal(qc, truth), 'flagged shallow profile without a cluster' 

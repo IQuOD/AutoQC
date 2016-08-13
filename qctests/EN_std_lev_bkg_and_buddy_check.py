@@ -31,7 +31,7 @@ def test(p, parameters, allow_level_reinstating=True):
     qc = np.zeros(p.n_levels(), dtype=bool)
 
     # Obtain the obs minus background differences on standard levels.
-    result = stdLevelData(p)
+    result = stdLevelData(p, parameters)
     if result is None: return qc
 
     # Unpack the results.
@@ -70,7 +70,7 @@ def test(p, parameters, allow_level_reinstating=True):
                 Fail = True
 
         if Fail == False:
-          result = stdLevelData(pBuddy)
+          result = stdLevelData(pBuddy, parameters)
           if result is not None: 
             levelsBuddy, origLevelsBuddy, assocLevelsBuddy = result
             bgevBuddy = EN_background_check.bgevStdLevels
@@ -216,7 +216,7 @@ def update_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, profile, bud
 
     return pgeData
 
-def stdLevelData(p):
+def stdLevelData(p, parameters):
     """
     Combines data that have passed other QC checks to create a 
     set of observation minus background data on standard levels.

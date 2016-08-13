@@ -21,7 +21,7 @@ def test_ICDC_crude_range():
 
         qctruth = f > 0
         p = util.testingProfile.fakeProfile(t, z)
-        qc = ICDC_crude_range.test(p)
+        qc = ICDC_crude_range.test(p, None)
 
         assert np.array_equal(qc, qctruth), 'Example %i failed' % (i + 1)
 

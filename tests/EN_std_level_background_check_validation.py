@@ -46,7 +46,7 @@ def test_EN_std_level_bkg_and_buddy_check_temperature():
     p = util.testingProfile.fakeProfile([1.8, 1.8, 1.8, 7.1], [0.0, 2.5, 5.0, 7.5], latitude=55.6, longitude=12.9, date=[1900, 01, 15, 0], probe_type=7) 
     data.ds.profiles = [p]
     qctests.EN_std_lev_bkg_and_buddy_check.profiles_info_list = get_profiles_info_list()
-    qc = qctests.EN_std_lev_bkg_and_buddy_check.test(p)
+    qc = qctests.EN_std_lev_bkg_and_buddy_check.test(p, None)
     expected = [False, False, False, False]
     print qc
     assert numpy.array_equal(qc, expected), 'mismatch between qc results and expected values'
@@ -203,7 +203,7 @@ def test_EN_std_level_bkg_and_buddy_real_profiles_1():
 
     data.ds.profiles = [realProfile1]
     qctests.EN_std_lev_bkg_and_buddy_check.profiles_info_list = get_profiles_info_list()
-    qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile1)
+    qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile1, None)
 
     assert numpy.array_equal(qc, truthQC1), 'mismatch between qc results and expected values'
 
@@ -214,7 +214,7 @@ def test_EN_std_level_bkg_and_buddy_real_profiles_2():
 
     data.ds.profiles = [realProfile2, realProfile3]
     qctests.EN_std_lev_bkg_and_buddy_check.profiles_info_list = get_profiles_info_list()
-    qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile2, allow_level_reinstating=False)
+    qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile2, None, allow_level_reinstating=False)
 
     assert numpy.array_equal(qc, truthQC2), 'mismatch between qc results and expected values'
 
@@ -225,7 +225,7 @@ def test_EN_std_level_bkg_and_buddy_real_profiles_3():
 
     data.ds.profiles = [realProfile2, realProfile3]
     qctests.EN_std_lev_bkg_and_buddy_check.profiles_info_list = get_profiles_info_list()
-    qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile2)
+    qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile2, None)
     assert numpy.all(qc == False), 'mismatch between qc results and expected values'
 
 realProfile1 = util.testingProfile.fakeProfile(
