@@ -22,10 +22,10 @@ docker pull iquod/autoqc
 Start the image via
 
 ```
-docker run -i -t iquod/autoqc /bin/bash
+docker run --sysctl "kernel.shmmax=18446744073692774399" -v $PWD:/rawdata --rm -i -t iquod/autoqc /bin/bash
 ```
 
-And you'll find AutoQC all set up and ready to use in the directory `/AutoQC`. Note that the version of AutoQC that ships with the docker image may be behind master on GitHub; you can always do `git pull origin master` from the `/AutoQC` directory inside the image, if you need an update.
+And you'll find AutoQC all set up and ready to use in the directory `/AutoQC`. Note that the version of AutoQC that ships with the docker image may be behind master on GitHub; you can always do `git pull origin master` from the `/AutoQC` directory inside the container, if you need an update. Also, whatever directory you launched this command from will be mounted on `/rawdata` inside your Docker container; use this to bring data into the container, or copy logs and files from within the container to this location to access them after Docker exits.
 
 If you want to run AutoQC without Docker, have a look at the setup steps in `docker/Dockerfile`; these correspond to the same setup steps you'll need to do on a similar machine (i.e. on Debian with miniconda already installed).
 
@@ -65,7 +65,7 @@ cd data
 Finally, launch your docker image with the `data` directory mounted inside it at `/rawdata`:
 
 ```
-sudo docker run -v $PWD:/rawdata -i -t iquod/autoqc /bin/bash
+sudo docker run --sysctl "kernel.shmmax=18446744073692774399" -v $PWD:/rawdata --rm -i -t iquod/autoqc /bin/bash
 ```
 
 And once again, AutoQC will be all set up in `/AutoQC`. Remember to `git pull` if necessary, and add any external data or parameter files to the correct places.
