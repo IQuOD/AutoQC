@@ -66,19 +66,11 @@ def test(p, parameters):
 
 def get_climatology_range(nlevels, z, lat, lon, month, nc):
 
-    # parameters
-    tmedA = nc.variables['tmedA'][:, :, :]
-    tamdA = nc.variables['tamdA'][:, :, :]
-    tmedM = nc.variables['tmedM'][:, :, :, :]
-    tamdM = nc.variables['tamdM'][:, :, :, :]
-    zedqc = nc.variables['zedqc'][:]
-    fillValue = nc.fillValue
-
     # Define arrays for the results.
     tmin = np.ndarray(nlevels)
     tmax = np.ndarray(nlevels)
-    tmin[:] = fillValue
-    tmax[:] = fillValue
+    tmin[:] = nc.fillValue
+    tmax[:] = nc.fillValue
 
     # Global ranges - data outside these bounds are assumed not valid.
     parminover = -2.3
@@ -93,7 +85,7 @@ def get_climatology_range(nlevels, z, lat, lon, month, nc):
     # Find the climatology range.
     for k in range(nlevels):
         # Find the corresponding climatology level.
-        arg = np.argwhere((z[k] >= zedqc[:-1]) & (z[k] < zedqc[1:]))
+        arg = np.argwhere((z[k] >= nc.variables['zedqc'][:-1][0]) & (z[k] < nc.variables['zedqc'][1:][0]))
         if len(arg) > 0:
             kisel = arg[0]
         else: 
@@ -106,19 +98,19 @@ def get_climatology_range(nlevels, z, lat, lon, month, nc):
         if month is None: useAnnual = True 
         # Extract the temperature.       
         if useAnnual == False:
-            amd = tamdM[ix, iy, kisel, month - 1]
+            amd = nc.variables['tamdM'][ix, iy, kisel, month - 1][0]
             if amd < 0.0:
                 useAnnual = True
             else:
-                tmedian = tmedM[ix, iy, kisel, month - 1]
+                tmedian = nc.variables['tmedM'][ix, iy, kisel, month - 1][0]
                 if tmedian < parminover:
                     useAnnual = True
         if useAnnual:
-            amd = tamdA[ix, iy, kisel]
+            amd = nc.variables['tamdA'][ix, iy, kisel][0]
             if amd < 0.0:
                 continue
             else:
-                tmedian = tmedA[ix, iy, kisel]
+                tmedian = nc.variables['tmedA'][ix, iy, kisel][0]
                 if tmedian < parminover:
                     continue
         if amd > 0.0 and amd < 0.05: amd = 0.05
@@ -137,105 +129,4 @@ def get_climatology_range(nlevels, z, lat, lon, month, nc):
 def loadParameters(parameterStore):
 
   parameterStore['nc'] = Dataset('data/climatological_t_median_and_amd_for_aqc.nc', 'r')
-
-# def read_ascii_and_convert_to_netcdf():
-#     '''Coverts the ASCII data file to netCDF on first read.
-#        This is much faster to access.
-#     '''
-#     global tmedM, tamdM, tmedA, tamdA, zedqc, fillValue
-
-#     # Load the data.
-#     tmedM             = np.ndarray([721, 361, 16, 12])
-#     tamdM             = np.ndarray([721, 361, 16, 12])
-#     tmedA             = np.ndarray([721, 361, 60])
-#     tamdA             = np.ndarray([721, 361, 60])
-#     zedqc             = np.ndarray(60)
-#     # Do not use masked arrays to save on memory use.
-#     fillValue         = -9.0 # Has to be a negative number.
-#     tmedM[:, :, :, :] = fillValue
-#     tamdM[:, :, :, :] = fillValue
-#     tmedA[:, :, :]    = fillValue
-#     tamdA[:, :, :]    = fillValue
-#     with open('data/climatological_t_median_and_amd_for_aqc.dat') as f:
-#         for line in f:
-#             vals      = line.split()
-#             m         = int(vals[0]) - 1
-#             j         = int(vals[1]) - 1
-#             i         = int(vals[3]) - 1
-#             k         = int(vals[5]) - 1
-#             z         = float(vals[6])
-#             tmedian   = float(vals[7])
-#             absmeddev = float(vals[8])
-
-#             if m < 12 and k < 16:
-#                 tmedM[i, j, k, m] = tmedian
-#                 tamdM[i, j, k, m] = absmeddev
-#             elif m == 12:
-#                 tmedA[i, j, k] = tmedian
-#                 tamdA[i, j, k] = absmeddev
-#             zedqc[k]         = z
-
-#     # Create the netCDF version.
-#     nc = Dataset('data/climatological_t_median_and_amd_for_aqc.nc', 'w')
-#     idim = nc.createDimension('i', 721)
-#     jdim = nc.createDimension('j', 361)
-#     kmdim = nc.createDimension('km', 16)
-#     kadim = nc.createDimension('ka', 60)
-#     mdim = nc.createDimension('m', 12)
-
-#     sf = 0.0001
-#     tmedav = nc.createVariable('tmedA', 'i4', ('i', 'j', 'ka'), zlib=True)
-#     tmedav.add_offset = 0.0
-#     tmedav.scale_factor = sf
-#     tmedav[:, :, :] = tmedA
-
-#     tamdav = nc.createVariable('tamdA', 'i4', ('i', 'j', 'ka'), zlib=True)
-#     tamdav.add_offset = 0.0
-#     tamdav.scale_factor = sf
-#     tamdav[:, :, :] = tamdA
-
-#     tmedmv = nc.createVariable('tmedM', 'i4', ('i', 'j', 'km', 'm'), zlib=True)
-#     tmedmv.add_offset = 0.0
-#     tmedmv.scale_factor = sf
-#     tmedmv[:, :, :, :] = tmedM
-
-#     tamdmv = nc.createVariable('tamdM', 'i4', ('i', 'j', 'km', 'm'), zlib=True)
-#     tamdmv.add_offset = 0.0
-#     tamdmv.scale_factor = sf
-#     tamdmv[:, :, :, :] = tamdM
-
-#     zedqcv = nc.createVariable('zedqc', 'f4', ('ka',))
-#     zedqcv[:] = zedqc
-
-#     nc.fillValue = fillValue
-#     nc.history = 'Created ' + time.ctime(time.time()) + ' from climatological_t_median_and_amd_for_aqc.dat provided by Viktor Gouretski, Integrated Climate Data Center, University of Hamburg, Hamburg, Germany, February 2016'
-#     nc.close()
-
-# def read_netcdf():
-#     '''Read climatological data from netCDF.
-#     '''
-#     global tmedM, tamdM, tmedA, tamdA, zedqc, fillValue
-
-#     nc = Dataset('data/climatological_t_median_and_amd_for_aqc.nc', 'r')
-#     tmedA = nc.variables['tmedA'][:, :, :]
-#     tamdA = nc.variables['tamdA'][:, :, :]
-#     tmedM = nc.variables['tmedM'][:, :, :, :]
-#     tamdM = nc.variables['tamdM'][:, :, :, :]
-#     zedqc = nc.variables['zedqc'][:]
-#     fillValue = nc.fillValue
-#     nc.close()
-
-# Global ranges - data outside these bounds are assumed not valid.
-#parminover = -2.3
-#parmaxover = 33.0
-
-# Read data.
-# if os.path.isfile('data/climatological_t_median_and_amd_for_aqc.nc'):
-#     print 1
-#     read_netcdf()
-#     print 11
-# else:
-#     read_ascii_and_convert_to_netcdf()
-
-
 
