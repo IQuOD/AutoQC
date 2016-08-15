@@ -85,7 +85,7 @@ def get_climatology_range(nlevels, z, lat, lon, month, nc):
     # Find the climatology range.
     for k in range(nlevels):
         # Find the corresponding climatology level.
-        arg = np.argwhere((z[k] >= nc.variables['zedqc'][:-1][0]) & (z[k] < nc.variables['zedqc'][1:][0]))
+        arg = np.argwhere((z[k] >= nc.variables['zedqc'][:][:-1]) & (z[k] < nc.variables['zedqc'][:][1:]))
         if len(arg) > 0:
             kisel = arg[0]
         else: 
