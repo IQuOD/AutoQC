@@ -36,7 +36,7 @@ def test(p, parameters):
       return result
     
     # some detector types cannot be assessed by this test; do not raise flag.
-    if p.probe_type in [None]:
+    if p.probe_type() in [None]:
         return np.zeros(1, dtype=bool)
     
     # fetch all profiles on track, sorted chronologically, earliest first (None sorted as highest)
