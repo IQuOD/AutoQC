@@ -40,8 +40,11 @@ def test(p, parameters):
         return np.zeros(1, dtype=bool)
     
     # fetch all profiles on track, sorted chronologically, earliest first (None sorted as highest)
+    # if there's more than 100 profiles on track, return no flag - large tracks cause memory-related crash
     command = 'SELECT raw FROM ' + sys.argv[1] + ' WHERE cruise = ' + str(cruise) + ' and year is not null and month is not null and day is not null and time is not null ORDER BY year, month, day, time ASC;'
     track_rows = main.dbinteract(command)
+    if len(track_rows) > 100:
+        return np.zeros(1, dtype=bool)
     track_profiles = [main.text2wod(raw[0]) for raw in track_rows]
    
     # start all as passing by default:
