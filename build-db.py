@@ -30,6 +30,7 @@ if len(sys.argv) == 3:
                 lat real, 
                 long real, 
                 cruise integer,
+                probe integer,
                 """
     for i in range(len(testNames)):
         query += testNames[i].lower() + ' boolean'
@@ -43,7 +44,7 @@ if len(sys.argv) == 3:
     # populate table from wod-ascii data
     fid = open(sys.argv[1])
 
-    while True:
+    for xx in range(1000):
         # extract profile as wodpy object and raw text
         start = fid.tell()
         profile = wod.WodProfile(fid)
@@ -64,7 +65,7 @@ if len(sys.argv) == 3:
                 break
             continue
 
-        query = "INSERT INTO " + sys.argv[2] + " (raw, truth, uid, year, month, day, time, lat, long, cruise) "  + """ VALUES(
+        query = "INSERT INTO " + sys.argv[2] + " (raw, truth, uid, year, month, day, time, lat, long, cruise, probe) "  + """ VALUES(
                     {p[raw]},
                     {p[truth]},
                     {p[uid]},
@@ -74,7 +75,8 @@ if len(sys.argv) == 3:
                     {p[time]},
                     {p[latitude]}, 
                     {p[longitude]}, 
-                    {p[cruise]}
+                    {p[cruise]},
+                    {p[probe_type]}
                    )""".format(p=wodDict)
         query = query.replace('--', 'NULL')
         query = query.replace('None', 'NULL')

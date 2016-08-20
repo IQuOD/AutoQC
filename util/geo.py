@@ -21,17 +21,12 @@ def arcHaversine(hs):
 
     return 2 * math.asin(sqrths)
 
-def haversineDistance(pro1, pro2):
+def haversineDistance(lat1, lon1, lat2, lon2):
     """
     Calculate the great circle distance in meters between two points 
     on the earth (specified in decimal degrees)
     implementation from http://gis.stackexchange.com/questions/44064/how-to-calculate-distances-in-a-point-sequence
     """
-
-    lon1 = pro1.longitude()
-    lat1 = pro1.latitude()
-    lon2 = pro2.longitude()
-    lat2 = pro2.latitude()
 
     # convert decimal degrees to radians 
     lon1, lat1, lon2, lat2 = map(math.radians, [lon1, lat1, lon2, lat2])
@@ -44,23 +39,19 @@ def haversineDistance(pro1, pro2):
     assert km >= 0, 'haversine returned negative distance'
     return km*1000.
 
-def haversineAngle(pro1, pro2, pro3):
+def haversineAngle(lat1, lon1, lat2, lon2, lat3, lon3):
     '''
-    Calculate the angle subtended by the great circle passing through pro1 and pro2,
-    with that passing through pro2 and pro3 (all the pro* are WOD profiles or headers)
+    Calculate the angle subtended by the great circle passing through lat/lon1 and lat/lon2,
+    with that passing through lat/lon2 and lat/lon3
     return None if any required information is missing.
     '''
     
-    if None in [pro1.latitude(), pro1.longitude()]:
-        return None
-    if None in [pro2.latitude(), pro2.longitude()]:
-        return None
-    if None in [pro3.latitude(), pro3.longitude()]:
+    if None in [lat1, lon1, lat2, lon2, lat3, lon3]:
         return None
 
-    a = haversineDistance(pro1, pro2) / 6367000.
-    b = haversineDistance(pro2, pro3) / 6367000.
-    c = haversineDistance(pro3, pro1) / 6367000.
+    a = haversineDistance(lat1, lon1, lat2, lon2) / 6367000.
+    b = haversineDistance(lat2, lon2, lat3, lon3) / 6367000.
+    c = haversineDistance(lat3, lon3, lat1, lon1) / 6367000.
 
     if a == 0 or b == 0:
         return 0
@@ -71,22 +62,22 @@ def haversineAngle(pro1, pro2, pro3):
 
 def deltaTime(earlier, later):
     '''
-    Calculate the time difference between two profiles, later and earlier,
+    Calculate the time difference between two tuples (year, month, day, time),
     in seconds.
     return None if information is missing.
     '''
 
-    if None in [earlier.year(), earlier.month(), earlier.day(), earlier.time()]:
+    if None in [earlier[0], earlier[1], earlier[2], earlier[3]]:
         return None
-    if None in [later.year(), later.month(), later.day(), later.time()]:
+    if None in [later[0], later[1], later[2], later[3]]:
         return None
 
-    eHour, eMinute, eSecond = parseTime(earlier.time())
-    lHour, lMinute, lSecond = parseTime(later.time())
+    eHour, eMinute, eSecond = parseTime(earlier[3])
+    lHour, lMinute, lSecond = parseTime(later[3])
 
     try:
-        early = datetime(year=earlier.year(), month=earlier.month(), day=earlier.day(), hour=eHour, minute=eMinute, second=eSecond )
-        late = datetime(year=later.year(), month=later.month(), day=later.day(), hour=lHour, minute=lMinute, second=lSecond )
+        early = datetime(year=earlier[0], month=earlier[1], day=earlier[2], hour=eHour, minute=eMinute, second=eSecond )
+        late = datetime(year=later[0], month=later[1], day=later[2], hour=lHour, minute=lMinute, second=lSecond )
     except:
         return None
 
