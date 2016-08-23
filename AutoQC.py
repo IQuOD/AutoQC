@@ -34,7 +34,6 @@ if len(sys.argv)>2:
   # Identify and import tests
   testNames = main.importQC('qctests')
   testNames.sort()
-  testNames = ['EN_track_check']
   print('{} quality control checks have been found'.format(len(testNames)))
   testNames = main.checkQCTestRequirements(testNames)
   print('{} quality control checks are able to be run:'.format(len(testNames)))
@@ -58,9 +57,7 @@ if len(sys.argv)>2:
       return
 
     # run tests
-    print uid
     for itest, test in enumerate(testNames):
-      print test
       result = run(test, [profile], parameterStore)
       query = "UPDATE " + sys.argv[1] + " SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile.uid()) + ";"
       cur.execute(query)
