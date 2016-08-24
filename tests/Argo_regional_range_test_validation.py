@@ -11,7 +11,7 @@ def Argo_regional_range_test_mediterranean_hot():
     '''
 
     p = util.testingProfile.fakeProfile([40.1, 39.9], [10, 20], 35., 18.) 
-    qc = qctests.Argo_regional_range_test.test(p)
+    qc = qctests.Argo_regional_range_test.test(p, None)
     truth = numpy.zeros(2, dtype=bool)
     truth[0] = True
     assert numpy.array_equal(qc, truth), 'failed to flag hot temperatures in Mediterranean Sea'   
@@ -22,7 +22,7 @@ def Argo_regional_range_test_red_cold():
     '''
 
     p = util.testingProfile.fakeProfile([21.6, 21.8], [10, 20], 22., 38.) 
-    qc = qctests.Argo_regional_range_test.test(p)
+    qc = qctests.Argo_regional_range_test.test(p, None)
     truth = numpy.zeros(2, dtype=bool)
     truth[0] = True
     assert numpy.array_equal(qc, truth), 'failed to flag cold temperatures Red Sea' 

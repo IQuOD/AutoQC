@@ -52,7 +52,7 @@ def test_EN_spike_and_step_check_tropics_prelim():
     test preliminary tropical rejection
     '''
     p = util.testingProfile.fakeProfile([0, 0, 0, 0], [0, 10, 20, 30], latitude=0.0)
-    qc = qctests.EN_spike_and_step_check.test(p, True)
+    qc = qctests.EN_spike_and_step_check.test(p, None, True)
     truth = numpy.zeros(4, dtype=bool)
     truth[:] = True
     assert numpy.array_equal(qc, truth), 'failed to flag cold temperatures in the tropics'
@@ -80,7 +80,7 @@ def test_EN_spike_and_step_check_A_nominal():
     test condition A spike check in context
     '''
     p = util.testingProfile.fakeProfile([20, 24, 18, 17], [0, 10, 20, 30], latitude=20.0)
-    qc = qctests.EN_spike_and_step_check.test(p)
+    qc = qctests.EN_spike_and_step_check.test(p, None)
     truth = numpy.zeros(4, dtype=bool)
     truth[1] = True
     assert numpy.array_equal(qc, truth), 'failed to flag spike identified by condiion A'
@@ -107,7 +107,7 @@ def test_EN_spike_and_step_check_spike_A_depth_constraint_shallow():
     condition A spike *except* measurements too far apart to count as spike (shallow) 
     '''
     p = util.testingProfile.fakeProfile([21, 24, 18, 17], [0, 10, 70, 80], latitude=20.0)
-    qc = qctests.EN_spike_and_step_check.test(p)
+    qc = qctests.EN_spike_and_step_check.test(p, None)
     truth = numpy.zeros(4, dtype=bool)
     assert numpy.array_equal(qc, truth), 'flagged a type A temperature spike spread out too far in depth (shallow)'
 
@@ -116,7 +116,7 @@ def test_EN_spike_and_step_check_spike_A_depth_constraint_deep():
     condition A spike *except* measurements too far apart to count as spike (deep). 
     '''
     p = util.testingProfile.fakeProfile([20, 21, 18, 17], [500, 510, 670, 680], latitude=20.0)
-    qc = qctests.EN_spike_and_step_check.test(p)
+    qc = qctests.EN_spike_and_step_check.test(p, None)
     truth = numpy.zeros(4, dtype=bool)
     assert numpy.array_equal(qc, truth), 'flagged a type A temperature spike spread out too far in depth (deep)'
 
@@ -143,7 +143,7 @@ def test_EN_spike_and_step_check_B_nominal():
     test condition B spike check in context
     '''
     p = util.testingProfile.fakeProfile([22.5, 24, 22.5, 22], [500, 510, 520, 530], latitude=20.0)
-    qc = qctests.EN_spike_and_step_check.test(p)
+    qc = qctests.EN_spike_and_step_check.test(p, None)
     truth = numpy.zeros(4, dtype=bool)
     truth[1] = True
     assert numpy.array_equal(qc, truth), 'failed to flag spike identified by condition B'
@@ -172,7 +172,7 @@ def test_EN_spike_and_step_check_C_nominal():
     suspect == True since condition C is a suspected reject
     '''
     p = util.testingProfile.fakeProfile([24, 24, 2, 1], [10, 20, 30, 40], latitude=20.0)
-    qc = qctests.EN_spike_and_step_check.test(p, True)
+    qc = qctests.EN_spike_and_step_check.test(p, None, True)
     truth = numpy.zeros(4, dtype=bool)
     truth[1] = True
     truth[2] = True
@@ -217,7 +217,7 @@ def test_EN_spike_and_step_check_excpetion_C_iii():
     suspect == True since condition C is a suspected reject
     '''
     p = util.testingProfile.fakeProfile([13, 13, 13, 1], [310, 320, 330, 340], latitude=50.0)
-    qc = qctests.EN_spike_and_step_check.test(p, True)
+    qc = qctests.EN_spike_and_step_check.test(p, None, True)
     truth = numpy.zeros(4, dtype=bool)
     truth[3] = True
     assert numpy.array_equal(qc, truth), 'flag only the last temperature when a step is found at the end of the profile'
@@ -227,7 +227,7 @@ def test_EN_spike_and_step_check_trailing_zero():
     make sure trailing 0s are getting flagged as suspect
     '''
     p = util.testingProfile.fakeProfile([0, 0, 0, 0], [10, 20, 30, 40], latitude=50.0)
-    qc = qctests.EN_spike_and_step_check.test(p, True)
+    qc = qctests.EN_spike_and_step_check.test(p, None, True)
     truth = numpy.zeros(4, dtype=bool)
     truth[3] = True
     assert numpy.array_equal(qc, truth), 'failed to flag a trailing zero'

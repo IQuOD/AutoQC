@@ -3,6 +3,7 @@ import qctests.ICDC_aqc_09_local_climatology_check as ICDC_lc
 
 import util.testingProfile
 import numpy as np
+from netCDF4 import Dataset
 
 ##### ICDC local climatology check.
 ##### --------------------------------------------------
@@ -13,6 +14,8 @@ def test_ICDC_local_climatology_check():
     '''
 
     lines = data.splitlines()
+    parameterStore = {}
+    ICDC_lc.loadParameters(parameterStore)
     for i, line in enumerate(lines):
         if line[0:2] == 'HH':
             header  = line.split()
@@ -49,12 +52,13 @@ def test_ICDC_local_climatology_check():
                                                           z, 
                                                           lat, 
                                                           lon,
-                                                          p.month())
+                                                          p.month(), 
+                                                          parameterStore['nc'])
 
             assert np.max(np.abs(tmin - climmin)) < 0.001, 'TMIN failed for profile with header ' + line
             assert np.max(np.abs(tmax - climmax)) < 0.001, 'TMAX failed for profile with header ' + line
 
-            qc = ICDC_lc.test(p)
+            qc = ICDC_lc.test(p, parameterStore)
             assert np.array_equal(qc, qctruth), 'QC failed profile with header ' + line
 
 # Data provided by Viktor Gouretski, ICDC, University of Hamburg.

@@ -6,7 +6,7 @@ import EN_spike_and_step_check
 import numpy as np
 from collections import Counter
 
-def test(p):
+def test(p, parameters):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 
@@ -14,12 +14,12 @@ def test(p):
     """
  
     if p.uid() != uid or p.uid() is None:
-        run_qc(p)
+        run_qc(p, parameters)
 
     # QC results are in the module variable.
     return qc
 
-def run_qc(p):
+def run_qc(p, parameters):
 
     global qc, uid
 
@@ -79,7 +79,7 @@ def run_qc(p):
             try:
                 spikeqc
             except:
-                spikeqc = EN_spike_and_step_check.test(p)
+                spikeqc = EN_spike_and_step_check.test(p, parameters)
             if spikeqc[currentLev]: qc[currentLev] = True
             if spikeqc[otherLev]:   qc[otherLev]   = True
             if spikeqc[currentLev] == False and spikeqc[otherLev] == False:

@@ -19,10 +19,10 @@ import ICDC_aqc_01_level_order as ICDC
 import numpy as np
 from util.wod import wod_database
 
-def test(p):
+def test(p, parameters):
     '''Return quality control decisions.
     '''
-
+    
     # Default set of QC flags to return.
     qc = np.zeros(p.n_levels(), dtype=bool)
 

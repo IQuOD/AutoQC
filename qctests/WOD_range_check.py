@@ -5,7 +5,7 @@ pp 46 http://data.nodc.noaa.gov/woa/WOD/DOC/wodreadme.pdf
 import numpy
 import data.ds as ds
 
-def test(p):
+def test(p, parameters):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 

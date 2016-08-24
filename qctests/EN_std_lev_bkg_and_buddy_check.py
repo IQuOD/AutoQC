@@ -5,7 +5,7 @@ http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 """
 
 from cotede.qctests.possible_speed import haversine
-import datetime
+import datetime, psycopg2
 import EN_background_check
 import EN_constant_value_check
 import EN_increasing_depth_check
@@ -13,10 +13,10 @@ import EN_range_check
 import EN_spike_and_step_check
 import EN_stability_check
 import util.main as main
-import data.ds
 import numpy as np
+import sys
 
-def test(p, allow_level_reinstating=True):
+def test(p, parameters, allow_level_reinstating=True):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 
@@ -31,7 +31,7 @@ def test(p, allow_level_reinstating=True):
     qc = np.zeros(p.n_levels(), dtype=bool)
 
     # Obtain the obs minus background differences on standard levels.
-    result = stdLevelData(p)
+    result = stdLevelData(p, parameters)
     if result is None: return qc
 
     # Unpack the results.
@@ -47,7 +47,7 @@ def test(p, allow_level_reinstating=True):
     pgeData = determine_pge(levels, bgev, obev, p)
 
     # Find buddy.
-    profiles = data.ds.profiles
+    profiles = get_profile_info()
     minDist  = 1000000000.0
     iMinDist = None
     for iProfile, profile in enumerate(profiles):
@@ -58,9 +58,7 @@ def test(p, allow_level_reinstating=True):
             
     # Check if we have found a buddy and process if so.
     if minDist <= 400000:
-        fid = None
-        pBuddy, currentFile, fid = main.profileData(profiles[iMinDist], '', fid)
-        fid.close()
+        pBuddy = main.get_profile_from_db(cur, profiles[iMinDist][0])
 
         # buddy vetos
         Fail = False
@@ -72,7 +70,7 @@ def test(p, allow_level_reinstating=True):
                 Fail = True
 
         if Fail == False:
-          result = stdLevelData(pBuddy)
+          result = stdLevelData(pBuddy, parameters)
           if result is not None: 
             levelsBuddy, origLevelsBuddy, assocLevelsBuddy = result
             bgevBuddy = EN_background_check.bgevStdLevels
@@ -218,19 +216,19 @@ def update_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, profile, bud
 
     return pgeData
 
-def stdLevelData(p):
+def stdLevelData(p, parameters):
     """
     Combines data that have passed other QC checks to create a 
     set of observation minus background data on standard levels.
     """
 
     # Combine other QC results.
-    preQC = (EN_background_check.test(p) | 
-             EN_constant_value_check.test(p) | 
-             EN_increasing_depth_check.test(p) | 
-             EN_range_check.test(p) |
-             EN_spike_and_step_check.test(p) | 
-             EN_stability_check.test(p))
+    preQC = (EN_background_check.test(p, parameters) | 
+             EN_constant_value_check.test(p, parameters) | 
+             EN_increasing_depth_check.test(p, parameters) | 
+             EN_range_check.test(p, parameters) |
+             EN_spike_and_step_check.test(p, parameters) | 
+             EN_stability_check.test(p, parameters))
 
     # Get the data stored by the EN background check.
     # As it was run above we know that the data held by the
@@ -315,14 +313,14 @@ def assessBuddyDistance(p, buddy):
     # that the profiles were within a time threshold. The
     # cruise is compared as two profiles from the same instrument
     # should not be compared.
-    if (buddy.uid() == p.uid() or
-        buddy.year() != p.year() or
-        buddy.month() != p.month() or
-        buddy.cruise() == p.cruise()): return None
+    if (buddy[0] == p.uid() or
+        buddy[1] != p.year() or
+        buddy[2] != p.month() or
+        buddy[3] == p.cruise()): return None
     lat = p.latitude()
     lon = p.longitude()
-    latComp = buddy.latitude()
-    lonComp = buddy.longitude()
+    latComp = buddy[4]
+    lonComp = buddy[5]
     # Do a rough check of distance.
     latDiff = np.abs(latComp - lat)
     if latDiff > 5: return None
@@ -366,4 +364,18 @@ def timeDiff(p1, p2):
 
     return np.abs(diff.total_seconds())
 
+def get_profile_info():
+    # Gets information about the profiles from the database.
+    # This is only done once and the results saved in the global variable.
+    # NB this could be done on module load but this would make it difficult 
+    # to implement code tests.
+    global profiles_info_list, cur
+    if len(profiles_info_list) == 0:
+        conn = psycopg2.connect("dbname='root' user='root'")
+        cur = conn.cursor()
+        cur.execute('SELECT uid,year,month,cruise,lat,long FROM ' + sys.argv[1])
+        profiles_info_list = cur.fetchall()
+    return profiles_info_list
 
+profiles_info_list = []
+cur = None

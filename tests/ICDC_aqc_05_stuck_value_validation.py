@@ -29,7 +29,7 @@ def test_ICDC_stuck_value():
                 qctruth.append(int(d[2]) > 0)
             
             p  = util.testingProfile.fakeProfile(temps, depths, probe_type=probe_type)
-            qc = ICDC_sv.test(p)
+            qc = ICDC_sv.test(p, None)
 
             assert np.array_equal(qc, qctruth), 'Failed profile with header ' + line
 

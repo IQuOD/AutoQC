@@ -9,7 +9,7 @@ http://w3.jcommops.org/FTPRoot/Argo/Doc/argo-quality-control-manual.pdf page 8.
 import numpy as np
 from util import obs_utils
 
-def test(p):
+def test(p, parameters):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 

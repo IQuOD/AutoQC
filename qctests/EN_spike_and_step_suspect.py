@@ -2,6 +2,6 @@
 
 import EN_spike_and_step_check
 
-def test(p):
+def test(p, parameters):
 
-    return EN_spike_and_step_check.test(p, suspect=True)
+    return EN_spike_and_step_check.test(p, parameters, suspect=True)

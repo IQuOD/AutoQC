@@ -27,7 +27,7 @@ def test_ICDC_n_temperature_extrema():
                 qctruth.append(int(d[2]) > 0)
             
             p  = util.testingProfile.fakeProfile(temps, depths)
-            qc = ICDC_nte.test(p)
+            qc = ICDC_nte.test(p, None)
        
             assert np.array_equal(qc, qctruth), 'Failed profile with header ' + line
 
