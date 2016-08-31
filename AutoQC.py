@@ -47,7 +47,7 @@ if len(sys.argv)>2:
     '''run all tests on the indicated database row'''
   
     # extract profile
-    profile = main.get_profile_from_db(cur, uid)
+    profile = main.get_profile_from_db(uid)
 
     # Check that there are temperature data in the profile, otherwise skip.
     if profile.var_index() is None:
@@ -60,7 +60,7 @@ if len(sys.argv)>2:
     for itest, test in enumerate(testNames):
       result = run(test, [profile], parameterStore)
       query = "UPDATE " + sys.argv[1] + " SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile.uid()) + ";"
-      cur.execute(query)
+      main.dbinteract(query)
 
   # set up global parmaeter store
   parameterStore = {}
@@ -72,11 +72,8 @@ if len(sys.argv)>2:
       print 'No parameters to load for', test
       
   # connect to database & fetch list of all uids
-  conn = psycopg2.connect("dbname='root' user='root'")
-  conn.autocommit = True
-  cur = conn.cursor()
-  cur.execute('SELECT uid FROM ' + sys.argv[1])
-  uids = cur.fetchall()
+  query = 'SELECT uid FROM ' + sys.argv[1]
+  uids = main.dbinteract(query)
   
   # launch async processes
   pool = Pool(processes=int(sys.argv[2]))

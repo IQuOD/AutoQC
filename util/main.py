@@ -127,13 +127,13 @@ def calcRates(testResults, trueResults):
 
   return tpr, fpr, fnr, tnr 
 
-def get_profile_from_db(cur, uid):
+def get_profile_from_db(uid):
   '''
-  Given the database cursor and a unique id, return a WodPy profile object.
+  Given a unique id found in the current database table, return the corresponding WodPy profile object.
   '''
  
-  cur.execute('SELECT * FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid) )
-  row = cur.fetchall()
+  command = 'SELECT * FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid)
+  row = dbinteract(command)
   return text2wod(row[0][0])
 
 def text2wod(raw):
@@ -168,7 +168,7 @@ def dictify(rows, keys):
 
 def dbinteract(command, tries=0):
   '''
-  execute the given command with the cursor provided;
+  execute the given postgres command;
   catch errors and retry a maximum number of times.
   '''
 
