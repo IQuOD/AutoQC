@@ -23,7 +23,7 @@ def get_profiles_info_list():
         ps.append(profile_to_info_list(p))
     return ps
 
-def dummy_get_profile_from_db(cur, uid):
+def dummy_get_profile_from_db(uid):
     for profile in data.ds.profiles:
         if profile.uid() == uid:
             return profile
