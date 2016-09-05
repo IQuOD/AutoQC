@@ -72,11 +72,11 @@ if len(sys.argv)>2:
       print 'No parameters to load for', test
       
   # connect to database & fetch list of all uids
-  query = 'SELECT uid FROM ' + sys.argv[1]
+  query = 'SELECT uid FROM ' + sys.argv[1] + ' ORDER BY uid OFFSET ' + sys.argv[2] + ' LIMIT ' + str(int(sys.argv[3]) - int(sys.argv[2])) + ';' 
   uids = main.dbinteract(query)
   
   # launch async processes
-  pool = Pool(processes=int(sys.argv[2]))
+  pool = Pool(processes=1)
   for i in range(len(uids)):
     pool.apply_async(process_row, (uids[i][0],))
   pool.close()
@@ -84,5 +84,5 @@ if len(sys.argv)>2:
     
 else:
   print 'Please add command line arguments to name your output file and set parallelization:'
-  print 'python AutoQC <test group> <database table>'
-  print 'will write qc results to <database table> in the database, and run the calculation parallelized across <number of threads> cores.'
+  print 'python AutoQC <database table> <from> <to>'
+  print 'will write qc results to <database table> in the database, and run the calculation on database rows starting at <from> and going to but not including <to>.'
