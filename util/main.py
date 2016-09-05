@@ -190,7 +190,7 @@ def dbinteract(command, tries=0):
     conn.rollback()
     cur.close()
     conn.close()
-    if tries < max_retries:
+    if tries < max_retry:
       dbinteract(command, tries+1)
     else:
       return -1
