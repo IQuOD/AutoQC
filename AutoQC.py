@@ -66,6 +66,7 @@ if len(sys.argv)>2:
 
   # set up global parmaeter store
   parameterStore = {}
+  parameterStore['dbTable'] = sys.argv[1]
   for test in testNames:
     exec('from qctests import ' + test)
     try:
