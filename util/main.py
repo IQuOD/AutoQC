@@ -190,7 +190,43 @@ def dbinteract(command, tries=0):
     conn.rollback()
     cur.close()
     conn.close()
-    if tries < max_retries:
+    if tries < max_retry:
       dbinteract(command, tries+1)
     else:
       return -1
+
+def demoTable(raw='', truth=False, uid=8888, year=1999, month=12, day=31, time=23.99, lat=0, long=0, cruise=1234, probe=0):
+  '''
+  insert a row with the specified info into table 'demo' (creates demo if it doesn't exist)
+  '''
+
+  # Identify tests
+  testNames = importQC('qctests')
+  testNames.sort()
+
+  # set up our table if necessary
+  query = "CREATE TABLE IF NOT EXISTS demo" +  """(
+              raw text,
+              truth boolean,
+              uid integer,
+              year integer,
+              month integer,
+              day integer,
+              time real,
+              lat real, 
+              long real, 
+              cruise integer,
+              probe integer,
+              """
+  for i in range(len(testNames)):
+      query += testNames[i].lower() + ' boolean'
+      if i<len(testNames)-1:
+          query += ','
+      else:
+          query += ');'
+
+  dbinteract(query)
+
+  # populate new row
+  query = "INSERT INTO demo (raw, truth, uid, year, month, day, time, lat, long, cruise, probe) VALUES('" + str(raw) + "'," + str(truth) + "," + str(uid) + "," + str(year) + "," + str(month) + "," + str(day) + "," + str(time) + "," + str(lat) + "," + str(long) + "," + str(cruise) + "," + str(probe) +")"
+  dbinteract(query)
