@@ -4,7 +4,6 @@ system, described on page 7 of http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.p
 """
 
 import numpy
-import util.main as main
 
 def test(p, parameters):
     """ 
@@ -13,20 +12,15 @@ def test(p, parameters):
     passed the check and True where it failed. 
     """
 
-    # check if this test has already been run on this profile:
-    query = 'select en_constant_value_check from ' + parameters['dbTable'] + ' where uid = ' + str(p.uid()) + ';'
-    previousQC = main.dbinteract(query)
-    if previousQC[0][0] is not None:
-        if previousQC[0][0]:
-            qc = numpy.ones(1, dtype=bool)
-        else:
-            qc = numpy.zeros(1, dtype=bool)
-        return qc
-    
-    # nothing in db, actually run the test: 
-    return run_qc(p, parameters)
+    if p.uid() != uid or p.uid() is None:
+        run_qc(p)
 
-def run_qc(p, parameters):
+    # QC results are stored in the module variable.
+    return qc
+
+def run_qc(p):
+
+    global qc, uid
 
     # Get temperature values from the profile.
     t = p.t()
@@ -65,7 +59,12 @@ def run_qc(p, parameters):
             if d.data[last] - d.data[first] >= 100:
                 qc = numpy.ones(len(t.data), dtype=bool) #note everyhing is flagged by this test.
 
-    return qc
+    uid = p.uid()
+
+    return None
+
+uid = None
+qc  = None
 
 
 

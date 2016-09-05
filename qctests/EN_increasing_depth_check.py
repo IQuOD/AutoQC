@@ -5,7 +5,6 @@ Implements the EN increasing depth check.
 import EN_spike_and_step_check
 import numpy as np
 from collections import Counter
-import util.main as main
 
 def test(p, parameters):
     """ 
@@ -14,20 +13,15 @@ def test(p, parameters):
     passed the check and True where it failed. 
     """
  
-    # check if this test has already been run on this profile:
-    query = 'select en_increasing_depth_check from ' + parameters['dbTable'] + ' where uid = ' + str(p.uid()) + ';'
-    previousQC = main.dbinteract(query)
-    if previousQC[0][0] is not None:
-        if previousQC[0][0]:
-            qc = np.ones(1, dtype=bool)
-        else:
-            qc = np.zeros(1, dtype=bool)
-        return qc
+    if p.uid() != uid or p.uid() is None:
+        run_qc(p, parameters)
 
-    # nothing in db, actually run the test: 
-    return run_qc(p, parameters)
+    # QC results are in the module variable.
+    return qc
 
 def run_qc(p, parameters):
+
+    global qc, uid
 
     # Get z values from the profile.
     d    = p.z()
@@ -41,7 +35,7 @@ def run_qc(p, parameters):
     most_common_depth = Counter(d.data).most_common(1)
     if most_common_depth[0][1] == len(d.data):
         qc = np.ones(n, dtype=bool)
-        return qc
+        return None
 
     # Basic check on each level.
     qc[d < 0]     = True
@@ -92,4 +86,9 @@ def run_qc(p, parameters):
                 qc[currentLev] = True
                 qc[otherLev]   = True
 
-    return qc
+    uid = p.uid()
+
+    return None
+
+uid = None
+qc  = None

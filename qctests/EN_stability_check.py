@@ -4,7 +4,6 @@ http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 """
 
 import math, numpy
-import util.main as main
 
 def test(p, parameters):
     """ 
@@ -13,20 +12,15 @@ def test(p, parameters):
     passed the check and True where it failed. 
     """
 
-    # check if this test has already been run on this profile:
-    query = 'select en_stability_check from ' + parameters['dbTable'] + ' where uid = ' + str(p.uid()) + ';'
-    previousQC = main.dbinteract(query)
-    if previousQC[0][0] is not None:
-        if previousQC[0][0]:
-            qc = numpy.ones(1, dtype=bool)
-        else:
-            qc = numpy.zeros(1, dtype=bool)
-        return qc
+    if p.uid() != uid or p.uid() is None:
+        run_qc(p)
 
-    # nothing in db, actually run the test: 
-    return run_qc(p, parameters)
+    # QC results are in the module variable.
+    return qc
 
-def run_qc(p, parameters):
+def run_qc(p):
+
+    global uid, qc
 
     # Get temperature, salinity, pressure values from the profile.
     t = p.t()
@@ -81,7 +75,9 @@ def run_qc(p, parameters):
     if sum(qc) >= max(2, len(t.data)/4.):
         qc = numpy.ones(len(t.data), dtype=bool)
 
-    return qc
+    uid = p.uid()
+
+    return None
 
 
 def mcdougallEOS(salinity, temperature, pressure):
@@ -176,3 +172,5 @@ def potentialTemperature(S, T, p):
 
     return T + p*poly
 
+uid = None
+qc  = None
