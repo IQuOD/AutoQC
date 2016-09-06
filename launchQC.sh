@@ -1,4 +1,4 @@
-# bash launchQC.sh <number of profiles> <number of processes>
+# bash launchQC.sh <database table> <number of profiles> <number of processes>
 
 QUEUE=$(($2 / $3))
 
@@ -7,4 +7,4 @@ do
   python AutoQC.py $1 $(($i * $QUEUE)) $(($(($i + 1)) * $QUEUE)) &
 done
 
-python AutoQC.py demo $(( $(($i + 1)) * $QUEUE)) $1 &
+python AutoQC.py $1 $(( $(($i + 1)) * $QUEUE)) $2 &
