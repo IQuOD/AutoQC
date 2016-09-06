@@ -8,5 +8,8 @@ services:
 before_install:
 - docker pull iquod/autoqc
 
+env:
+- OCEANSDB_DIR=/AutoQC/data/
+
 script:
 - docker run -v $PWD:/AutoQC_latest iquod/autoqc /bin/bash -c "cp /AutoQC/data/* /AutoQC_latest/data/.; cd /AutoQC_latest; nosetests tests/*.py"
