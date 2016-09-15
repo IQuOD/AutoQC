@@ -7,6 +7,8 @@ import EN_spike_and_step_check
 import numpy as np
 import util.obs_utils as outils
 from netCDF4 import Dataset
+import pickle, psycopg2, StringIO
+import util.main as main
 
 def test(p, parameters):
     """ 
@@ -28,7 +30,7 @@ def run_qc(p, parameters):
     Performs the QC check.
     """
 
-    global qc, uid, origLevels, ptLevels, bgLevels, bgStdLevels, bgevStdLevels
+    global qc, uid#, origLevels, ptLevels, bgLevels, bgStdLevels, bgevStdLevels
 
     # Define an array to hold results.
     qc = np.zeros(p.n_levels(), dtype=bool)
@@ -118,6 +120,15 @@ def run_qc(p, parameters):
             ptLevels.append(potm)
             bgLevels.append(climLevel)
     
+    # register pre-computed arrays in db for reuse
+    bgstdlevels = pickle.dumps(bgStdLevels, -1)
+    bgevstdlevels = pickle.dumps(bgevStdLevels, -1)
+    origlevels = pickle.dumps(origLevels, -1)
+    ptlevels = pickle.dumps(ptLevels, -1)
+    bglevels = pickle.dumps(bgLevels, -1)
+    query = "INSERT INTO enbackground VALUES({0!s}, {1!s}, {2!s}, {3!s}, {4!s}, {5!s})".format(uid, psycopg2.Binary(bgstdlevels), psycopg2.Binary(bgevstdlevels), psycopg2.Binary(origlevels), psycopg2.Binary(ptlevels), psycopg2.Binary(bglevels))
+    main.dbinteract(query)
+
     return None
 
 def findGridCell(p, gridLong, gridLat):
@@ -178,6 +189,11 @@ def readENBackgroundCheckAux():
     
     return data
 
+def loadParameters(parameterStore):
+
+    main.dbinteract("DROP TABLE IF EXISTS enbackground")
+    main.dbinteract("CREATE TABLE IF NOT EXISTS enbackground (uid INTEGER, bgstdlevels BYTEA, bgevstdlevels BYTEA, origlevels BYTEA, ptlevels BYTEA, bglevels BYTEA)")
+
 #import parameters on load
 auxParam = readENBackgroundCheckAux()
 
@@ -185,9 +201,9 @@ auxParam = readENBackgroundCheckAux()
 # EN background and buddy check on standard levels.
 uid           = None
 qc            = None
-origLevels    = []
-ptLevels      = []
-bgLevels      = []
-bgevStdLevels = []
-bgStdLevels   = []
+# origLevels    = []
+# ptLevels      = []
+# bgLevels      = []
+# bgevStdLevels = []
+# bgStdLevels   = []
 

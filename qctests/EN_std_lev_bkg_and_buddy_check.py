@@ -14,7 +14,7 @@ import EN_spike_and_step_check
 import EN_stability_check
 import util.main as main
 import numpy as np
-import sys
+import sys, pickle, StringIO
 
 def test(p, parameters, allow_level_reinstating=True):
     """ 
@@ -38,9 +38,13 @@ def test(p, parameters, allow_level_reinstating=True):
     levels, origLevels, assocLevels = result
     # Retrieve the background and observation error variances and
     # the background values.
-    bgsl = EN_background_check.bgStdLevels
+    query = 'SELECT bgstdlevels, bgevstdlevels FROM enbackground WHERE uid = ' + str(p.uid())
+    enbackground_pars = main.dbinteract(query) 
+    #bgsl = EN_background_check.bgStdLevels
+    bgsl = pickle.load(StringIO.StringIO(enbackground_pars[0][0]))
     slev = EN_background_check.auxParam['depth']
-    bgev = EN_background_check.bgevStdLevels
+    #bgev = EN_background_check.bgevStdLevels
+    bgev = pickle.load(StringIO.StringIO(enbackground_pars[0][1]))
     obev = EN_background_check.auxParam['obev']
 
     #find initial pge
@@ -71,9 +75,12 @@ def test(p, parameters, allow_level_reinstating=True):
 
         if Fail == False:
           result = stdLevelData(pBuddy, parameters)
+          query = 'SELECT bgevstdlevels FROM enbackground WHERE uid = ' + str(pBuddy.uid())
+          buddy_pars = main.dbinteract(query)           
           if result is not None: 
             levelsBuddy, origLevelsBuddy, assocLevelsBuddy = result
-            bgevBuddy = EN_background_check.bgevStdLevels
+            #bgevBuddy = EN_background_check.bgevStdLevels
+            bgevBuddy = pickle.load(StringIO.StringIO(buddy_pars[0][0]))
             pgeBuddy  = determine_pge(levels, bgevBuddy, obev, pBuddy)
             pgeData   = update_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, p, pBuddy, obev, bgev, bgevBuddy)
 
@@ -231,11 +238,14 @@ def stdLevelData(p, parameters):
              EN_stability_check.test(p, parameters))
 
     # Get the data stored by the EN background check.
-    # As it was run above we know that the data held by the
-    # module corresponds to the correct profile.
-    origLevels = np.array(EN_background_check.origLevels)
-    diffLevels = (np.array(EN_background_check.ptLevels) -
-                      np.array(EN_background_check.bgLevels))
+    # As it was run above we know that the data is available in the db.
+    query = 'SELECT origlevels, ptlevels, bglevels FROM enbackground WHERE uid = ' + str(p.uid())
+    enbackground_pars = main.dbinteract(query)
+    origlevels = pickle.load(StringIO.StringIO(enbackground_pars[0][0]))
+    ptlevels = pickle.load(StringIO.StringIO(enbackground_pars[0][1]))
+    bglevels = pickle.load(StringIO.StringIO(enbackground_pars[0][2]))
+    origLevels = np.array(origlevels)
+    diffLevels = (np.array(ptlevels) - np.array(bglevels))
     nLevels    = len(origLevels)
     if nLevels == 0: return None # Nothing more to do.
 

@@ -57,7 +57,9 @@ if len(sys.argv)>2:
       return
 
     # run tests
+    print uid
     for itest, test in enumerate(testNames):
+      print test
       result = run(test, [profile], parameterStore)
       query = "UPDATE " + sys.argv[1] + " SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile.uid()) + ";"
       main.dbinteract(query)
