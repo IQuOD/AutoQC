@@ -30,7 +30,7 @@ def run_qc(p, parameters):
     Performs the QC check.
     """
 
-    global qc, uid#, origLevels, ptLevels, bgLevels, bgStdLevels, bgevStdLevels
+    global qc, uid
 
     # Define an array to hold results.
     qc = np.zeros(p.n_levels(), dtype=bool)
@@ -201,9 +201,5 @@ auxParam = readENBackgroundCheckAux()
 # EN background and buddy check on standard levels.
 uid           = None
 qc            = None
-# origLevels    = []
-# ptLevels      = []
-# bgLevels      = []
-# bgevStdLevels = []
-# bgStdLevels   = []
+
 

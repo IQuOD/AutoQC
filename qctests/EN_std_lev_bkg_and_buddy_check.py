@@ -379,13 +379,5 @@ def get_profile_info():
     # This is only done once and the results saved in the global variable.
     # NB this could be done on module load but this would make it difficult 
     # to implement code tests.
-    global profiles_info_list, cur
-    if len(profiles_info_list) == 0:
-        conn = psycopg2.connect("dbname='root' user='root'")
-        cur = conn.cursor()
-        cur.execute('SELECT uid,year,month,cruise,lat,long FROM ' + sys.argv[1])
-        profiles_info_list = cur.fetchall()
-    return profiles_info_list
-
-profiles_info_list = []
-cur = None
+    query = 'SELECT uid,year,month,cruise,lat,long FROM ' + sys.argv[1]
+    return main.dbinteract(query)
