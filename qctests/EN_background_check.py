@@ -7,7 +7,7 @@ import EN_spike_and_step_check
 import numpy as np
 import util.obs_utils as outils
 from netCDF4 import Dataset
-import pickle, psycopg2, StringIO
+import pickle, psycopg2, StringIO, sys
 import util.main as main
 
 def test(p, parameters):
@@ -18,19 +18,20 @@ def test(p, parameters):
     """
     
     # Check if the QC of this profile was already done and if not
-    # run the QC.
-    if p.uid() != uid or p.uid() is None:
-        run_qc(p, parameters)
-
-    # QC results are in the module variable.
-    return qc
+    # run the QC. Note we read this from the enbackground parameter
+    # table, since other tests (buddy check) will want to look up 
+    # the verbose, per-level decisions.
+    query = "SELECT qc FROM enbackground WHERE uid = " + str(p.uid())
+    qc_log = main.dbinteract(query)
+    if len(qc_log) > 0:
+        return pickle.load(StringIO.StringIO(qc_log[0][0]))
+        
+    return run_qc(p, parameters)
 
 def run_qc(p, parameters):
     """
     Performs the QC check.
     """
-
-    global qc, uid
 
     # Define an array to hold results.
     qc = np.zeros(p.n_levels(), dtype=bool)
@@ -126,10 +127,11 @@ def run_qc(p, parameters):
     origlevels = pickle.dumps(origLevels, -1)
     ptlevels = pickle.dumps(ptLevels, -1)
     bglevels = pickle.dumps(bgLevels, -1)
-    query = "INSERT INTO enbackground VALUES({0!s}, {1!s}, {2!s}, {3!s}, {4!s}, {5!s})".format(uid, psycopg2.Binary(bgstdlevels), psycopg2.Binary(bgevstdlevels), psycopg2.Binary(origlevels), psycopg2.Binary(ptlevels), psycopg2.Binary(bglevels))
+    qc_txt = pickle.dumps(qc, -1)
+    query = "INSERT INTO enbackground VALUES({0!s}, {1!s}, {2!s}, {3!s}, {4!s}, {5!s}, {6!s})".format(uid, psycopg2.Binary(bgstdlevels), psycopg2.Binary(bgevstdlevels), psycopg2.Binary(origlevels), psycopg2.Binary(ptlevels), psycopg2.Binary(bglevels), psycopg2.Binary(qc_txt))
     main.dbinteract(query)
 
-    return None
+    return qc
 
 def findGridCell(p, gridLong, gridLat):
     '''
@@ -192,14 +194,10 @@ def readENBackgroundCheckAux():
 def loadParameters(parameterStore):
 
     main.dbinteract("DROP TABLE IF EXISTS enbackground")
-    main.dbinteract("CREATE TABLE IF NOT EXISTS enbackground (uid INTEGER, bgstdlevels BYTEA, bgevstdlevels BYTEA, origlevels BYTEA, ptlevels BYTEA, bglevels BYTEA)")
+    main.dbinteract("CREATE TABLE IF NOT EXISTS enbackground (uid INTEGER, bgstdlevels BYTEA, bgevstdlevels BYTEA, origlevels BYTEA, ptlevels BYTEA, bglevels BYTEA, qc BYTEA)")
 
 #import parameters on load
 auxParam = readENBackgroundCheckAux()
 
-# Initialise global variables to hold data needed for the
-# EN background and buddy check on standard levels.
-uid           = None
-qc            = None
 
 
