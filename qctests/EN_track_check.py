@@ -7,7 +7,7 @@ import numpy as np
 import util.main as main
 import util.geo as geo
 import copy, datetime, math, psycopg2
-import sys, datetime, calendar
+import sys, datetime, calendar, pickle, StringIO
 
 # module constants
 DistRes = 20000. # meters
@@ -31,9 +31,10 @@ def test(p, parameters):
     command = 'SELECT en_track_check FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid) + ';'
     en_track_result = main.dbinteract(command)
     if en_track_result[0][0] is not None:
-      result = np.zeros(1, dtype=bool)
-      result[0] = en_track_result[0][0]
-      return result
+        en_track_result = pickle.load(StringIO.StringIO(en_track_result[0][0]))
+        result = np.zeros(1, dtype=bool)
+        result[0] = np.any(en_track_result)
+        return result
     
     # some detector types cannot be assessed by this test; do not raise flag.
     if p.probe_type() in [None]:
@@ -65,7 +66,8 @@ def test(p, parameters):
    
     # write all to db
     for i in range(len(track_rows)):
-        query = "UPDATE " + sys.argv[1] + " SET en_track_check " + " = " + str(EN_track_results[track_rows[i][0]][0]) + " WHERE uid = " + str(track_rows[i][0]) + ";"
+        result = pickle.dumps(EN_track_results[track_rows[i][0]], -1)
+        query = "UPDATE " + sys.argv[1] + " SET en_track_check = " + str(psycopg2.Binary(result)) + " WHERE uid = " + str(track_rows[i][0]) + ";"
         main.dbinteract(query)
 
     return EN_track_results[uid]

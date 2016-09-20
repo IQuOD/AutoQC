@@ -1,6 +1,21 @@
 import util.main as main
-import pandas
-import sys, psycopg2
+import pandas, StringIO
+import sys, psycopg2, pickle, StringIO, numpy
+
+def unpickle(value):
+    'unpickle a text encoding of a something pickled to the database'
+
+    return pickle.load(StringIO.StringIO(value))
+
+def summarize(levels):
+    'given an array of level qc decisions, return true iff any of the levels are flagged'
+
+    return numpy.any(levels)
+
+def parse(results):
+    'parse the raw pickled text of a per-level qc result, and return True if any levels are flagged'
+
+    return results.apply(unpickle).apply(summarize)
 
 if len(sys.argv) == 2:
 
@@ -20,8 +35,10 @@ if len(sys.argv) == 2:
 
     cur.execute(query)
     rawresults = cur.fetchall()
-    df = pandas.DataFrame(rawresults).astype('bool')
+    df = pandas.DataFrame(rawresults).astype('str')
     df.columns = ['Truth'] + testNames
+    df[['Truth']] = df[['Truth']].astype('bool')
+    df[testNames] = df[testNames].apply(parse)
 
     # summarize results
     print('%35s %7s %7s %7s %7s %7s' % ('NAME OF TEST', 'FAILS', 'TPR', 'FPR', 'TNR', 'FNR')) 

@@ -1,10 +1,8 @@
 from wodpy import wod
-import glob, time
+import glob, time, pickle, psycopg2, StringIO, sys, pandas
 import numpy as np
-import sys, os, data.ds
+import os, data.ds
 import util.main as main
-import pandas
-import psycopg2
 from multiprocessing import Pool
 import tempfile
 
@@ -12,19 +10,14 @@ def run(test, profiles, parameters):
   '''
   run <test> on a list of <profiles>, return an array summarizing when exceptions were raised
   '''
-  qcResults = []
+
   verbose = []
   exec('from qctests import ' + test)
   for profile in profiles:
     exec('result = ' + test + '.test(profile, parameters)')
-
-    #demand tests returned bools:
-    for i in result:
-      assert isinstance(i, np.bool_), str(i) + ' in test result list is of type ' + str(type(i))
-
-    qcResults.append(np.any(result))
     verbose.append(result)
-  return [qcResults, verbose]
+
+  return verbose
 
 ########################################
 # main
@@ -60,8 +53,9 @@ if len(sys.argv)>2:
     print uid
     for itest, test in enumerate(testNames):
       print test
-      result = run(test, [profile], parameterStore)
-      query = "UPDATE " + sys.argv[1] + " SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile.uid()) + ";"
+      result = run(test, [profile], parameterStore)[0]
+      result = pickle.dumps(result, -1)
+      query = "UPDATE " + sys.argv[1] + " SET " + test.lower() + " = " + str(psycopg2.Binary(result)) + " WHERE uid = " + str(profile.uid()) + ";"
       main.dbinteract(query)
 
   # set up global parmaeter store

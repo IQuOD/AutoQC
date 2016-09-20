@@ -33,7 +33,7 @@ if len(sys.argv) == 3:
                 probe integer,
                 """
     for i in range(len(testNames)):
-        query += testNames[i].lower() + ' boolean'
+        query += testNames[i].lower() + ' BYTEA'
         if i<len(testNames)-1:
             query += ','
         else:
