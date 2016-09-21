@@ -19,7 +19,7 @@ def test(p, parameters):
     
     # Check if the QC of this profile was already done and if not
     # run the QC.
-    query = 'SELECT en_background_check FROM ' + sys.argv[1] + ' WHERE uid = ' + str(p.uid()) + ';'
+    query = 'SELECT en_background_check FROM ' + parameters["table"] + ' WHERE uid = ' + str(p.uid()) + ';'
     qc_log = main.dbinteract(query)
     if qc_log[0][0] is not None:
         return pickle.load(StringIO.StringIO(qc_log[0][0]))

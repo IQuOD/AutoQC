@@ -194,3 +194,69 @@ def dbinteract(command, tries=0):
       dbinteract(command, tries+1)
     else:
       return -1
+
+def faketable(name):
+  '''
+  generate a table <name> in root/root with the same structure as the main data table
+  '''
+
+  # Identify tests
+  testNames = importQC('qctests')
+  testNames.sort()
+
+  # set up our table
+  query = "CREATE TABLE IF NOT EXISTS " + name + """(
+              raw text,
+              truth boolean,
+              uid integer,
+              year integer,
+              month integer,
+              day integer,
+              time real,
+              lat real, 
+              long real, 
+              cruise integer,
+              probe integer,
+              """
+  for i in range(len(testNames)):
+      query += testNames[i].lower() + ' BYTEA'
+      if i<len(testNames)-1:
+          query += ','
+      else:
+          query += ');'
+
+  dbinteract(query)
+
+def fakerow(tablename, raw='x', truth=False, uid=8888, year=1999, month=12, day=31, time=23.99, lat=0, longitude=0, cruise=1234, probe=2):
+  '''
+  insert a row containing pre-qc info into a table with the same structure as the main data table
+  '''
+
+  wodDict = {
+    "raw": raw,
+    "truth": truth,
+    "uid": uid,
+    "year": year,
+    "month": month,
+    "day": day,
+    "time": time,
+    "latitude": lat,
+    "longitude": longitude,
+    "cruise": cruise,
+    "probe_type": probe
+  }
+
+  query = "INSERT INTO " + tablename + " (raw, truth, uid, year, month, day, time, lat, long, cruise, probe) "  + """ VALUES(
+              '{p[raw]}',
+              {p[truth]},
+              {p[uid]},
+              {p[year]},
+              {p[month]},
+              {p[day]},
+              {p[time]},
+              {p[latitude]}, 
+              {p[longitude]}, 
+              {p[cruise]},
+              {p[probe_type]}
+             )""".format(p=wodDict)
+  dbinteract(query)

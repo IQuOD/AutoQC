@@ -28,7 +28,7 @@ def test(p, parameters):
         return np.zeros(1, dtype=bool)
     
     # don't bother if this has already been analyzed
-    command = 'SELECT en_track_check FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid) + ';'
+    command = 'SELECT en_track_check FROM ' + parameters["table"] + ' WHERE uid = ' + str(uid) + ';'
     en_track_result = main.dbinteract(command)
     if en_track_result[0][0] is not None:
         en_track_result = pickle.load(StringIO.StringIO(en_track_result[0][0]))
@@ -41,7 +41,7 @@ def test(p, parameters):
         return np.zeros(1, dtype=bool)
     
     # fetch all profiles on track, sorted chronologically, earliest first (None sorted as highest)
-    command = 'SELECT uid, year, month, day, time, lat, long, probe FROM ' + sys.argv[1] + ' WHERE cruise = ' + str(cruise) + ' and year is not null and month is not null and day is not null and time is not null ORDER BY year, month, day, time ASC;'
+    command = 'SELECT uid, year, month, day, time, lat, long, probe FROM ' + parameters["table"] + ' WHERE cruise = ' + str(cruise) + ' and year is not null and month is not null and day is not null and time is not null ORDER BY year, month, day, time ASC;'
     track_rows = main.dbinteract(command)
 
     # start all as passing by default:

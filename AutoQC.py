@@ -59,7 +59,9 @@ if len(sys.argv)>2:
       main.dbinteract(query)
 
   # set up global parmaeter store
-  parameterStore = {}
+  parameterStore = {
+    "table": sys.argv[1]
+  }
   for test in testNames:
     exec('from qctests import ' + test)
     try:

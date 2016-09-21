@@ -4,6 +4,8 @@ system, described on page 7 of http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.p
 """
 
 import numpy
+import pickle, StringIO, sys
+import util.main as main
 
 def test(p, parameters):
     """ 
@@ -12,15 +14,16 @@ def test(p, parameters):
     passed the check and True where it failed. 
     """
 
-    if p.uid() != uid or p.uid() is None:
-        run_qc(p)
+    # Check if the QC of this profile was already done and if not
+    # run the QC.
+    query = 'SELECT en_constant_value_check FROM ' + parameters["table"] + ' WHERE uid = ' + str(p.uid()) + ';'
+    qc_log = main.dbinteract(query)
+    if qc_log[0][0] is not None:
+        return pickle.load(StringIO.StringIO(qc_log[0][0]))
+        
+    return run_qc(p, parameters)
 
-    # QC results are stored in the module variable.
-    return qc
-
-def run_qc(p):
-
-    global qc, uid
+def run_qc(p, parameters):
 
     # Get temperature values from the profile.
     t = p.t()
@@ -59,12 +62,8 @@ def run_qc(p):
             if d.data[last] - d.data[first] >= 100:
                 qc = numpy.ones(len(t.data), dtype=bool) #note everyhing is flagged by this test.
 
-    uid = p.uid()
+    return qc
 
-    return None
-
-uid = None
-qc  = None
 
 
 
