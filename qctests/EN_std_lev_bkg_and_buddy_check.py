@@ -42,10 +42,10 @@ def test(p, parameters, allow_level_reinstating=True):
     enbackground_pars = main.dbinteract(query) 
     #bgsl = EN_background_check.bgStdLevels
     bgsl = pickle.load(StringIO.StringIO(enbackground_pars[0][0]))
-    slev = EN_background_check.auxParam['depth']
+    slev = parameters['enbackground']['depth']
     #bgev = EN_background_check.bgevStdLevels
     bgev = pickle.load(StringIO.StringIO(enbackground_pars[0][1]))
-    obev = EN_background_check.auxParam['obev']
+    obev = parameters['enbackground']['obev']
 
     #find initial pge
     pgeData = determine_pge(levels, bgev, obev, p)
@@ -253,7 +253,7 @@ def stdLevelData(p, parameters):
     nLevels, origLevels, diffLevels = filterLevels(preQC, origLevels, diffLevels)
     if nLevels == 0: return None
     
-    levels, assocLevs = meanDifferencesAtStandardLevels(origLevels, diffLevels, p.z())
+    levels, assocLevs = meanDifferencesAtStandardLevels(origLevels, diffLevels, p.z(), parameters)
 
     return levels, origLevels, assocLevs
 
@@ -275,7 +275,7 @@ def filterLevels(preQC, origLevels, diffLevels):
 
     return nLevels, origLevels, diffLevels
 
-def meanDifferencesAtStandardLevels(origLevels, diffLevels, depths):
+def meanDifferencesAtStandardLevels(origLevels, diffLevels, depths, parameters):
     '''
     origLevels: list of level indices under consideration
     diffLevels: list of differences corresponding to origLevels
@@ -286,7 +286,7 @@ def meanDifferencesAtStandardLevels(origLevels, diffLevels, depths):
     '''
 
     # Get the set of standard levels.
-    stdLevels = EN_background_check.auxParam['depth']
+    stdLevels = parameters['enbackground']['depth']
     
     # Create arrays to hold the standard level data and aggregate.
     nStdLevels = len(stdLevels)

@@ -36,22 +36,21 @@ def run_qc(p, parameters):
     
     # Create a record of the processing for use by the background
     # and buddy checks on standard levels.
-    uid        = p.uid()
     origLevels = []
     ptLevels   = []
     bgLevels   = []
 
     # Find grid cell nearest to the observation.
-    ilon, ilat = findGridCell(p, auxParam['lon'], auxParam['lat'])
+    ilon, ilat = findGridCell(p, parameters['enbackground']['lon'], parameters['enbackground']['lat'])
         
     # Extract the relevant auxiliary data.
     imonth = p.month() - 1
-    clim = auxParam['clim'][:, ilat, ilon, imonth]
-    bgev = auxParam['bgev'][:, ilat, ilon]
+    clim = parameters['enbackground']['clim'][:, ilat, ilon, imonth]
+    bgev = parameters['enbackground']['bgev'][:, ilat, ilon]
     bgStdLevels   = clim # Save for use in another check.
     bgevStdLevels = bgev # Save the full column for use by another check.
-    obev = auxParam['obev']
-    depths = auxParam['depth']
+    obev = parameters['enbackground']['obev']
+    depths = parameters['enbackground']['depth']
     
     # Remove missing data points.
     iOK = (clim.mask == False) & (bgev.mask == False)
@@ -125,7 +124,7 @@ def run_qc(p, parameters):
     origlevels = pickle.dumps(origLevels, -1)
     ptlevels = pickle.dumps(ptLevels, -1)
     bglevels = pickle.dumps(bgLevels, -1)
-    query = "INSERT INTO enbackground VALUES({0!s}, {1!s}, {2!s}, {3!s}, {4!s}, {5!s})".format(uid, psycopg2.Binary(bgstdlevels), psycopg2.Binary(bgevstdlevels), psycopg2.Binary(origlevels), psycopg2.Binary(ptlevels), psycopg2.Binary(bglevels))
+    query = "INSERT INTO enbackground VALUES({0!s}, {1!s}, {2!s}, {3!s}, {4!s}, {5!s})".format(p.uid(), psycopg2.Binary(bgstdlevels), psycopg2.Binary(bgevstdlevels), psycopg2.Binary(origlevels), psycopg2.Binary(ptlevels), psycopg2.Binary(bglevels))
     main.dbinteract(query)
 
     return qc
@@ -192,9 +191,8 @@ def loadParameters(parameterStore):
 
     main.dbinteract("DROP TABLE IF EXISTS enbackground")
     main.dbinteract("CREATE TABLE IF NOT EXISTS enbackground (uid INTEGER, bgstdlevels BYTEA, bgevstdlevels BYTEA, origlevels BYTEA, ptlevels BYTEA, bglevels BYTEA)")
+    parameterStore['enbackground'] = readENBackgroundCheckAux()
 
-#import parameters on load
-auxParam = readENBackgroundCheckAux()
 
 
 
