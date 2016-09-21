@@ -1,10 +1,10 @@
 import qctests.EN_std_lev_bkg_and_buddy_check
 import qctests.EN_background_check
+import qctests.EN_spike_and_step_check
 from cotede.qctests.possible_speed import haversine
 from util import main
 import util.testingProfile
-import numpy
-import data.ds
+import numpy, pickle, StringIO
 
 # Dummy functions to turn off functions that do not
 # work on a testing profile.
@@ -13,220 +13,236 @@ def dummycatchflagsfunc(arg):
 realcatchflagsfunc = main.catchFlags
 realgetproffunc    = main.get_profile_from_db
 
-# Set up the profile information for the check to work using the information put into the data.ds module.
 def profile_to_info_list(p):
+    '''
+    fake a query response for a profile p
+    '''
     return (p.uid(),p.year(),p.month(),p.cruise(),p.latitude(),p.longitude())
 
-def get_profiles_info_list():
-    ps = []
-    for p in data.ds.profiles:
-        ps.append(profile_to_info_list(p))
-    return ps
-
 def dummy_get_profile_from_db(uid):
-    for profile in data.ds.profiles:
-        if profile.uid() == uid:
-            return profile
+    if uid == 1:
+        return realProfile1
+    elif uid == 2:
+        return realProfile2
+    elif uid == 3:
+        return realProfile3
+    else:
+        return util.testingProfile.fakeProfile([0,0,0],[0,0,0],date=[1999,12,31,23.99], latitude=0, longitude=0,cruise=1234, uid=uid)
 
 ##### EN_std_lev_bkg_and_buddy_check ---------------------------------------------------
 
-def setUp():
-    main.catchFlags = dummycatchflagsfunc
-    main.get_profile_from_db = dummy_get_profile_from_db
+class TestClass():
 
-def tearDown():
-    main.catchFlags = realcatchflagsfunc
-    main.get_profile_from_db = realgetproffunc
+    parameters = {
+        "table": 'unit'
+    }
+    qctests.EN_background_check.loadParameters(parameters)
 
-def test_EN_std_level_bkg_and_buddy_check_temperature():
-    '''
-    Make sure EN_std_level_background_check is flagging temperature excursions
-    '''
+    def setUp(self):
+        # this qc test will go looking for the profile in question in the db, needs to find something sensible
+        main.faketable('unit')
+        main.fakerow('unit')
+        main.catchFlags = dummycatchflagsfunc
+        main.get_profile_from_db = dummy_get_profile_from_db
+        # need to re-do this every time to refresh the enspikeandstep table
+        qctests.EN_spike_and_step_check.loadParameters(self.parameters)
 
-    p = util.testingProfile.fakeProfile([1.8, 1.8, 1.8, 7.1], [0.0, 2.5, 5.0, 7.5], latitude=55.6, longitude=12.9, date=[1900, 01, 15, 0], probe_type=7) 
-    data.ds.profiles = [p]
-    qctests.EN_std_lev_bkg_and_buddy_check.profiles_info_list = get_profiles_info_list()
-    qc = qctests.EN_std_lev_bkg_and_buddy_check.test(p, None)
-    expected = [False, False, False, False]
-    print qc
-    assert numpy.array_equal(qc, expected), 'mismatch between qc results and expected values'
+    def tearDown(self):
+        main.dbinteract('DROP TABLE unit;')
+        main.catchFlags = realcatchflagsfunc
+        main.get_profile_from_db = realgetproffunc
 
-def test_determine_pge():
-    '''
-    totally ridiculous differences between observation and background should give pge == 1
-    '''
+    def test_EN_std_level_bkg_and_buddy_check_temperature(self):
+        '''
+        Make sure EN_std_level_background_check is flagging temperature excursions
+        '''
 
-    p = util.testingProfile.fakeProfile([1.8, 1.8, 1.8, 7.1], [0.0, 2.5, 5.0, 7.5], latitude=55.6, longitude=12.9, date=[1900, 01, 15, 0], probe_type=7) 
-    levels = numpy.ma.array([1000,1000,1000,1000])
-    levels.mask = False
-    bgev = qctests.EN_background_check.bgevStdLevels
-    obev = qctests.EN_background_check.auxParam['obev']
-    expected = [1.0, 1.0, 1.0, 1.0]
-    assert numpy.array_equal(qctests.EN_std_lev_bkg_and_buddy_check.determine_pge(levels, bgev, obev, p), expected), 'PGE of extreme departures from background not flagged as 1.0'
+        p = util.testingProfile.fakeProfile([1.8, 1.8, 1.8, 7.1], [0.0, 2.5, 5.0, 7.5], latitude=55.6, longitude=12.9, date=[1900, 01, 15, 0], probe_type=7, uid=8888) 
+        qc = qctests.EN_std_lev_bkg_and_buddy_check.test(p, self.parameters)
+        expected = [False, False, False, False]
+        assert numpy.array_equal(qc, expected), 'mismatch between qc results and expected values'
 
-def test_buddyCovariance_time():
-    '''
-    make sure buddyCovariance displays the correct behavior in time.
-    '''
+    def test_determine_pge(self):
+        '''
+        totally ridiculous differences between observation and background should give pge == 1
+        '''
 
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 12])
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 6, 12])
-    buddyCovariance_5days = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(100, p1, p2, 1, 1, 1, 1)
+        p = util.testingProfile.fakeProfile([1.8, 1.8, 1.8, 7.1], [0.0, 2.5, 5.0, 7.5], latitude=55.6, longitude=12.9, date=[1900, 01, 15, 0], probe_type=7, uid=8888) 
+        levels = numpy.ma.array([1000,1000,1000,1000])
+        levels.mask = False
 
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 12])
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 11, 12])
-    buddyCovariance_10days = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(100, p1, p2, 1, 1, 1, 1)    
+        #bgev = qctests.EN_background_check.bgevStdLevels
+        qctests.EN_background_check.test(p, self.parameters) #need to populate the enbackground db with profile specific info
+        query = 'SELECT bgevstdlevels FROM enbackground WHERE uid = 8888'
+        enbackground_pars = main.dbinteract(query) 
+        bgev = pickle.load(StringIO.StringIO(enbackground_pars[0][0]))
 
-    assert buddyCovariance_5days * numpy.exp(-3) - buddyCovariance_10days < 1e-12, 'incorrect timescale behavior'
+        obev = self.parameters['enbackground']['obev']
+        expected = [1.0, 1.0, 1.0, 1.0]
+        assert numpy.array_equal(qctests.EN_std_lev_bkg_and_buddy_check.determine_pge(levels, bgev, obev, p), expected), 'PGE of extreme departures from background not flagged as 1.0'
 
-def test_buddyCovariance_mesoscale():
-    '''
-    make sure buddyCovariance displays the correct behavior in mesoscale correlation.
-    '''
+    def test_buddyCovariance_time(self):
+        '''
+        make sure buddyCovariance displays the correct behavior in time.
+        '''
 
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 12])
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 6, 12])
-    buddyCovariance_100km = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(100000, p1, p2, 1, 1, 0, 0)
-    buddyCovariance_200km = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(200000, p1, p2, 1, 1, 0, 0)
-  
+        p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 12])
+        p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 6, 12])
+        buddyCovariance_5days = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(100, p1, p2, 1, 1, 1, 1)
 
-    assert buddyCovariance_100km * numpy.exp(-1) - buddyCovariance_200km < 1e-12, 'incorrect mesoscale correlation'
+        p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 12])
+        p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 11, 12])
+        buddyCovariance_10days = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(100, p1, p2, 1, 1, 1, 1)    
 
-def test_buddyCovariance_synoptic_scale():
-    '''
-    make sure buddyCovariance displays the correct behavior in synoptic scale correlation.
-    '''
+        assert buddyCovariance_5days * numpy.exp(-3) - buddyCovariance_10days < 1e-12, 'incorrect timescale behavior'
 
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 12])
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 6, 12])
-    buddyCovariance_100km = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(100000, p1, p2, 0, 0, 1, 1)
-    buddyCovariance_500km = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(500000, p1, p2, 0, 0, 1, 1)
-  
-    assert buddyCovariance_100km * numpy.exp(-1) - buddyCovariance_500km < 1e-12, 'incorrect synoptic scale correlation'
+    def test_buddyCovariance_mesoscale(self):
+        '''
+        make sure buddyCovariance displays the correct behavior in mesoscale correlation.
+        '''
 
-def test_filterLevels():
-    '''
-    check that filterLevels removes the expected elements from its arguments.
-    '''
+        p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 12])
+        p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 6, 12])
+        buddyCovariance_100km = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(100000, p1, p2, 1, 1, 0, 0)
+        buddyCovariance_200km = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(200000, p1, p2, 1, 1, 0, 0)
+      
 
-    preQC = [True, False, True, True, False]
-    origLevels = numpy.array([0,2,3,4])
-    diffLevels = numpy.array([10,11,12,13])
+        assert buddyCovariance_100km * numpy.exp(-1) - buddyCovariance_200km < 1e-12, 'incorrect mesoscale correlation'
 
-    nLevels, origLevels, diffLevels = qctests.EN_std_lev_bkg_and_buddy_check.filterLevels(preQC, origLevels, diffLevels)
+    def test_buddyCovariance_synoptic_scale(self):
+        '''
+        make sure buddyCovariance displays the correct behavior in synoptic scale correlation.
+        '''
 
-    assert numpy.array_equal(origLevels, [4])
-    assert numpy.array_equal(diffLevels, [13])
+        p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 12])
+        p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 6, 12])
+        buddyCovariance_100km = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(100000, p1, p2, 0, 0, 1, 1)
+        buddyCovariance_500km = qctests.EN_std_lev_bkg_and_buddy_check.buddyCovariance(500000, p1, p2, 0, 0, 1, 1)
+      
+        assert buddyCovariance_100km * numpy.exp(-1) - buddyCovariance_500km < 1e-12, 'incorrect synoptic scale correlation'
 
-def test_meanDifferencesAtStandardLevels():
-    '''
-    check a simple case for calculating mean level differences.
-    '''
+    def test_filterLevels(self):
+        '''
+        check that filterLevels removes the expected elements from its arguments.
+        '''
 
-    stdLevels = qctests.EN_background_check.auxParam['depth']
+        preQC = [True, False, True, True, False]
+        origLevels = numpy.array([0,2,3,4])
+        diffLevels = numpy.array([10,11,12,13])
 
-    origLevels = [0,2,3]
-    diffLevels = [3,5,7]
-    depths = [5, 5.1, 45, 46]
+        nLevels, origLevels, diffLevels = qctests.EN_std_lev_bkg_and_buddy_check.filterLevels(preQC, origLevels, diffLevels)
 
-    levels, assocLevs = qctests.EN_std_lev_bkg_and_buddy_check.meanDifferencesAtStandardLevels(origLevels, diffLevels, depths)
+        assert numpy.array_equal(origLevels, [4])
+        assert numpy.array_equal(diffLevels, [13])
 
-    trueLevels = numpy.zeros(len(stdLevels))
-    trueLevels[0] = 3 # level 0 alone
-    trueLevels[4] = 6 # level 2 and 3 averaged
-    trueLevels = numpy.ma.array(trueLevels)
-    trueLevels.mask = False
+    def test_meanDifferencesAtStandardLevels(self):
+        '''
+        check a simple case for calculating mean level differences.
+        '''
 
-    assert numpy.array_equal(levels, trueLevels)
-    assert numpy.array_equal(assocLevs, [0,4,4]) # since 5 ~ first standard level, 5.1 isn't considered, and 45 and 46 are ~ 5th std. level.
+        stdLevels = self.parameters['enbackground']['depth']
 
-def test_assessBuddyDistance_invalid_buddies():
-    '''
-    check buddy distance rejects invalid buddy pairs
-    '''
+        origLevels = [0,2,3]
+        diffLevels = [3,5,7]
+        depths = [5, 5.1, 45, 46]
 
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 13], uid=0, cruise=2)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) is None, 'accepted buddies with same uid'
+        levels, assocLevs = qctests.EN_std_lev_bkg_and_buddy_check.meanDifferencesAtStandardLevels(origLevels, diffLevels, depths, self.parameters)
 
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1901, 1, 1, 13], uid=1, cruise=2)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) is None, 'accepted buddies with different year'
+        trueLevels = numpy.zeros(len(stdLevels))
+        trueLevels[0] = 3 # level 0 alone
+        trueLevels[4] = 6 # level 2 and 3 averaged
+        trueLevels = numpy.ma.array(trueLevels)
+        trueLevels.mask = False
 
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 2, 1, 13], uid=1, cruise=2)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) is None, 'accepted buddies with different month'
+        assert numpy.array_equal(levels, trueLevels)
+        assert numpy.array_equal(assocLevs, [0,4,4]) # since 5 ~ first standard level, 5.1 isn't considered, and 45 and 46 are ~ 5th std. level.
 
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 13], uid=1, cruise=1)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) is None, 'accepted buddies with same cruise'
+    def test_assessBuddyDistance_invalid_buddies(self):
+        '''
+        check buddy distance rejects invalid buddy pairs
+        '''
 
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 5.01, 0, date=[1900, 1, 1, 13], uid=1, cruise=2)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) is None, 'accepted buddies too far apart in latitude'
+        p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+        p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 13], uid=0, cruise=2)
+        assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) is None, 'accepted buddies with same uid'
 
-def test_assessBuddyDistance_haversine():
-    '''
-    make sure haversine calculation is consistent with rest of package
-    '''
+        p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+        p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1901, 1, 1, 13], uid=1, cruise=2)
+        assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) is None, 'accepted buddies with different year'
 
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 1, 1, date=[1900, 1, 1, 13], uid=1, cruise=2)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) == haversine(0,0,1,1), 'haversine calculation inconsistent with cotede.qctests.possible_speed.haversine'
+        p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+        p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 2, 1, 13], uid=1, cruise=2)
+        assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) is None, 'accepted buddies with different month'
+
+        p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+        p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 13], uid=1, cruise=1)
+        assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) is None, 'accepted buddies with same cruise'
+
+        p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+        p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 5.01, 0, date=[1900, 1, 1, 13], uid=1, cruise=2)
+        assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) is None, 'accepted buddies too far apart in latitude'
+
+    def test_assessBuddyDistance_haversine(self):
+        '''
+        make sure haversine calculation is consistent with rest of package
+        '''
+
+        p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
+        p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 1, 1, date=[1900, 1, 1, 13], uid=1, cruise=2)
+        assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) == haversine(0,0,1,1), 'haversine calculation inconsistent with cotede.qctests.possible_speed.haversine'
 
 
-def test_timeDiff():
-    '''
-    standard behavior of time difference calculator
-    '''
+    def test_timeDiff(self):
+        '''
+        standard behavior of time difference calculator
+        '''
 
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 12])
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 13])
+        p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 12])
+        p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 13])
 
-    assert qctests.EN_std_lev_bkg_and_buddy_check.timeDiff(p1, p2) == 3600, 'incorrect time difference reported'
-    assert qctests.EN_std_lev_bkg_and_buddy_check.timeDiff(p2, p1) == 3600, 'time differences should always be positive'
+        assert qctests.EN_std_lev_bkg_and_buddy_check.timeDiff(p1, p2) == 3600, 'incorrect time difference reported'
+        assert qctests.EN_std_lev_bkg_and_buddy_check.timeDiff(p2, p1) == 3600, 'time differences should always be positive'
 
-def test_timeDiff_garbage_time():
-    '''
-    timeDiff returns none when it finds garbage times
-    '''
+    def test_timeDiff_garbage_time(self):
+        '''
+        timeDiff returns none when it finds garbage times
+        '''
 
-    p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, -1, 1, 12])
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 13])
+        p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, -1, 1, 12])
+        p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1900, 1, 1, 13])
 
-    assert qctests.EN_std_lev_bkg_and_buddy_check.timeDiff(p1, p2) is None, 'failed to reurn None when a nonsesne date was found'
+        assert qctests.EN_std_lev_bkg_and_buddy_check.timeDiff(p1, p2) is None, 'failed to reurn None when a nonsesne date was found'
 
-def test_EN_std_level_bkg_and_buddy_real_profiles_1():
-    '''
-    Make sure EN_std_level_background_check is flagging temperature excursions
-    '''
+    def test_EN_std_level_bkg_and_buddy_real_profiles_1(self):
+        '''
+        Make sure EN_std_level_background_check is flagging temperature excursions
+        '''
 
-    data.ds.profiles = [realProfile1]
-    qctests.EN_std_lev_bkg_and_buddy_check.profiles_info_list = get_profiles_info_list()
-    qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile1, None)
+        main.fakerow('unit', raw='x', truth=False, uid=1, year=2000, month=1, day=15, time=12, lat=-39.889, longitude=17.650000, cruise=1, probe=2)
+        qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile1, self.parameters)
 
-    assert numpy.array_equal(qc, truthQC1), 'mismatch between qc results and expected values'
+        assert numpy.array_equal(qc, truthQC1), 'mismatch between qc results and expected values'
 
-def test_EN_std_level_bkg_and_buddy_real_profiles_2():
-    '''
-    Make sure EN_std_level_background_check is flagging temperature excursions
-    '''
+    def test_EN_std_level_bkg_and_buddy_real_profiles_2(self):
+        '''
+        Make sure EN_std_level_background_check is flagging temperature excursions
+        '''
 
-    data.ds.profiles = [realProfile2, realProfile3]
-    qctests.EN_std_lev_bkg_and_buddy_check.profiles_info_list = get_profiles_info_list()
-    qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile2, None, allow_level_reinstating=False)
+        main.fakerow('unit', raw='x', truth=False, uid=2, year=2000, month=1, day=10, time=0, lat=-30.229, longitude=2.658, cruise=2, probe=2)
+        main.fakerow('unit', raw='x', truth=False, uid=3, year=2000, month=1, day=10, time=0.1895833, lat=-28.36, longitude=-0.752, cruise=3, probe=2)
+        qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile2, self.parameters, allow_level_reinstating=False)
 
-    assert numpy.array_equal(qc, truthQC2), 'mismatch between qc results and expected values'
+        assert numpy.array_equal(qc, truthQC2), 'mismatch between qc results and expected values'
 
-def test_EN_std_level_bkg_and_buddy_real_profiles_3():
-    '''
-    Make sure EN_std_level_background_check is flagging temperature excursions - ensure that level reinstating is working.
-    '''
+    def test_EN_std_level_bkg_and_buddy_real_profiles_3(self):
+        '''
+        Make sure EN_std_level_background_check is flagging temperature excursions - ensure that level reinstating is working.
+        '''
 
-    data.ds.profiles = [realProfile2, realProfile3]
-    qctests.EN_std_lev_bkg_and_buddy_check.profiles_info_list = get_profiles_info_list()
-    qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile2, None)
-    assert numpy.all(qc == False), 'mismatch between qc results and expected values'
+        main.fakerow('unit', raw='x', truth=False, uid=2, year=2000, month=1, day=10, time=0, lat=-30.229, longitude=2.658, cruise=2, probe=2)
+        main.fakerow('unit', raw='x', truth=False, uid=3, year=2000, month=1, day=10, time=0.1895833, lat=-28.36, longitude=-0.752, cruise=3, probe=2)
+        qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile2, self.parameters)
+        assert numpy.all(qc == False), 'mismatch between qc results and expected values'
 
 realProfile1 = util.testingProfile.fakeProfile(
                 [20.6900,      20.6900,      20.6900,      20.6900,

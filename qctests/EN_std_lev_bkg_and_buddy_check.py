@@ -40,10 +40,8 @@ def test(p, parameters, allow_level_reinstating=True):
     # the background values.
     query = 'SELECT bgstdlevels, bgevstdlevels FROM enbackground WHERE uid = ' + str(p.uid())
     enbackground_pars = main.dbinteract(query) 
-    #bgsl = EN_background_check.bgStdLevels
     bgsl = pickle.load(StringIO.StringIO(enbackground_pars[0][0]))
     slev = parameters['enbackground']['depth']
-    #bgev = EN_background_check.bgevStdLevels
     bgev = pickle.load(StringIO.StringIO(enbackground_pars[0][1]))
     obev = parameters['enbackground']['obev']
 
@@ -51,7 +49,7 @@ def test(p, parameters, allow_level_reinstating=True):
     pgeData = determine_pge(levels, bgev, obev, p)
 
     # Find buddy.
-    profiles = get_profile_info()
+    profiles = get_profile_info(parameters)
     minDist  = 1000000000.0
     iMinDist = None
     for iProfile, profile in enumerate(profiles):
@@ -374,10 +372,10 @@ def timeDiff(p1, p2):
 
     return np.abs(diff.total_seconds())
 
-def get_profile_info():
+def get_profile_info(parameters):
     # Gets information about the profiles from the database.
     # This is only done once and the results saved in the global variable.
     # NB this could be done on module load but this would make it difficult 
     # to implement code tests.
-    query = 'SELECT uid,year,month,cruise,lat,long FROM ' + sys.argv[1]
+    query = 'SELECT uid,year,month,cruise,lat,long FROM ' + parameters['table']
     return main.dbinteract(query)

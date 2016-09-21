@@ -11,6 +11,7 @@ class TestClass():
     parameters = {
         "table": 'unit'
     }
+    qctests.EN_background_check.loadParameters(parameters)
 
     def setUp(self):
         # this qc test will go looking for the profile in question in the db, needs to find something sensible
