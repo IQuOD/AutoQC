@@ -19,22 +19,15 @@ c    if necessary to bring the original levels to increasing order
 '''
 
 import numpy as np
-
-# Global variables to hold data to avoid having to recalculate order
-# repeatedly for the same profile.
-uid        = None
-nlevels    = 0
-origlevels = None
-zr         = None
-tr         = None
-qc         = None
+import util.main as main
+import pickle, psycopg2, StringIO
 
 def test(p, parameters):
     '''Return a set of QC decisions. This corresponds to levels with
        negative depths.
     '''
     
-    level_order(p)
+    uid, nlevels, origlevels, zr, tr, qc = level_order(p)
 
     return qc
 
@@ -43,7 +36,7 @@ def reordered_data(p):
        Only non-rejected levels are returned.
     '''
 
-    level_order(p)
+    uid, nlevels, origlevels, zr, tr, qc = level_order(p)
 
     return nlevels, zr, tr
 
@@ -52,7 +45,7 @@ def revert_order(p, data):
        the level_order function are returned as missing data.
     '''
 
-    level_order(p)
+    uid, nlevels, origlevels, zr, tr, qc = level_order(p)
 
     datar      = np.ma.array(np.ndarray(p.n_levels()), 
                              dtype = data.dtype)
@@ -74,11 +67,17 @@ def level_order(p):
     '''Reorders data into depth order and rejects levels with 
        negative depth.
     '''
-    global uid, nlevels, origlevels, zr, tr, qc
-
-    # Check if the module already holds the results for this profile.
-    if uid == p.uid() and uid is not None:
-        return None
+    
+    # check if the relevant info is already in the db
+    query = 'SELECT nlevels, origlevels, zr, tr, qc FROM icdclevelorder WHERE uid = ' + str(p.uid())
+    precomputed = main.dbinteract(query)           
+    if len(precomputed) > 0:
+        nlevels = precomputed[0][0]
+        origlevels = pickle.load(StringIO.StringIO(precomputed[0][1]))
+        zr = pickle.load(StringIO.StringIO(precomputed[0][2]))
+        tr = pickle.load(StringIO.StringIO(precomputed[0][3]))
+        qc = pickle.load(StringIO.StringIO(precomputed[0][4]))
+        return p.uid(), nlevels, origlevels, zr, tr, qc
 
     # Extract data and define the index for each level.
     z          = p.z()
@@ -106,6 +105,17 @@ def level_order(p):
         zr         = z
         tr         = t
 
-    return None
+    # register pre-computed arrays in db for reuse    
+    origlevels_p = pickle.dumps(origlevels, -1)
+    zr_p = pickle.dumps(zr, -1)
+    tr_p = pickle.dumps(tr, -1)
+    qc_p = pickle.dumps(qc, -1)
+    query = "INSERT INTO icdclevelorder VALUES({0!s}, {1!s}, {2!s}, {3!s}, {4!s}, {5!s})".format(p.uid(), nlevels, psycopg2.Binary(origlevels_p), psycopg2.Binary(zr_p), psycopg2.Binary(tr_p), psycopg2.Binary(qc_p))
+    main.dbinteract(query)
 
+    return p.uid(), nlevels, origlevels, zr, tr, qc
 
+def loadParameters(parameterStore):
+
+    main.dbinteract("DROP TABLE IF EXISTS icdclevelorder")
+    main.dbinteract("CREATE TABLE IF NOT EXISTS icdclevelorder (uid INTEGER, nlevels INTEGER, origlevels BYTEA, zr BYTEA, tr BYTEA, qc BYTEA)")

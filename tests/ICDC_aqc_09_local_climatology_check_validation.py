@@ -2,64 +2,75 @@ import qctests.ICDC_aqc_01_level_order as ICDC
 import qctests.ICDC_aqc_09_local_climatology_check as ICDC_lc
 
 import util.testingProfile
+import util.main as main
 import numpy as np
 from netCDF4 import Dataset
 
 ##### ICDC local climatology check.
 ##### --------------------------------------------------
+class TestClass():
 
-def test_ICDC_local_climatology_check():
-    '''Make sure code processes data supplied by Viktor Gouretski
-       correctly.
-    '''
+    parameters = {}
+    ICDC_lc.loadParameters(parameters)
 
-    lines = data.splitlines()
-    parameterStore = {}
-    ICDC_lc.loadParameters(parameterStore)
-    for i, line in enumerate(lines):
-        if line[0:2] == 'HH':
-            header  = line.split()
-            lat     = float(header[2])
-            lon     = float(header[3])
-            year    = int(header[4])
-            month   = int(header[5])
-            day     = int(header[6])
-            nlevels = int(header[-1][:-3])
+    def setUp(self):
+        # refresh this table every test
+        ICDC.loadParameters(self.parameters)
 
-            depths  = []
-            temps   = []
-            qctruth = []
-            climmin = []
-            climmax = []
-            for j in range(nlevels):
-                d = lines[i + j + 1].split()
-                depths.append(float(d[0]))
-                temps.append(float(d[1]))
-                qctruth.append(int(d[2]) > 0)
-                climmin.append(float(d[3]))
-                climmax.append(float(d[4]))
-            
-            p  = util.testingProfile.fakeProfile(temps, 
-                                                 depths,
-                                                 latitude=lat,
-                                                 longitude=lon,
-                                                 date=[year,month,day,0])
+    def tearDown(self):
+        main.dbinteract('DROP TABLE icdclevelorder;')
 
-            nlevels, z, t = ICDC.reordered_data(p)
-            lat           = p.latitude()
-            lon           = p.longitude()
-            tmin, tmax    = ICDC_lc.get_climatology_range(nlevels, 
-                                                          z, 
-                                                          lat, 
-                                                          lon,
-                                                          p.month(), 
-                                                          parameterStore['nc'])
+    def test_ICDC_local_climatology_check(self):
+        '''Make sure code processes data supplied by Viktor Gouretski
+           correctly.
+        '''
 
-            assert np.max(np.abs(tmin - climmin)) < 0.001, 'TMIN failed for profile with header ' + line
-            assert np.max(np.abs(tmax - climmax)) < 0.001, 'TMAX failed for profile with header ' + line
+        lines = data.splitlines()
+        for i, line in enumerate(lines):
+            if line[0:2] == 'HH':
+                header  = line.split()
+                lat     = float(header[2])
+                lon     = float(header[3])
+                year    = int(header[4])
+                month   = int(header[5])
+                day     = int(header[6])
+                nlevels = int(header[-1][:-3])
 
-            qc = ICDC_lc.test(p, parameterStore)
-            assert np.array_equal(qc, qctruth), 'QC failed profile with header ' + line
+                depths  = []
+                temps   = []
+                qctruth = []
+                climmin = []
+                climmax = []
+                for j in range(nlevels):
+                    d = lines[i + j + 1].split()
+                    depths.append(float(d[0]))
+                    temps.append(float(d[1]))
+                    qctruth.append(int(d[2]) > 0)
+                    climmin.append(float(d[3]))
+                    climmax.append(float(d[4]))
+                
+                p  = util.testingProfile.fakeProfile(temps, 
+                                                     depths,
+                                                     latitude=lat,
+                                                     longitude=lon,
+                                                     date=[year,month,day,0],
+                                                     uid=i)
+
+                nlevels, z, t = ICDC.reordered_data(p)
+                lat           = p.latitude()
+                lon           = p.longitude()
+                tmin, tmax    = ICDC_lc.get_climatology_range(nlevels, 
+                                                              z, 
+                                                              lat, 
+                                                              lon,
+                                                              p.month(), 
+                                                              self.parameters['nc'])
+
+                assert np.max(np.abs(tmin - climmin)) < 0.001, 'TMIN failed for profile with header ' + line
+                assert np.max(np.abs(tmax - climmax)) < 0.001, 'TMAX failed for profile with header ' + line
+
+                qc = ICDC_lc.test(p, self.parameters)
+                assert np.array_equal(qc, qctruth), 'QC failed profile with header ' + line
 
 # Data provided by Viktor Gouretski, ICDC, University of Hamburg.
 data = '''

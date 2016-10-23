@@ -1,37 +1,50 @@
+import qctests.ICDC_aqc_01_level_order as ICDC
 import qctests.ICDC_aqc_05_stuck_value as ICDC_sv
 
 import util.testingProfile
+import util.main as main
 import numpy as np
 
 ##### ICDC stuck value check.
 ##### --------------------------------------------------
 
-def test_ICDC_stuck_value():
-    '''Make sure code processes data supplied by Viktor Gouretski
-       correctly.
-    '''
+class TestClass():
 
-    lines = data.splitlines()
-    for i, line in enumerate(lines):
-        if line[0:2] == 'HH':
-            header  = line.split()
-            dataset = header[-1][-3:]
-            probe_type = probe_types[dataset]
-            nlevels = int(header[-1][:-3])
-            
-            depths  = []
-            temps   = []
-            qctruth = []
-            for j in range(nlevels):
-                d = lines[i + j + 1].split()
-                depths.append(float(d[0]))
-                temps.append(float(d[1]))
-                qctruth.append(int(d[2]) > 0)
-            
-            p  = util.testingProfile.fakeProfile(temps, depths, probe_type=probe_type)
-            qc = ICDC_sv.test(p, None)
+    parameters = {}
 
-            assert np.array_equal(qc, qctruth), 'Failed profile with header ' + line
+    def setUp(self):
+        # refresh this table every test
+        ICDC.loadParameters(self.parameters)
+
+    def tearDown(self):
+        main.dbinteract('DROP TABLE icdclevelorder;')
+
+    def test_ICDC_stuck_value(self):
+        '''Make sure code processes data supplied by Viktor Gouretski
+           correctly.
+        '''
+
+        lines = data.splitlines()
+        for i, line in enumerate(lines):
+            if line[0:2] == 'HH':
+                header  = line.split()
+                dataset = header[-1][-3:]
+                probe_type = probe_types[dataset]
+                nlevels = int(header[-1][:-3])
+                
+                depths  = []
+                temps   = []
+                qctruth = []
+                for j in range(nlevels):
+                    d = lines[i + j + 1].split()
+                    depths.append(float(d[0]))
+                    temps.append(float(d[1]))
+                    qctruth.append(int(d[2]) > 0)
+                
+                p  = util.testingProfile.fakeProfile(temps, depths, probe_type=probe_type, uid=i)
+                qc = ICDC_sv.test(p, self.parameters)
+
+                assert np.array_equal(qc, qctruth), 'Failed profile with header ' + line
 
 probe_types = {'OSD': 7, 'CTD': 4, 'PFL': 9, 'APB': 13, 'MBT': 1, 'XBT': 2}
 
