@@ -50,9 +50,7 @@ if len(sys.argv)>2:
       return
 
     # run tests
-    print uid
     for itest, test in enumerate(testNames):
-      print test
       result = run(test, [profile], parameterStore)[0]
       result = pickle.dumps(result, -1)
       query = "UPDATE " + sys.argv[1] + " SET " + test.lower() + " = " + str(psycopg2.Binary(result)) + " WHERE uid = " + str(profile.uid()) + ";"
@@ -74,7 +72,7 @@ if len(sys.argv)>2:
   uids = main.dbinteract(query)
   
   # launch async processes
-  pool = Pool(processes=sys.argv[2])
+  pool = Pool(processes=int(sys.argv[2]))
   for i in range(len(uids)):
     pool.apply_async(process_row, (uids[i][0],))
   pool.close()
