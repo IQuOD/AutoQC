@@ -50,11 +50,14 @@ if len(sys.argv)>2:
       return
 
     # run tests
+    query = "UPDATE " + sys.argv[1] + " SET "
     for itest, test in enumerate(testNames):
       result = run(test, [profile], parameterStore)[0]
       result = pickle.dumps(result, -1)
-      query = "UPDATE " + sys.argv[1] + " SET " + test.lower() + " = " + str(psycopg2.Binary(result)) + " WHERE uid = " + str(profile.uid()) + ";"
-      main.dbinteract(query)
+      query += test.lower() + " = " + str(psycopg2.Binary(result)) + ', '
+    query = query[:-2] 
+    query += " WHERE uid = " + str(profile.uid()) + ";"
+    main.dbinteract(query)
 
   # set up global parmaeter store
   parameterStore = {
