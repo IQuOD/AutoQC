@@ -5,7 +5,7 @@ http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 """
 
 from cotede.qctests.possible_speed import haversine
-import datetime, psycopg2
+import datetime
 import EN_background_check
 import EN_constant_value_check
 import EN_increasing_depth_check
@@ -39,10 +39,11 @@ def test(p, parameters, allow_level_reinstating=True):
     # Retrieve the background and observation error variances and
     # the background values.
     query = 'SELECT bgstdlevels, bgevstdlevels FROM enbackground WHERE uid = ' + str(p.uid())
-    enbackground_pars = main.dbinteract(query) 
-    bgsl = pickle.load(StringIO.StringIO(enbackground_pars[0][0]))
+    enbackground_pars = main.dbinteract(query)
+    enbackground_pars = main.unpack_row(enbackground_pars[0])
+    bgsl = enbackground_pars[0]
     slev = parameters['enbackground']['depth']
-    bgev = pickle.load(StringIO.StringIO(enbackground_pars[0][1]))
+    bgev = enbackground_pars[1]
     obev = parameters['enbackground']['obev']
 
     #find initial pge
@@ -74,11 +75,11 @@ def test(p, parameters, allow_level_reinstating=True):
         if Fail == False:
           result = stdLevelData(pBuddy, parameters)
           query = 'SELECT bgevstdlevels FROM enbackground WHERE uid = ' + str(pBuddy.uid())
-          buddy_pars = main.dbinteract(query)           
+          buddy_pars = main.dbinteract(query)
+          buddy_pars = main.unpack_row(buddy_pars[0])        
           if result is not None: 
             levelsBuddy, origLevelsBuddy, assocLevelsBuddy = result
-            #bgevBuddy = EN_background_check.bgevStdLevels
-            bgevBuddy = pickle.load(StringIO.StringIO(buddy_pars[0][0]))
+            bgevBuddy = buddy_pars[0]
             pgeBuddy  = determine_pge(levels, bgevBuddy, obev, pBuddy)
             pgeData   = update_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, p, pBuddy, obev, bgev, bgevBuddy)
 
@@ -239,9 +240,10 @@ def stdLevelData(p, parameters):
     # As it was run above we know that the data is available in the db.
     query = 'SELECT origlevels, ptlevels, bglevels FROM enbackground WHERE uid = ' + str(p.uid())
     enbackground_pars = main.dbinteract(query)
-    origlevels = pickle.load(StringIO.StringIO(enbackground_pars[0][0]))
-    ptlevels = pickle.load(StringIO.StringIO(enbackground_pars[0][1]))
-    bglevels = pickle.load(StringIO.StringIO(enbackground_pars[0][2]))
+    enbackground_pars = main.unpack_row(enbackground_pars[0])
+    origlevels = enbackground_pars[0]
+    ptlevels = enbackground_pars[1]
+    bglevels = enbackground_pars[2]
     origLevels = np.array(origlevels)
     diffLevels = (np.array(ptlevels) - np.array(bglevels))
     nLevels    = len(origLevels)
@@ -374,8 +376,6 @@ def timeDiff(p1, p2):
 
 def get_profile_info(parameters):
     # Gets information about the profiles from the database.
-    # This is only done once and the results saved in the global variable.
-    # NB this could be done on module load but this would make it difficult 
-    # to implement code tests.
+    
     query = 'SELECT uid,year,month,cruise,lat,long FROM ' + parameters['table']
-    return main.dbinteract(query)
+    return main.dbinteract(query, usePostgres=parameters['postgres'])

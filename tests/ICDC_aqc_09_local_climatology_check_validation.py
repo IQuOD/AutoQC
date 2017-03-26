@@ -11,6 +11,7 @@ from netCDF4 import Dataset
 class TestClass():
 
     parameters = {}
+    
     ICDC_lc.loadParameters(parameters)
 
     def setUp(self):

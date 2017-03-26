@@ -24,6 +24,7 @@ def run(test, profiles, parameters):
 ########################################
 
 if len(sys.argv)>2:
+
   # Identify and import tests
   testNames = main.importQC('qctests')
   testNames.sort()
@@ -50,15 +51,19 @@ if len(sys.argv)>2:
       return
 
     # run tests
+    query = "UPDATE " + sys.argv[1] + " SET "
     for itest, test in enumerate(testNames):
       result = run(test, [profile], parameterStore)[0]
       result = pickle.dumps(result, -1)
-      query = "UPDATE " + sys.argv[1] + " SET " + test.lower() + " = " + str(psycopg2.Binary(result)) + " WHERE uid = " + str(profile.uid()) + ";"
-      main.dbinteract(query)
+      query += test.lower() + " = " + str(psycopg2.Binary(result)) + ', '
+    query = query[:-2] 
+    query += " WHERE uid = " + str(profile.uid()) + ";"
+    main.dbinteract(query, usePostgres=True)
 
   # set up global parmaeter store
   parameterStore = {
-    "table": sys.argv[1]
+    "table": sys.argv[1],
+    "postgres": True
   }
   for test in testNames:
     exec('from qctests import ' + test)
@@ -69,7 +74,7 @@ if len(sys.argv)>2:
       
   # connect to database & fetch list of all uids
   query = 'SELECT uid FROM ' + sys.argv[1] + ' ORDER BY uid;' 
-  uids = main.dbinteract(query)
+  uids = main.dbinteract(query, usePostgres=True)
   
   # launch async processes
   pool = Pool(processes=int(sys.argv[2]))
@@ -80,5 +85,5 @@ if len(sys.argv)>2:
     
 else:
   print 'Please add command line arguments to name your output file and set parallelization:'
-  print 'python AutoQC <database table> <number of processes>'
-  print 'will use <database table> in the database, and run the calculation parallelized over <number of processes>.'
+  print 'python AutoQC <database results table> <number of processes>'
+  print 'will use <database results table> to log QC results in the database, and run the calculation parallelized over <number of processes>.'

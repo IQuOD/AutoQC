@@ -4,7 +4,6 @@ system, described on page 7 of http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.p
 """
 
 import numpy
-import pickle, StringIO, sys
 import util.main as main
 
 def test(p, parameters):
@@ -17,9 +16,10 @@ def test(p, parameters):
     # Check if the QC of this profile was already done and if not
     # run the QC.
     query = 'SELECT en_constant_value_check FROM ' + parameters["table"] + ' WHERE uid = ' + str(p.uid()) + ';'
-    qc_log = main.dbinteract(query)
-    if qc_log[0][0] is not None:
-        return pickle.load(StringIO.StringIO(qc_log[0][0]))
+    qc_log = main.dbinteract(query, usePostgres=parameters['postgres'])
+    qc_log = main.unpack_row(qc_log[0], usePostgres=parameters['postgres'])
+    if qc_log[0] is not None:
+        return qc_log[0]
         
     return run_qc(p, parameters)
 

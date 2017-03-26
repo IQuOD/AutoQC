@@ -7,7 +7,7 @@ import EN_spike_and_step_check
 import numpy as np
 import util.obs_utils as outils
 from netCDF4 import Dataset
-import pickle, psycopg2, StringIO, sys
+import sqlite3, sys
 import util.main as main
 
 def test(p, parameters):
@@ -20,9 +20,10 @@ def test(p, parameters):
     # Check if the QC of this profile was already done and if not
     # run the QC.
     query = 'SELECT en_background_check FROM ' + parameters["table"] + ' WHERE uid = ' + str(p.uid()) + ';'
-    qc_log = main.dbinteract(query)
-    if qc_log[0][0] is not None:
-        return pickle.load(StringIO.StringIO(qc_log[0][0]))
+    qc_log = main.dbinteract(query, usePostgres=parameters['postgres'])
+    qc_log = main.unpack_row(qc_log[0], usePostgres=parameters['postgres'])
+    if qc_log[0] is not None:
+        return qc_log[0]
         
     return run_qc(p, parameters)
 
@@ -119,13 +120,13 @@ def run_qc(p, parameters):
             bgLevels.append(climLevel)
     
     # register pre-computed arrays in db for reuse
-    bgstdlevels = pickle.dumps(bgStdLevels, -1)
-    bgevstdlevels = pickle.dumps(bgevStdLevels, -1)
-    origlevels = pickle.dumps(origLevels, -1)
-    ptlevels = pickle.dumps(ptLevels, -1)
-    bglevels = pickle.dumps(bgLevels, -1)
-    query = "INSERT INTO enbackground VALUES({0!s}, {1!s}, {2!s}, {3!s}, {4!s}, {5!s})".format(p.uid(), psycopg2.Binary(bgstdlevels), psycopg2.Binary(bgevstdlevels), psycopg2.Binary(origlevels), psycopg2.Binary(ptlevels), psycopg2.Binary(bglevels))
-    main.dbinteract(query)
+    bgstdlevels = main.pack_array(bgStdLevels)
+    bgevstdlevels = main.pack_array(bgevStdLevels)
+    origlevels = main.pack_array(origLevels)
+    ptlevels = main.pack_array(ptLevels)
+    bglevels = main.pack_array(bgLevels)
+    query = "INSERT INTO enbackground VALUES(?,?,?,?,?,?);"
+    main.dbinteract(query, [p.uid(), bgstdlevels, bgevstdlevels, origlevels, ptlevels, bglevels])
 
     return qc
 
@@ -190,7 +191,7 @@ def readENBackgroundCheckAux():
 def loadParameters(parameterStore):
 
     main.dbinteract("DROP TABLE IF EXISTS enbackground")
-    main.dbinteract("CREATE TABLE IF NOT EXISTS enbackground (uid INTEGER, bgstdlevels BYTEA, bgevstdlevels BYTEA, origlevels BYTEA, ptlevels BYTEA, bglevels BYTEA)")
+    main.dbinteract("CREATE TABLE IF NOT EXISTS enbackground (uid INTEGER, bgstdlevels BLOB, bgevstdlevels BLOB, origlevels BLOB, ptlevels BLOB, bglevels BLOB)")
     parameterStore['enbackground'] = readENBackgroundCheckAux()
 
 

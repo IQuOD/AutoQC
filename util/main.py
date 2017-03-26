@@ -1,6 +1,6 @@
 ## helper functions used in the top level AutoQC.py
 
-import json, os, glob, time, pandas, csv, sys, fnmatch
+import json, os, glob, time, pandas, csv, sys, fnmatch, sqlite3, io, pickle, StringIO
 import numpy as np
 from wodpy import wod
 from netCDF4 import Dataset
@@ -133,7 +133,7 @@ def get_profile_from_db(uid):
   '''
  
   command = 'SELECT * FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid)
-  row = dbinteract(command)
+  row = dbinteract(command, usePostgres=True)
   return text2wod(row[0][0])
 
 def text2wod(raw):
@@ -166,18 +166,24 @@ def dictify(rows, keys):
 
   return dicts
 
-def dbinteract(command, tries=0):
+def dbinteract(command, values=[], tries=0, usePostgres=False):
   '''
-  execute the given postgres command;
-  catch errors and retry a maximum number of times.
+  execute the given SQL command;
+  catch errors and retry a maximum number of times;
+  defaults to using mysql3, option to use postgres (recommended)
   '''
+  
+  max_retry = 3
 
-  max_retry = 99
-  conn = psycopg2.connect("dbname='root' user='root'")
-  conn.autocommit = True
+  if usePostgres:
+    conn = psycopg2.connect("dbname='root' user='root'")
+    conn.autocommit = True
+  else:
+    conn = sqlite3.connect('iquod.db', isolation_level=None)
   cur = conn.cursor()
+
   try:
-    cur.execute(command)
+    cur.execute(command, values)
     try:
       result = cur.fetchall()
     except:
@@ -185,17 +191,16 @@ def dbinteract(command, tries=0):
     cur.close()
     conn.close()
     return result
-  except psycopg2.Error as e:
-    print 'failed', command, 'on try number', tries
+  except (psycopg2.Error, sqlite3.Error) as e:
     conn.rollback()
     cur.close()
     conn.close()
     if tries < max_retry:
-      dbinteract(command, tries+1)
+      dbinteract(command, values, tries+1, usePostgres)
     else:
-      return -1
+      return -1  
 
-def faketable(name):
+def faketable(name, usePostgres=False):
   '''
   generate a table <name> in root/root with the same structure as the main data table
   '''
@@ -207,7 +212,7 @@ def faketable(name):
   # set up our table
   query = "CREATE TABLE IF NOT EXISTS " + name + """(
               raw text,
-              truth boolean,
+              truth integer,
               uid integer,
               year integer,
               month integer,
@@ -219,15 +224,15 @@ def faketable(name):
               probe integer,
               """
   for i in range(len(testNames)):
-      query += testNames[i].lower() + ' BYTEA'
+      query += testNames[i].lower() + ' text'
       if i<len(testNames)-1:
           query += ','
       else:
           query += ');'
+  
+  dbinteract(query, usePostgres=usePostgres)
 
-  dbinteract(query)
-
-def fakerow(tablename, raw='x', truth=False, uid=8888, year=1999, month=12, day=31, time=23.99, lat=0, longitude=0, cruise=1234, probe=2):
+def fakerow(tablename, raw='x', truth=0, uid=8888, year=1999, month=12, day=31, time=23.99, lat=0, longitude=0, cruise=1234, probe=2, usePostgres=False):
   '''
   insert a row containing pre-qc info into a table with the same structure as the main data table
   '''
@@ -258,5 +263,71 @@ def fakerow(tablename, raw='x', truth=False, uid=8888, year=1999, month=12, day=
               {p[longitude]}, 
               {p[cruise]},
               {p[probe_type]}
-             )""".format(p=wodDict)
-  dbinteract(query)
+             );""".format(p=wodDict)
+  
+  dbinteract(query, usePostgres=usePostgres)
+
+
+# def pack_array(arr):
+#     # chew up a numpy array for insertion into a sqlite column of type blob
+
+#     out = io.BytesIO()
+#     np.save(out, arr)
+#     out.seek(0)
+#     return sqlite3.Binary(out.read())
+
+def pack_array(arr):
+    # chew up a numpy array for insertion into a sqlite column of type blob
+
+    out = io.BytesIO()
+    if type(arr) is np.ndarray:
+        np.save(out, arr)
+    elif type(arr) is np.ma.core.MaskedArray:
+        arr.dump(out)
+    out.seek(0)
+
+    return sqlite3.Binary(out.read())
+
+def parse_sqlite_row(row):
+    # given a tuple read from an sqlite table,
+    # return a corresponding tuple parsed into the appropriate data types
+    res = []
+    for elt in row:
+        if type(elt) is unicode:
+            # unicode -> str
+            res.append(str(elt))
+        elif type(elt) is buffer:
+            # buffer -> numpy array
+            res.append(np.load(io.BytesIO(elt)))
+        else:
+            res.append(elt)
+
+    return tuple(res)
+
+def parse_postgres_row(row):
+    # given a tuple read from an sqlite table,
+    # return a corresponding tuple parsed into the appropriate data types
+
+    res = []
+
+    for elt in row:
+        if type(elt) is str:
+            try:
+                res.append(pickle.load(StringIO.StringIO(elt)))
+            except:
+                res.append(elt)
+        else:
+            res.append(elt)
+
+    return tuple(res)
+
+def unpack_row(row, usePostgres=False):
+    # given a tuple row from either sqlite or postgres, return a tuple with 
+    # typical datatypes
+
+    if usePostgres:
+        return parse_postgres_row(row)
+    else:
+        return parse_sqlite_row(row)
+
+

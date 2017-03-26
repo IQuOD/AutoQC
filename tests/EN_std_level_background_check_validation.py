@@ -34,7 +34,8 @@ def dummy_get_profile_from_db(uid):
 class TestClass():
 
     parameters = {
-        "table": 'unit'
+        "table": 'unit',
+        "postgres": False
     }
     qctests.EN_background_check.loadParameters(parameters)
 
@@ -218,7 +219,7 @@ class TestClass():
         Make sure EN_std_level_background_check is flagging temperature excursions
         '''
 
-        main.fakerow('unit', raw='x', truth=False, uid=1, year=2000, month=1, day=15, time=12, lat=-39.889, longitude=17.650000, cruise=1, probe=2)
+        main.fakerow('unit', raw='x', truth=0, uid=1, year=2000, month=1, day=15, time=12, lat=-39.889, longitude=17.650000, cruise=1, probe=2, usePostgres=self.parameters["postgres"])
         qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile1, self.parameters)
 
         assert numpy.array_equal(qc, truthQC1), 'mismatch between qc results and expected values'
@@ -228,8 +229,8 @@ class TestClass():
         Make sure EN_std_level_background_check is flagging temperature excursions
         '''
 
-        main.fakerow('unit', raw='x', truth=False, uid=2, year=2000, month=1, day=10, time=0, lat=-30.229, longitude=2.658, cruise=2, probe=2)
-        main.fakerow('unit', raw='x', truth=False, uid=3, year=2000, month=1, day=10, time=0.1895833, lat=-28.36, longitude=-0.752, cruise=3, probe=2)
+        main.fakerow('unit', raw='x', truth=0, uid=2, year=2000, month=1, day=10, time=0, lat=-30.229, longitude=2.658, cruise=2, probe=2, usePostgres=self.parameters["postgres"])
+        main.fakerow('unit', raw='x', truth=0, uid=3, year=2000, month=1, day=10, time=0.1895833, lat=-28.36, longitude=-0.752, cruise=3, probe=2, usePostgres=self.parameters["postgres"])
         qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile2, self.parameters, allow_level_reinstating=False)
 
         assert numpy.array_equal(qc, truthQC2), 'mismatch between qc results and expected values'
@@ -239,8 +240,8 @@ class TestClass():
         Make sure EN_std_level_background_check is flagging temperature excursions - ensure that level reinstating is working.
         '''
 
-        main.fakerow('unit', raw='x', truth=False, uid=2, year=2000, month=1, day=10, time=0, lat=-30.229, longitude=2.658, cruise=2, probe=2)
-        main.fakerow('unit', raw='x', truth=False, uid=3, year=2000, month=1, day=10, time=0.1895833, lat=-28.36, longitude=-0.752, cruise=3, probe=2)
+        main.fakerow('unit', raw='x', truth=0, uid=2, year=2000, month=1, day=10, time=0, lat=-30.229, longitude=2.658, cruise=2, probe=2, usePostgres=self.parameters["postgres"])
+        main.fakerow('unit', raw='x', truth=0, uid=3, year=2000, month=1, day=10, time=0.1895833, lat=-28.36, longitude=-0.752, cruise=3, probe=2, usePostgres=self.parameters["postgres"])
         qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile2, self.parameters)
         assert numpy.all(qc == False), 'mismatch between qc results and expected values'
 

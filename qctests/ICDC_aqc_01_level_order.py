@@ -20,7 +20,7 @@ c    if necessary to bring the original levels to increasing order
 
 import numpy as np
 import util.main as main
-import pickle, psycopg2, StringIO
+import pickle, sqlite3, StringIO
 
 def test(p, parameters):
     '''Return a set of QC decisions. This corresponds to levels with
@@ -110,7 +110,8 @@ def level_order(p):
     zr_p = pickle.dumps(zr, -1)
     tr_p = pickle.dumps(tr, -1)
     qc_p = pickle.dumps(qc, -1)
-    query = "INSERT INTO icdclevelorder VALUES({0!s}, {1!s}, {2!s}, {3!s}, {4!s}, {5!s})".format(p.uid(), nlevels, psycopg2.Binary(origlevels_p), psycopg2.Binary(zr_p), psycopg2.Binary(tr_p), psycopg2.Binary(qc_p))
+    
+    query = "INSERT INTO icdclevelorder VALUES({0!s}, {1!s}, {2!s}, {3!s}, {4!s}, {5!s})".format(p.uid(), nlevels, sqlite3.Binary(origlevels_p), sqlite3.Binary(zr_p), sqlite3.Binary(tr_p), sqlite3.Binary(qc_p))
     main.dbinteract(query)
 
     return p.uid(), nlevels, origlevels, zr, tr, qc
@@ -118,4 +119,4 @@ def level_order(p):
 def loadParameters(parameterStore):
 
     main.dbinteract("DROP TABLE IF EXISTS icdclevelorder")
-    main.dbinteract("CREATE TABLE IF NOT EXISTS icdclevelorder (uid INTEGER, nlevels INTEGER, origlevels BYTEA, zr BYTEA, tr BYTEA, qc BYTEA)")
+    main.dbinteract("CREATE TABLE IF NOT EXISTS icdclevelorder (uid INTEGER, nlevels INTEGER, origlevels BLOB, zr BLOB, tr BLOB, qc BLOB)")

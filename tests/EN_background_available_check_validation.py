@@ -9,7 +9,8 @@ import numpy
 class TestClass():
 
     parameters = {
-        "table": 'unit'
+        "table": 'unit',
+        "postgres": False
     }
     qctests.EN_background_check.loadParameters(parameters)
 

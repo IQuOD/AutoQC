@@ -8,7 +8,8 @@ import util.main as main
 class TestClass():
 
     parameters = {
-        "table": 'unit'
+        "table": 'unit',
+        "postgres": False
     }
 
     def setUp(self):

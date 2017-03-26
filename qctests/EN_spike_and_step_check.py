@@ -9,7 +9,7 @@ remove these elements and include them within the background check code.
 """
 
 import numpy as np
-import pickle, StringIO, psycopg2
+import StringIO, sqlite3, psycopg2
 import util.main as main
 
 def test(p, parameters, suspect=False):
@@ -31,7 +31,7 @@ def run_qc(p, suspect):
         query = 'SELECT suspect FROM enspikeandstep WHERE uid = ' + str(p.uid())
         susp = main.dbinteract(query)
         if len(susp) > 0:
-            return pickle.load(StringIO.StringIO(susp[0][0]))
+            return main.parse_sqlite_row(susp[0])[0]
             
     # Define tolerances used.
     tolD     = np.array([0, 200, 300, 500, 600])
@@ -103,9 +103,7 @@ def run_qc(p, suspect):
 
     # register suspects, if computed, to db
     if suspect:
-        susp = pickle.dumps(qc, -1)
-        query = "INSERT INTO enspikeandstep VALUES({0!s}, {1!s})".format(p.uid(), psycopg2.Binary(susp))
-        main.dbinteract(query)
+        main.dbinteract(query, [p.uid(), main.pack_array(qc)] )
 
     return qc
 
@@ -205,4 +203,4 @@ def interpolate(depth, shallow, deep, shallowVal, deepVal):
 def loadParameters(parameterStore):
 
     main.dbinteract("DROP TABLE IF EXISTS enspikeandstep")
-    main.dbinteract("CREATE TABLE IF NOT EXISTS enspikeandstep (uid INTEGER, suspect BYTEA)")
+    main.dbinteract("CREATE TABLE IF NOT EXISTS enspikeandstep (uid INTEGER, suspect BLOB)")
