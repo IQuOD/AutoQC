@@ -1,10 +1,9 @@
 from wodpy import wod
-import glob, time, pickle, psycopg2, StringIO, sys, pandas
+import pickle, psycopg2, sys
 import numpy as np
-import os, data.ds
 import util.main as main
 from multiprocessing import Pool
-import tempfile
+
 
 def run(test, profiles, parameters):
   '''
@@ -19,6 +18,37 @@ def run(test, profiles, parameters):
 
   return verbose
 
+def process_row(uid):
+  '''run all tests on the indicated database row'''
+
+  # extract profile
+  profile = main.get_profile_from_db(uid)
+
+  # Check that there are temperature data in the profile, otherwise skip.
+  if profile.var_index() is None:
+    return
+  main.catchFlags(profile)
+  if np.sum(profile.t().mask == False) == 0:
+    return
+
+  # run tests
+  query = "UPDATE " + sys.argv[1] + " SET "
+  for itest, test in enumerate(testNames):
+    result = run(test, [profile], parameterStore)[0]
+    print test, type(result)
+    result = pickle.dumps(result, -1)
+    query += test.lower() + " = " + str(psycopg2.Binary(result)) + ', '
+  query = query[:-2] 
+  query += " WHERE uid = " + str(profile.uid()) + ";"
+  main.dbinteract(query, usePostgres=True)
+
+  # # run tests
+  # for itest, test in enumerate(testNames):
+  #   result = run(test, [profile], parameterStore)[0]
+  #   result = pickle.dumps(result, -1)
+  #   query = "UPDATE " + sys.argv[1] + " SET "
+  #   query += test.lower() + " = " + str(psycopg2.Binary(result)) + " WHERE uid = " + str(profile.uid()) + ";"
+  #   main.dbinteract(query, usePostgres=True)
 ########################################
 # main
 ########################################
@@ -36,29 +66,6 @@ if len(sys.argv)>2:
 
   # Parallel processing.
   print('\nPlease wait while QC is performed\n')
-
-  def process_row(uid):
-    '''run all tests on the indicated database row'''
-  
-    # extract profile
-    profile = main.get_profile_from_db(uid)
-
-    # Check that there are temperature data in the profile, otherwise skip.
-    if profile.var_index() is None:
-      return
-    main.catchFlags(profile)
-    if np.sum(profile.t().mask == False) == 0:
-      return
-
-    # run tests
-    query = "UPDATE " + sys.argv[1] + " SET "
-    for itest, test in enumerate(testNames):
-      result = run(test, [profile], parameterStore)[0]
-      result = pickle.dumps(result, -1)
-      query += test.lower() + " = " + str(psycopg2.Binary(result)) + ', '
-    query = query[:-2] 
-    query += " WHERE uid = " + str(profile.uid()) + ";"
-    main.dbinteract(query, usePostgres=True)
 
   # set up global parmaeter store
   parameterStore = {

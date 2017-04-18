@@ -111,8 +111,8 @@ def level_order(p):
     tr_p = pickle.dumps(tr, -1)
     qc_p = pickle.dumps(qc, -1)
     
-    query = "INSERT INTO icdclevelorder VALUES({0!s}, {1!s}, {2!s}, {3!s}, {4!s}, {5!s})".format(p.uid(), nlevels, sqlite3.Binary(origlevels_p), sqlite3.Binary(zr_p), sqlite3.Binary(tr_p), sqlite3.Binary(qc_p))
-    main.dbinteract(query)
+    query = "INSERT INTO icdclevelorder VALUES(?,?,?,?,?,?)"
+    main.dbinteract(query, [p.uid(), nlevels, sqlite3.Binary(origlevels_p), sqlite3.Binary(zr_p), sqlite3.Binary(tr_p), sqlite3.Binary(qc_p)])
 
     return p.uid(), nlevels, origlevels, zr, tr, qc
 

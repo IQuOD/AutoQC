@@ -45,7 +45,7 @@ if len(sys.argv) == 3:
     fid = open(sys.argv[1])
 
     #while True:
-    for xx in range(1000):
+    for xx in range(500):
         # extract profile as wodpy object and raw text
         start = fid.tell()
         profile = wod.WodProfile(fid)
@@ -54,6 +54,8 @@ if len(sys.argv) == 3:
         raw = fid.read(end-start)
         fid.seek(end)
 
+        if profile.uid() != 65781603 and profile.uid() != 563906:
+            continue
         # set up dictionary for populating query string
         wodDict = profile.npdict()
         wodDict['raw'] = "'" + raw + "'"

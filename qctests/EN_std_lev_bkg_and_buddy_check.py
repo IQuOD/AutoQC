@@ -58,7 +58,7 @@ def test(p, parameters, allow_level_reinstating=True):
         if pDist is not None and pDist < minDist:
             minDist  = pDist
             iMinDist = iProfile
-            
+
     # Check if we have found a buddy and process if so.
     if minDist <= 400000:
         pBuddy = main.get_profile_from_db(profiles[iMinDist][0])
@@ -73,10 +73,14 @@ def test(p, parameters, allow_level_reinstating=True):
                 Fail = True
 
         if Fail == False:
+
           result = stdLevelData(pBuddy, parameters)
+
           query = 'SELECT bgevstdlevels FROM enbackground WHERE uid = ' + str(pBuddy.uid())
           buddy_pars = main.dbinteract(query)
-          buddy_pars = main.unpack_row(buddy_pars[0])        
+
+          buddy_pars = main.unpack_row(buddy_pars[0])
+
           if result is not None: 
             levelsBuddy, origLevelsBuddy, assocLevelsBuddy = result
             bgevBuddy = buddy_pars[0]
@@ -248,13 +252,13 @@ def stdLevelData(p, parameters):
     diffLevels = (np.array(ptlevels) - np.array(bglevels))
     nLevels    = len(origLevels)
     if nLevels == 0: return None # Nothing more to do.
-
+    
     # Remove any levels that failed previous QC.
     nLevels, origLevels, diffLevels = filterLevels(preQC, origLevels, diffLevels)
     if nLevels == 0: return None
     
     levels, assocLevs = meanDifferencesAtStandardLevels(origLevels, diffLevels, p.z(), parameters)
-
+    
     return levels, origLevels, assocLevs
 
 def filterLevels(preQC, origLevels, diffLevels):

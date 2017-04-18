@@ -22,6 +22,7 @@ def test(p, parameters):
     query = 'SELECT en_background_check FROM ' + parameters["table"] + ' WHERE uid = ' + str(p.uid()) + ';'
     qc_log = main.dbinteract(query, usePostgres=parameters['postgres'])
     qc_log = main.unpack_row(qc_log[0], usePostgres=parameters['postgres'])
+
     if qc_log[0] is not None:
         return qc_log[0]
         

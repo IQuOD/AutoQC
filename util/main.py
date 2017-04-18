@@ -192,6 +192,7 @@ def dbinteract(command, values=[], tries=0, usePostgres=False):
     conn.close()
     return result
   except (psycopg2.Error, sqlite3.Error) as e:
+    print 'bad db request'
     conn.rollback()
     cur.close()
     conn.close()
@@ -277,16 +278,17 @@ def fakerow(tablename, raw='x', truth=0, uid=8888, year=1999, month=12, day=31, 
 #     return sqlite3.Binary(out.read())
 
 def pack_array(arr):
-    # chew up a numpy array for insertion into a sqlite column of type blob
-
+    # chew up a numpy array, masked array, or list for insertion into a sqlite column of type blob
     out = io.BytesIO()
+
     if type(arr) is np.ndarray:
         np.save(out, arr)
     elif type(arr) is np.ma.core.MaskedArray:
         arr.dump(out)
+    elif type(arr) is list:
+        pickle.dump(arr, out)
     out.seek(0)
-
-    return sqlite3.Binary(out.read())
+    return sqlite3.Binary(out.read())  
 
 def parse_sqlite_row(row):
     # given a tuple read from an sqlite table,
@@ -311,11 +313,12 @@ def parse_postgres_row(row):
     res = []
 
     for elt in row:
-        if type(elt) is str:
+        if type(elt) is buffer:
+            # buffer -> numpy array
             try:
-                res.append(pickle.load(StringIO.StringIO(elt)))
+              res.append(pickle.load(StringIO.StringIO(row[0])))
             except:
-                res.append(elt)
+              res.append(elt)
         else:
             res.append(elt)
 
