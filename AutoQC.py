@@ -85,3 +85,4 @@ else:
   print 'Please add command line arguments to name your output file and set parallelization:'
   print 'python AutoQC <database results table> <number of processes>'
   print 'will use <database results table> to log QC results in the database, and run the calculation parallelized over <number of processes>.'
+
