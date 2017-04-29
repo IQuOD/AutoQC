@@ -1,11 +1,12 @@
 import util.main as main
 import pandas, StringIO
-import sys, psycopg2, pickle, StringIO, numpy
+import sys, psycopg2, pickle, StringIO, numpy, sqlite3, io
+import numpy as np
 
-def unpickle(value):
-    'unpickle a text encoding of a something pickled to the database'
+def unpack_qc(value):
+    'unpack a qc result from the db'
 
-    return pickle.load(StringIO.StringIO(value))
+    return np.load(io.BytesIO(value))
 
 def summarize(levels):
     'given an array of level qc decisions, return true iff any of the levels are flagged'
@@ -15,7 +16,7 @@ def summarize(levels):
 def parse(results):
     'parse the raw pickled text of a per-level qc result, and return True if any levels are flagged'
 
-    return results.apply(unpickle).apply(summarize)
+    return results.apply(unpack_qc).apply(summarize)
 
 if len(sys.argv) == 2:
 
@@ -24,7 +25,7 @@ if len(sys.argv) == 2:
     testNames.sort()
 
     # connect to database
-    conn = psycopg2.connect("dbname='root' user='root'")
+    conn = sqlite3.connect('iquod.db', isolation_level=None)
     cur = conn.cursor()
 
     # extract matrix of test results and true flags into a dataframe

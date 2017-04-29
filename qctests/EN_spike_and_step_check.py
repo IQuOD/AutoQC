@@ -9,7 +9,6 @@ remove these elements and include them within the background check code.
 """
 
 import numpy as np
-import StringIO, sqlite3, psycopg2
 import util.main as main
 
 def test(p, parameters, suspect=False):
@@ -28,10 +27,10 @@ def run_qc(p, suspect):
 
     # check for pre-registered suspect tabulation, if that's what we want:
     if suspect:
-        query = 'SELECT suspect FROM enspikeandstep WHERE uid = ' + str(p.uid())
+        query = 'SELECT suspect FROM enspikeandstep WHERE uid = ' + str(p.uid()) + ';'
         susp = main.dbinteract(query)
         if len(susp) > 0:
-            return main.parse_sqlite_row(susp[0])[0]
+            return main.unpack_row(susp[0])[0]
             
     # Define tolerances used.
     tolD     = np.array([0, 200, 300, 500, 600])
@@ -103,6 +102,7 @@ def run_qc(p, suspect):
 
     # register suspects, if computed, to db
     if suspect:
+        query = "INSERT INTO enspikeandstep VALUES(?,?);"
         main.dbinteract(query, [p.uid(), main.pack_array(qc)] )
 
     return qc

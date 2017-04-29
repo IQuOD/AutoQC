@@ -1,17 +1,12 @@
 # usage: python build-db.py <wod ascii file name> <table name to append to>
 
 from wodpy import wod
-import sys, psycopg2
+import sys, sqlite3
 import util.main as main
 
 if len(sys.argv) == 3:
 
-    # connect to database and create a cursor by which to interact with it.
-    try:
-        conn = psycopg2.connect("dbname='root' user='root'")
-    except:
-        print "I am unable to connect to the database"
-
+    conn = sqlite3.connect('iquod.db', isolation_level=None)
     cur = conn.cursor()
 
     # Identify tests
@@ -19,9 +14,11 @@ if len(sys.argv) == 3:
     testNames.sort()
 
     # set up our table
-    query = "CREATE TABLE IF NOT EXISTS " + sys.argv[2] + """(
+    query = "DROP TABLE IF EXISTS " + sys.argv[2] + ";"
+    cur.execute(query)
+    query = "CREATE TABLE " + sys.argv[2] + """(
                 raw text,
-                truth boolean,
+                truth integer,
                 uid integer,
                 year integer,
                 month integer,
@@ -33,7 +30,7 @@ if len(sys.argv) == 3:
                 probe integer,
                 """
     for i in range(len(testNames)):
-        query += testNames[i].lower() + ' BYTEA'
+        query += testNames[i].lower() + ' BLOB'
         if i<len(testNames)-1:
             query += ','
         else:
@@ -44,8 +41,7 @@ if len(sys.argv) == 3:
     # populate table from wod-ascii data
     fid = open(sys.argv[1])
 
-    #while True:
-    for xx in range(500):
+    while True:
         # extract profile as wodpy object and raw text
         start = fid.tell()
         profile = wod.WodProfile(fid)
@@ -54,8 +50,9 @@ if len(sys.argv) == 3:
         raw = fid.read(end-start)
         fid.seek(end)
 
-        if profile.uid() != 65781603 and profile.uid() != 563906:
-            continue
+        #if profile.uid() != 65781603 and profile.uid() != 563906:
+        #    continue
+
         # set up dictionary for populating query string
         wodDict = profile.npdict()
         wodDict['raw'] = "'" + raw + "'"
@@ -83,6 +80,8 @@ if len(sys.argv) == 3:
                    )""".format(p=wodDict)
         query = query.replace('--', 'NULL')
         query = query.replace('None', 'NULL')
+        query = query.replace('True', '1')
+        query = query.replace('False', '0')
         cur.execute(query)
         if profile.is_last_profile_in_file(fid) == True:
             break

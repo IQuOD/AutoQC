@@ -14,7 +14,6 @@ import EN_spike_and_step_check
 import EN_stability_check
 import util.main as main
 import numpy as np
-import sys, pickle, StringIO
 
 def test(p, parameters, allow_level_reinstating=True):
     """ 
@@ -382,4 +381,4 @@ def get_profile_info(parameters):
     # Gets information about the profiles from the database.
     
     query = 'SELECT uid,year,month,cruise,lat,long FROM ' + parameters['table']
-    return main.dbinteract(query, usePostgres=parameters['postgres'])
+    return main.dbinteract(query)

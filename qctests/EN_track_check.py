@@ -6,8 +6,7 @@ http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 import numpy as np
 import util.main as main
 import util.geo as geo
-import copy, datetime, math, psycopg2, sqlite3
-import sys, datetime, calendar, pickle, StringIO
+import copy, datetime, math, sys, calendar
 
 # module constants
 DistRes = 20000. # meters
@@ -29,9 +28,9 @@ def test(p, parameters):
     
     # don't bother if this has already been analyzed
     command = 'SELECT en_track_check FROM ' + parameters["table"] + ' WHERE uid = ' + str(uid) + ';'
-    en_track_result = main.dbinteract(command, usePostgres=parameters['postgres'])
+    en_track_result = main.dbinteract(command)
     if en_track_result[0][0] is not None:
-        en_track_result = pickle.load(StringIO.StringIO(en_track_result[0][0]))
+        en_track_result = main.unpack_row(en_track_result[0])[0]
         result = np.zeros(1, dtype=bool)
         result[0] = np.any(en_track_result)
         return result
@@ -42,7 +41,7 @@ def test(p, parameters):
     
     # fetch all profiles on track, sorted chronologically, earliest first (None sorted as highest)
     command = 'SELECT uid, year, month, day, time, lat, long, probe FROM ' + parameters["table"] + ' WHERE cruise = ' + str(cruise) + ' and year is not null and month is not null and day is not null and time is not null ORDER BY year, month, day, time ASC;'
-    track_rows = main.dbinteract(command, usePostgres=parameters['postgres'])
+    track_rows = main.dbinteract(command)
 
     # start all as passing by default:
     EN_track_results = {}
@@ -66,14 +65,11 @@ def test(p, parameters):
    
     # write all to db
     for i in range(len(track_rows)):
-        result = pickle.dumps(EN_track_results[track_rows[i][0]], -1)
+        result = main.pack_array(EN_track_results[track_rows[i][0]])
         
-        if parameters['postgres']:
-            query = "UPDATE " + sys.argv[1] + " SET en_track_check = " + str(psycopg2.Binary(result)) + " WHERE uid = " + str(track_rows[i][0]) + ";"
-        else:
-            query = "UPDATE " + sys.argv[1] + " SET en_track_check = " + str(sqlite3.Binary(result)) + " WHERE uid = " + str(track_rows[i][0]) + ";"
+        query = "UPDATE " + sys.argv[1] + " SET en_track_check=? WHERE uid = " + str(track_rows[i][0]) + ";"
 
-        main.dbinteract(query, usePostgres=parameters['postgres'])
+        main.dbinteract(query, (result,))
 
     return EN_track_results[uid]
 

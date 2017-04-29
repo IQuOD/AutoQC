@@ -7,7 +7,7 @@ from netCDF4 import Dataset
 import testingProfile
 from numbers import Number
 import sys
-import tempfile, psycopg2
+import tempfile
 
 def importQC(dir):
   '''
@@ -133,8 +133,9 @@ def get_profile_from_db(uid):
   '''
  
   command = 'SELECT * FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid)
-  row = dbinteract(command, usePostgres=True)
-  return text2wod(row[0][0])
+  row = dbinteract(command)
+  profile = text2wod(row[0][0])
+  return profile
 
 def text2wod(raw):
   '''
@@ -166,22 +167,17 @@ def dictify(rows, keys):
 
   return dicts
 
-def dbinteract(command, values=[], tries=0, usePostgres=False):
+def dbinteract(command, values=[], tries=0):
   '''
   execute the given SQL command;
   catch errors and retry a maximum number of times;
-  defaults to using mysql3, option to use postgres (recommended)
   '''
   
   max_retry = 3
 
-  if usePostgres:
-    conn = psycopg2.connect("dbname='root' user='root'")
-    conn.autocommit = True
-  else:
-    conn = sqlite3.connect('iquod.db', isolation_level=None)
+  conn = sqlite3.connect('iquod.db', isolation_level=None)
   cur = conn.cursor()
-
+  
   try:
     cur.execute(command, values)
     try:
@@ -191,17 +187,18 @@ def dbinteract(command, values=[], tries=0, usePostgres=False):
     cur.close()
     conn.close()
     return result
-  except (psycopg2.Error, sqlite3.Error) as e:
+  except sqlite3.Error as e:
     print 'bad db request'
+    print e
     conn.rollback()
     cur.close()
     conn.close()
     if tries < max_retry:
-      dbinteract(command, values, tries+1, usePostgres)
+      dbinteract(command, values, tries+1)
     else:
       return -1  
 
-def faketable(name, usePostgres=False):
+def faketable(name):
   '''
   generate a table <name> in root/root with the same structure as the main data table
   '''
@@ -231,9 +228,9 @@ def faketable(name, usePostgres=False):
       else:
           query += ');'
   
-  dbinteract(query, usePostgres=usePostgres)
+  dbinteract(query)
 
-def fakerow(tablename, raw='x', truth=0, uid=8888, year=1999, month=12, day=31, time=23.99, lat=0, longitude=0, cruise=1234, probe=2, usePostgres=False):
+def fakerow(tablename, raw='x', truth=0, uid=8888, year=1999, month=12, day=31, time=23.99, lat=0, longitude=0, cruise=1234, probe=2):
   '''
   insert a row containing pre-qc info into a table with the same structure as the main data table
   '''
@@ -266,16 +263,7 @@ def fakerow(tablename, raw='x', truth=0, uid=8888, year=1999, month=12, day=31, 
               {p[probe_type]}
              );""".format(p=wodDict)
   
-  dbinteract(query, usePostgres=usePostgres)
-
-
-# def pack_array(arr):
-#     # chew up a numpy array for insertion into a sqlite column of type blob
-
-#     out = io.BytesIO()
-#     np.save(out, arr)
-#     out.seek(0)
-#     return sqlite3.Binary(out.read())
+  dbinteract(query)
 
 def pack_array(arr):
     # chew up a numpy array, masked array, or list for insertion into a sqlite column of type blob
@@ -290,9 +278,10 @@ def pack_array(arr):
     out.seek(0)
     return sqlite3.Binary(out.read())  
 
-def parse_sqlite_row(row):
-    # given a tuple read from an sqlite table,
-    # return a corresponding tuple parsed into the appropriate data types
+def unpack_row(row):
+    # given a tuple row from sqlite, return a tuple with 
+    # typical datatypes
+
     res = []
     for elt in row:
         if type(elt) is unicode:
@@ -305,32 +294,5 @@ def parse_sqlite_row(row):
             res.append(elt)
 
     return tuple(res)
-
-def parse_postgres_row(row):
-    # given a tuple read from an sqlite table,
-    # return a corresponding tuple parsed into the appropriate data types
-
-    res = []
-
-    for elt in row:
-        if type(elt) is buffer:
-            # buffer -> numpy array
-            try:
-              res.append(pickle.load(StringIO.StringIO(row[0])))
-            except:
-              res.append(elt)
-        else:
-            res.append(elt)
-
-    return tuple(res)
-
-def unpack_row(row, usePostgres=False):
-    # given a tuple row from either sqlite or postgres, return a tuple with 
-    # typical datatypes
-
-    if usePostgres:
-        return parse_postgres_row(row)
-    else:
-        return parse_sqlite_row(row)
 
 

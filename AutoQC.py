@@ -32,23 +32,15 @@ def process_row(uid):
     return
 
   # run tests
+  results = []
   query = "UPDATE " + sys.argv[1] + " SET "
   for itest, test in enumerate(testNames):
     result = run(test, [profile], parameterStore)[0]
-    print test, type(result)
-    result = pickle.dumps(result, -1)
-    query += test.lower() + " = " + str(psycopg2.Binary(result)) + ', '
-  query = query[:-2] 
-  query += " WHERE uid = " + str(profile.uid()) + ";"
-  main.dbinteract(query, usePostgres=True)
+    results.append(main.pack_array(result))
+    query += test.lower() + "=?,"
 
-  # # run tests
-  # for itest, test in enumerate(testNames):
-  #   result = run(test, [profile], parameterStore)[0]
-  #   result = pickle.dumps(result, -1)
-  #   query = "UPDATE " + sys.argv[1] + " SET "
-  #   query += test.lower() + " = " + str(psycopg2.Binary(result)) + " WHERE uid = " + str(profile.uid()) + ";"
-  #   main.dbinteract(query, usePostgres=True)
+  query = query[:-1] + " WHERE uid = " + str(profile.uid()) + ";"
+  main.dbinteract(query, results)
 ########################################
 # main
 ########################################
@@ -69,8 +61,7 @@ if len(sys.argv)>2:
 
   # set up global parmaeter store
   parameterStore = {
-    "table": sys.argv[1],
-    "postgres": True
+    "table": sys.argv[1]
   }
   for test in testNames:
     exec('from qctests import ' + test)
@@ -81,7 +72,7 @@ if len(sys.argv)>2:
       
   # connect to database & fetch list of all uids
   query = 'SELECT uid FROM ' + sys.argv[1] + ' ORDER BY uid;' 
-  uids = main.dbinteract(query, usePostgres=True)
+  uids = main.dbinteract(query)
   
   # launch async processes
   pool = Pool(processes=int(sys.argv[2]))

@@ -2,8 +2,7 @@
 Implements the regional range test on page 7 of http://w3.jcommops.org/FTPRoot/Argo/Doc/argo-quality-control-manual.pdf
 """
 
-import numpy
-import pyproj
+import numpy, pyproj
 from shapely.geometry import Polygon, Point
 
 def test(p, parameters):
