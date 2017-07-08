@@ -20,17 +20,16 @@ def run(test, profiles, parameters):
 
 def process_row(uid):
   '''run all tests on the indicated database row'''
-
+  
   # extract profile
   profile = main.get_profile_from_db(uid)
-
+  
   # Check that there are temperature data in the profile, otherwise skip.
   if profile.var_index() is None:
     return
   main.catchFlags(profile)
   if np.sum(profile.t().mask == False) == 0:
     return
-
   # run tests
   results = []
   query = "UPDATE " + sys.argv[1] + " SET "

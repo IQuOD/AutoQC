@@ -134,7 +134,7 @@ def get_profile_from_db(uid):
  
   command = 'SELECT * FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid)
   row = dbinteract(command)
-  profile = text2wod(row[0][0])
+  profile = text2wod(row[0][0][1:-1])
   return profile
 
 def text2wod(raw):

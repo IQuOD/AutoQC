@@ -51,7 +51,7 @@ def test(p, parameters):
 
         if t[i] < minTemp or t[i] > maxTemp:
             qc[i] = True
-
+    
     return qc
 
 

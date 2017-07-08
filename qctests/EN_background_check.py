@@ -31,7 +31,7 @@ def run_qc(p, parameters):
     """
     Performs the QC check.
     """
-
+    
     # Define an array to hold results.
     qc = np.zeros(p.n_levels(), dtype=bool)
     

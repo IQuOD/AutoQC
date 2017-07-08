@@ -15,7 +15,7 @@ def summarize(levels):
 
 def parse(results):
     'parse the raw pickled text of a per-level qc result, and return True if any levels are flagged'
-
+    
     return results.apply(unpack_qc).apply(summarize)
 
 if len(sys.argv) == 2:
@@ -29,23 +29,25 @@ if len(sys.argv) == 2:
     cur = conn.cursor()
 
     # extract matrix of test results and true flags into a dataframe
-    query = 'SELECT truth'
+    query = 'SELECT truth, uid'
     for test in testNames:
         query += ', ' + test.lower()
     query += ' FROM ' + sys.argv[1]
+    
+    query += ' LIMIT 1000' # first pathological case
 
     cur.execute(query)
     rawresults = cur.fetchall()
     df = pandas.DataFrame(rawresults).astype('str')
-    df.columns = ['Truth'] + testNames
-    df[['Truth']] = df[['Truth']].astype('bool')
+    df.columns = ['Truth', 'uid'] + testNames
+    df[['Truth']] = df[['Truth']].apply(parse)
     df[testNames] = df[testNames].apply(parse)
 
     # summarize results
     print('%35s %7s %7s %7s %7s %7s' % ('NAME OF TEST', 'FAILS', 'TPR', 'FPR', 'TNR', 'FNR')) 
     for test in testNames:
-        tpr, fpr, fnr, tnr = main.calcRates(df[test].tolist(), df['Truth'].tolist())
-        print('%35s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % (test, sum(df[test].tolist()), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
+       tpr, fpr, fnr, tnr = main.calcRates(df[test].tolist(), df['Truth'].tolist())
+       print('%35s %7i %6.1f%1s %6.1f%1s %6.1f%1s %6.1f%1s' % (test, sum(df[test].tolist()), tpr, '%', fpr, '%', tnr, '%', fnr, '%'))
 
 else:
 

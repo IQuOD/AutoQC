@@ -32,7 +32,7 @@ def test(p, parameters, allow_level_reinstating=True):
     # Obtain the obs minus background differences on standard levels.
     result = stdLevelData(p, parameters)
     if result is None: return qc
-
+    
     # Unpack the results.
     levels, origLevels, assocLevels = result
     # Retrieve the background and observation error variances and
@@ -243,6 +243,7 @@ def stdLevelData(p, parameters):
     # As it was run above we know that the data is available in the db.
     query = 'SELECT origlevels, ptlevels, bglevels FROM enbackground WHERE uid = ' + str(p.uid())
     enbackground_pars = main.dbinteract(query)
+    print enbackground_pars
     enbackground_pars = main.unpack_row(enbackground_pars[0])
     origlevels = enbackground_pars[0]
     ptlevels = enbackground_pars[1]
@@ -251,13 +252,13 @@ def stdLevelData(p, parameters):
     diffLevels = (np.array(ptlevels) - np.array(bglevels))
     nLevels    = len(origLevels)
     if nLevels == 0: return None # Nothing more to do.
-    
+
     # Remove any levels that failed previous QC.
     nLevels, origLevels, diffLevels = filterLevels(preQC, origLevels, diffLevels)
     if nLevels == 0: return None
-    
+
     levels, assocLevs = meanDifferencesAtStandardLevels(origLevels, diffLevels, p.z(), parameters)
-    
+
     return levels, origLevels, assocLevs
 
 def filterLevels(preQC, origLevels, diffLevels):
