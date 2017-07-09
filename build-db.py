@@ -50,9 +50,6 @@ if len(sys.argv) == 3:
         raw = fid.read(end-start)
         fid.seek(end)
 
-        if profile.uid() != 580707:
-            continue
-
         # set up dictionary for populating query string
         p = profile.npdict()
         p['raw'] = "'" + raw + "'"
@@ -60,7 +57,6 @@ if len(sys.argv) == 3:
         # We have no use for this profile in that case so skip it.
         try:
             p['truth'] = main.pack_array(profile.t_level_qc(originator=True))
-            #wodDict['truth'] = sum(profile.t_level_qc(originator=True) >= 3) >= 1
         except:
             if profile.is_last_profile_in_file(fid) == True:
                 break
@@ -70,24 +66,6 @@ if len(sys.argv) == 3:
         values = (p['raw'], p['truth'], p['uid'], p['year'], p['month'], p['day'], p['time'], p['latitude'], p['longitude'], p['cruise'], p['probe_type'])
         main.dbinteract(query, values)
 
-        # query = "INSERT INTO " + sys.argv[2] + " (raw, truth, uid, year, month, day, time, lat, long, cruise, probe) "  + """ VALUES(
-        #             {p[raw]},
-        #             {p[truth]},
-        #             {p[uid]},
-        #             {p[year]},
-        #             {p[month]},
-        #             {p[day]},
-        #             {p[time]},
-        #             {p[latitude]}, 
-        #             {p[longitude]}, 
-        #             {p[cruise]},
-        #             {p[probe_type]}
-        #            )""".format(p=wodDict)
-        # query = query.replace('--', 'NULL')
-        # query = query.replace('None', 'NULL')
-        # query = query.replace('True', '1')
-        # query = query.replace('False', '0')
-        # cur.execute(query)
         if profile.is_last_profile_in_file(fid) == True:
             break
 

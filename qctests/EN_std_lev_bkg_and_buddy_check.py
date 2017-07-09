@@ -31,7 +31,8 @@ def test(p, parameters, allow_level_reinstating=True):
 
     # Obtain the obs minus background differences on standard levels.
     result = stdLevelData(p, parameters)
-    if result is None: return qc
+    if result is None:
+        return qc
     
     # Unpack the results.
     levels, origLevels, assocLevels = result
@@ -243,7 +244,6 @@ def stdLevelData(p, parameters):
     # As it was run above we know that the data is available in the db.
     query = 'SELECT origlevels, ptlevels, bglevels FROM enbackground WHERE uid = ' + str(p.uid())
     enbackground_pars = main.dbinteract(query)
-    print enbackground_pars
     enbackground_pars = main.unpack_row(enbackground_pars[0])
     origlevels = enbackground_pars[0]
     ptlevels = enbackground_pars[1]

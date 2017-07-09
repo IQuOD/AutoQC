@@ -6,6 +6,12 @@ import numpy as np
 def unpack_qc(value):
     'unpack a qc result from the db'
 
+    try:
+        qc = np.load(io.BytesIO(value))
+    except:
+        print 'failed to unpack qc data - check db for missing entries.'
+        qc = np.zeros(1, dtype=bool)
+
     return np.load(io.BytesIO(value))
 
 def summarize(levels):
@@ -29,17 +35,15 @@ if len(sys.argv) == 2:
     cur = conn.cursor()
 
     # extract matrix of test results and true flags into a dataframe
-    query = 'SELECT truth, uid'
+    query = 'SELECT truth'
     for test in testNames:
         query += ', ' + test.lower()
     query += ' FROM ' + sys.argv[1]
     
-    query += ' LIMIT 1000' # first pathological case
-
     cur.execute(query)
     rawresults = cur.fetchall()
     df = pandas.DataFrame(rawresults).astype('str')
-    df.columns = ['Truth', 'uid'] + testNames
+    df.columns = ['Truth'] + testNames
     df[['Truth']] = df[['Truth']].apply(parse)
     df[testNames] = df[testNames].apply(parse)
 
