@@ -52,10 +52,12 @@ def run_qc(p, parameters):
     bgevStdLevels = bgev # Save the full column for use by another check.
     obev = parameters['enbackground']['obev']
     depths = parameters['enbackground']['depth']
-    
+
     # Remove missing data points.
     iOK = (clim.mask == False) & (bgev.mask == False)
-    if np.count_nonzero(iOK) == 0: return qc
+    if np.count_nonzero(iOK) == 0: 
+        record_parameters(p, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels)
+        return qc
     clim = clim[iOK]
     bgev = bgev[iOK]
     obev = obev[iOK]
@@ -119,16 +121,22 @@ def run_qc(p, parameters):
             ptLevels.append(potm)
             bgLevels.append(climLevel)
     
-    # register pre-computed arrays in db for reuse
+    record_parameters(p, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels)
+
+    return qc
+
+def record_parameters(profile, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels):
+    # pack the parameter arrays into the enbackground table
+    # for consumption by the buddy check
+
     bgstdlevels = main.pack_array(bgStdLevels)
     bgevstdlevels = main.pack_array(bgevStdLevels)
     origlevels = main.pack_array(origLevels)
     ptlevels = main.pack_array(ptLevels)
     bglevels = main.pack_array(bgLevels)
     query = "INSERT INTO enbackground VALUES(?,?,?,?,?,?);"
-    main.dbinteract(query, [p.uid(), bgstdlevels, bgevstdlevels, origlevels, ptlevels, bglevels])
+    main.dbinteract(query, [profile.uid(), bgstdlevels, bgevstdlevels, origlevels, ptlevels, bglevels])
 
-    return qc
 
 def findGridCell(p, gridLong, gridLat):
     '''
