@@ -12,7 +12,7 @@ def unpack_qc(value):
         print 'failed to unpack qc data - check db for missing entries.'
         qc = np.zeros(1, dtype=bool)
 
-    return np.load(io.BytesIO(value))
+    return qc
 
 def summarize(levels):
     'given an array of level qc decisions, return true iff any of the levels are flagged'
