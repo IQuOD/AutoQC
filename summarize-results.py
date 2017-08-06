@@ -1,16 +1,15 @@
 import util.main as main
 import pandas, StringIO
 import sys, psycopg2, pickle, StringIO, numpy, sqlite3, io
-import numpy as np
 
 def unpack_qc(value):
     'unpack a qc result from the db'
 
     try:
-        qc = np.load(io.BytesIO(value))
+        qc = numpy.load(io.BytesIO(value))
     except:
         print 'failed to unpack qc data - check db for missing entries.'
-        qc = np.zeros(1, dtype=bool)
+        qc = numpy.zeros(1, dtype=bool)
 
     return qc
 
@@ -23,6 +22,15 @@ def parse(results):
     'parse the raw pickled text of a per-level qc result, and return True if any levels are flagged'
     
     return results.apply(unpack_qc).apply(summarize)
+
+def summarize_truth(levels):
+    'given an array of originator qc decisions, return true iff any of the levels are flagged'
+
+    return sum(levels >= 3) >= 1
+
+def parse_truth(results):
+
+    return results.apply(unpack_qc).apply(summarize_truth)
 
 if len(sys.argv) == 2:
 
@@ -44,7 +52,7 @@ if len(sys.argv) == 2:
     rawresults = cur.fetchall()
     df = pandas.DataFrame(rawresults).astype('str')
     df.columns = ['Truth'] + testNames
-    df[['Truth']] = df[['Truth']].apply(parse)
+    df[['Truth']] = df[['Truth']].apply(parse_truth)
     df[testNames] = df[testNames].apply(parse)
 
     # summarize results
