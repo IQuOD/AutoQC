@@ -38,6 +38,7 @@ def run_qc(p, parameters):
     most_common_depth = Counter(d.data).most_common(1)
     if most_common_depth[0][1] == len(d.data):
         qc = np.ones(n, dtype=bool)
+        uid = p.uid()
         return qc
 
     # Basic check on each level.
