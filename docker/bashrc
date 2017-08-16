@@ -1,2 +1,0 @@
-export OCEANSDB_DIR=/AutoQC/data/
-/etc/init.d/postgresql start 

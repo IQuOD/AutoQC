@@ -5,7 +5,7 @@ http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 """
 
 from cotede.qctests.possible_speed import haversine
-import datetime, psycopg2
+import datetime
 import EN_background_check
 import EN_constant_value_check
 import EN_increasing_depth_check
@@ -14,7 +14,6 @@ import EN_spike_and_step_check
 import EN_stability_check
 import util.main as main
 import numpy as np
-import sys
 
 def test(p, parameters, allow_level_reinstating=True):
     """ 
@@ -32,22 +31,26 @@ def test(p, parameters, allow_level_reinstating=True):
 
     # Obtain the obs minus background differences on standard levels.
     result = stdLevelData(p, parameters)
-    if result is None: return qc
-
+    if result is None:
+        return qc
+    
     # Unpack the results.
     levels, origLevels, assocLevels = result
     # Retrieve the background and observation error variances and
     # the background values.
-    bgsl = EN_background_check.bgStdLevels
-    slev = EN_background_check.auxParam['depth']
-    bgev = EN_background_check.bgevStdLevels
-    obev = EN_background_check.auxParam['obev']
+    query = 'SELECT bgstdlevels, bgevstdlevels FROM enbackground WHERE uid = ' + str(p.uid())
+    enbackground_pars = main.dbinteract(query)
+    enbackground_pars = main.unpack_row(enbackground_pars[0])
+    bgsl = enbackground_pars[0]
+    slev = parameters['enbackground']['depth']
+    bgev = enbackground_pars[1]
+    obev = parameters['enbackground']['obev']
 
     #find initial pge
     pgeData = determine_pge(levels, bgev, obev, p)
 
     # Find buddy.
-    profiles = get_profile_info()
+    profiles = get_profile_info(parameters)
     minDist  = 1000000000.0
     iMinDist = None
     for iProfile, profile in enumerate(profiles):
@@ -55,7 +58,7 @@ def test(p, parameters, allow_level_reinstating=True):
         if pDist is not None and pDist < minDist:
             minDist  = pDist
             iMinDist = iProfile
-            
+
     # Check if we have found a buddy and process if so.
     if minDist <= 400000:
         pBuddy = main.get_profile_from_db(profiles[iMinDist][0])
@@ -70,10 +73,17 @@ def test(p, parameters, allow_level_reinstating=True):
                 Fail = True
 
         if Fail == False:
+
           result = stdLevelData(pBuddy, parameters)
+
+          query = 'SELECT bgevstdlevels FROM enbackground WHERE uid = ' + str(pBuddy.uid())
+          buddy_pars = main.dbinteract(query)
+
+          buddy_pars = main.unpack_row(buddy_pars[0])
+
           if result is not None: 
             levelsBuddy, origLevelsBuddy, assocLevelsBuddy = result
-            bgevBuddy = EN_background_check.bgevStdLevels
+            bgevBuddy = buddy_pars[0]
             pgeBuddy  = determine_pge(levels, bgevBuddy, obev, pBuddy)
             pgeData   = update_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, p, pBuddy, obev, bgev, bgevBuddy)
 
@@ -231,19 +241,23 @@ def stdLevelData(p, parameters):
              EN_stability_check.test(p, parameters))
 
     # Get the data stored by the EN background check.
-    # As it was run above we know that the data held by the
-    # module corresponds to the correct profile.
-    origLevels = np.array(EN_background_check.origLevels)
-    diffLevels = (np.array(EN_background_check.ptLevels) -
-                      np.array(EN_background_check.bgLevels))
+    # As it was run above we know that the data is available in the db.
+    query = 'SELECT origlevels, ptlevels, bglevels FROM enbackground WHERE uid = ' + str(p.uid())
+    enbackground_pars = main.dbinteract(query)
+    enbackground_pars = main.unpack_row(enbackground_pars[0])
+    origlevels = enbackground_pars[0]
+    ptlevels = enbackground_pars[1]
+    bglevels = enbackground_pars[2]
+    origLevels = np.array(origlevels)
+    diffLevels = (np.array(ptlevels) - np.array(bglevels))
     nLevels    = len(origLevels)
     if nLevels == 0: return None # Nothing more to do.
 
     # Remove any levels that failed previous QC.
     nLevels, origLevels, diffLevels = filterLevels(preQC, origLevels, diffLevels)
     if nLevels == 0: return None
-    
-    levels, assocLevs = meanDifferencesAtStandardLevels(origLevels, diffLevels, p.z())
+
+    levels, assocLevs = meanDifferencesAtStandardLevels(origLevels, diffLevels, p.z(), parameters)
 
     return levels, origLevels, assocLevs
 
@@ -265,7 +279,7 @@ def filterLevels(preQC, origLevels, diffLevels):
 
     return nLevels, origLevels, diffLevels
 
-def meanDifferencesAtStandardLevels(origLevels, diffLevels, depths):
+def meanDifferencesAtStandardLevels(origLevels, diffLevels, depths, parameters):
     '''
     origLevels: list of level indices under consideration
     diffLevels: list of differences corresponding to origLevels
@@ -276,7 +290,7 @@ def meanDifferencesAtStandardLevels(origLevels, diffLevels, depths):
     '''
 
     # Get the set of standard levels.
-    stdLevels = EN_background_check.auxParam['depth']
+    stdLevels = parameters['enbackground']['depth']
     
     # Create arrays to hold the standard level data and aggregate.
     nStdLevels = len(stdLevels)
@@ -364,18 +378,8 @@ def timeDiff(p1, p2):
 
     return np.abs(diff.total_seconds())
 
-def get_profile_info():
+def get_profile_info(parameters):
     # Gets information about the profiles from the database.
-    # This is only done once and the results saved in the global variable.
-    # NB this could be done on module load but this would make it difficult 
-    # to implement code tests.
-    global profiles_info_list, cur
-    if len(profiles_info_list) == 0:
-        conn = psycopg2.connect("dbname='root' user='root'")
-        cur = conn.cursor()
-        cur.execute('SELECT uid,year,month,cruise,lat,long FROM ' + sys.argv[1])
-        profiles_info_list = cur.fetchall()
-    return profiles_info_list
-
-profiles_info_list = []
-cur = None
+    
+    query = 'SELECT uid,year,month,cruise,lat,long FROM ' + parameters['table']
+    return main.dbinteract(query)

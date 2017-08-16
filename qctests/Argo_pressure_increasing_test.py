@@ -6,7 +6,7 @@ See Argo quality control manual (based on version 2.5),
 http://w3.jcommops.org/FTPRoot/Argo/Doc/argo-quality-control-manual.pdf page 8.
 """
 
-import numpy as np
+import numpy
 from util import obs_utils
 
 def test(p, parameters):
@@ -21,7 +21,7 @@ def test(p, parameters):
 
     # Make the quality control decisions. This should
     # return true where z decreases or stays the same.
-    qc = np.ndarray(p.n_levels(), dtype=bool)
+    qc = numpy.ndarray(p.n_levels(), dtype=bool)
     qc[:] = False
     iRef = -1
     for i in range(0, p.n_levels()):

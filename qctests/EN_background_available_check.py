@@ -6,7 +6,6 @@ This aspect is separated out in this check.
 """
 
 import numpy as np
-from qctests.EN_background_check import auxParam
 from qctests.EN_background_check import findGridCell
 
 def test(p, parameters):
@@ -20,12 +19,12 @@ def test(p, parameters):
     qc = np.zeros(p.n_levels(), dtype=bool)
     
     # Find grid cell nearest to the observation.
-    ilon, ilat = findGridCell(p, auxParam['lon'], auxParam['lat'])
+    ilon, ilat = findGridCell(p, parameters['enbackground']['lon'], parameters['enbackground']['lat'])
         
     # Extract the relevant auxiliary data.
     imonth = p.month() - 1
-    clim = auxParam['clim'][:, ilat, ilon, imonth]
-    depths = auxParam['depth']
+    clim = parameters['enbackground']['clim'][:, ilat, ilon, imonth]
+    depths = parameters['enbackground']['depth']
     
     # Remove missing data points.
     iOK = (clim.mask == False)

@@ -4,8 +4,7 @@ Implements the impossible date test on page 6 of http://w3.jcommops.org/FTPRoot/
 The date criterion has been altered so that the test can be applied to all data types.
 """
 
-import numpy
-import calendar
+import numpy, calendar
 
 def test(p, parameters):
     """

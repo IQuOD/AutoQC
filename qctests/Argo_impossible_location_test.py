@@ -3,7 +3,6 @@ Implements the impossible location test on page 6 of http://w3.jcommops.org/FTPR
 """
 
 import numpy
-import calendar
 
 def test(p, parameters):
     """

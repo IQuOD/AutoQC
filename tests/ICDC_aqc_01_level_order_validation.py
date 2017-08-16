@@ -1,59 +1,72 @@
 import qctests.ICDC_aqc_01_level_order as ICDC
 
 import util.testingProfile
+import util.main as main
 import numpy as np
 
 ##### ICDC level order check.
 ##### --------------------------------------------------
 
-def test_ICDC_level_order_simple():
-    '''Simple tests to ensure functionality works as expected.
-    '''
-    p = util.testingProfile.fakeProfile([1.0, 2.0, 3.0],
-                                        [2.0, -1.0, 1.0])
-    qc              = ICDC.test(p, None)
-    nlevels, zr, tr = ICDC.reordered_data(p)
-    zreverted       = ICDC.revert_order(p, zr)    
-    zreverted_truth = np.ma.array([2.0, -1.0, 1.0], 
-                                  mask = [False, True, False])
+class TestClass():
 
-    assert np.array_equal(qc, [False, True, False]), 'QC error'
-    assert nlevels == 2, 'Subsetting of levels incorrect'
-    assert np.array_equal(zr, [1.0, 2.0]), 'Depth reorder failed'
-    assert np.array_equal(tr, [3.0, 1.0]), 'Temperature reorder failed'
-    assert np.array_equal(zreverted.data[zreverted.mask == False],                       
-                          zreverted_truth.data[zreverted_truth.mask == False]),           'Revert data failed'
-    assert np.array_equal(zreverted.mask,                       
-                          zreverted_truth.mask), 'Revert data failed'
+    parameters = {}
 
-def test_ICDC_level_order():
-    '''
-    Make sure code processes data supplied by Viktor Gouretski
-    correctly.
-    '''
+    def setUp(self):
+        # refresh this table every test
+        ICDC.loadParameters(self.parameters)
 
-    examples = [example1, example2, example3, example4, example5]
+    def tearDown(self):
+        main.dbinteract('DROP TABLE icdclevelorder;')
 
-    for i, example in enumerate(examples):
-        # Extract the test data and the 'truth' values.
-        zorig   = example[:, 0]
-        torig   = example[:, 1]
-        ztruth  = example[:, 2]
-        ttruth  = example[:, 3]
-        qctruth = zorig < 0.0
-        use     = ztruth >= 0.0
-        ztruth  = ztruth[use]
-        ttruth  = ttruth[use]
-        p = util.testingProfile.fakeProfile(torig, zorig) 
-
-        # Check the QC results are returned correctly.
-        qc = ICDC.test(p, None)
-        assert np.array_equal(qc, qctruth), 'Example %i QC wrong' % (i + 1)
-
-        # Check that the reordering is correct.
+    def test_ICDC_level_order_simple(self):
+        '''Simple tests to ensure functionality works as expected.
+        '''
+        p = util.testingProfile.fakeProfile([1.0, 2.0, 3.0],
+                                            [2.0, -1.0, 1.0],
+                                            uid=8888)
+        qc              = ICDC.test(p, self.parameters)
         nlevels, zr, tr = ICDC.reordered_data(p)
-        assert np.array_equal(zr, ztruth), 'Example %i zr wrong' % (i + 1)
-        assert np.array_equal(tr, ttruth), 'Example %i tr wrong' % (i + 1)
+        zreverted       = ICDC.revert_order(p, zr)    
+        zreverted_truth = np.ma.array([2.0, -1.0, 1.0], 
+                                      mask = [False, True, False])
+        
+        assert np.array_equal(qc, [False, True, False]), 'QC error'
+        assert nlevels == 2, 'Subsetting of levels incorrect'
+        assert np.array_equal(zr, [1.0, 2.0]), 'Depth reorder failed'
+        assert np.array_equal(tr, [3.0, 1.0]), 'Temperature reorder failed'
+        assert np.array_equal(zreverted.data[zreverted.mask == False],                       
+                              zreverted_truth.data[zreverted_truth.mask == False]),           'Revert data failed'
+        assert np.array_equal(zreverted.mask,                       
+                              zreverted_truth.mask), 'Revert data failed'
+
+    def test_ICDC_level_order(self):
+        '''
+        Make sure code processes data supplied by Viktor Gouretski
+        correctly.
+        '''
+
+        examples = [example1, example2, example3, example4, example5]
+
+        for i, example in enumerate(examples):
+            # Extract the test data and the 'truth' values.
+            zorig   = example[:, 0]
+            torig   = example[:, 1]
+            ztruth  = example[:, 2]
+            ttruth  = example[:, 3]
+            qctruth = zorig < 0.0
+            use     = ztruth >= 0.0
+            ztruth  = ztruth[use]
+            ttruth  = ttruth[use]
+            p = util.testingProfile.fakeProfile(torig, zorig, uid=i) 
+
+            # Check the QC results are returned correctly.
+            qc = ICDC.test(p, self.parameters)
+            assert np.array_equal(qc, qctruth), 'Example %i QC wrong' % (i + 1)
+
+            # Check that the reordering is correct.
+            nlevels, zr, tr = ICDC.reordered_data(p)
+            assert np.array_equal(zr, ztruth), 'Example %i zr wrong' % (i + 1)
+            assert np.array_equal(tr, ttruth), 'Example %i tr wrong' % (i + 1)
 
 # Data provided by Viktor Gouretski, ICDC, University of Hamburg.
 example1 = np.array([

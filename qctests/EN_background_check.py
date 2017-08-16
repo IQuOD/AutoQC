@@ -7,6 +7,7 @@ import EN_spike_and_step_check
 import numpy as np
 import util.obs_utils as outils
 from netCDF4 import Dataset
+import util.main as main
 
 def test(p, parameters):
     """ 
@@ -17,44 +18,46 @@ def test(p, parameters):
     
     # Check if the QC of this profile was already done and if not
     # run the QC.
-    if p.uid() != uid or p.uid() is None:
-        run_qc(p, parameters)
+    query = 'SELECT en_background_check FROM ' + parameters["table"] + ' WHERE uid = ' + str(p.uid()) + ';'
+    qc_log = main.dbinteract(query)
+    qc_log = main.unpack_row(qc_log[0])
 
-    # QC results are in the module variable.
-    return qc
+    if qc_log[0] is not None:
+        return qc_log[0]
+        
+    return run_qc(p, parameters)
 
 def run_qc(p, parameters):
     """
     Performs the QC check.
     """
-
-    global qc, uid, origLevels, ptLevels, bgLevels, bgStdLevels, bgevStdLevels
-
+    
     # Define an array to hold results.
     qc = np.zeros(p.n_levels(), dtype=bool)
     
     # Create a record of the processing for use by the background
     # and buddy checks on standard levels.
-    uid        = p.uid()
     origLevels = []
     ptLevels   = []
     bgLevels   = []
 
     # Find grid cell nearest to the observation.
-    ilon, ilat = findGridCell(p, auxParam['lon'], auxParam['lat'])
+    ilon, ilat = findGridCell(p, parameters['enbackground']['lon'], parameters['enbackground']['lat'])
         
     # Extract the relevant auxiliary data.
     imonth = p.month() - 1
-    clim = auxParam['clim'][:, ilat, ilon, imonth]
-    bgev = auxParam['bgev'][:, ilat, ilon]
+    clim = parameters['enbackground']['clim'][:, ilat, ilon, imonth]
+    bgev = parameters['enbackground']['bgev'][:, ilat, ilon]
     bgStdLevels   = clim # Save for use in another check.
     bgevStdLevels = bgev # Save the full column for use by another check.
-    obev = auxParam['obev']
-    depths = auxParam['depth']
-    
+    obev = parameters['enbackground']['obev']
+    depths = parameters['enbackground']['depth']
+
     # Remove missing data points.
     iOK = (clim.mask == False) & (bgev.mask == False)
-    if np.count_nonzero(iOK) == 0: return qc
+    if np.count_nonzero(iOK) == 0: 
+        record_parameters(p, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels)
+        return qc
     clim = clim[iOK]
     bgev = bgev[iOK]
     obev = obev[iOK]
@@ -118,7 +121,22 @@ def run_qc(p, parameters):
             ptLevels.append(potm)
             bgLevels.append(climLevel)
     
-    return None
+    record_parameters(p, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels)
+
+    return qc
+
+def record_parameters(profile, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels):
+    # pack the parameter arrays into the enbackground table
+    # for consumption by the buddy check
+
+    bgstdlevels = main.pack_array(bgStdLevels)
+    bgevstdlevels = main.pack_array(bgevStdLevels)
+    origlevels = main.pack_array(origLevels)
+    ptlevels = main.pack_array(ptLevels)
+    bglevels = main.pack_array(bgLevels)
+    query = "INSERT INTO enbackground VALUES(?,?,?,?,?,?);"
+    main.dbinteract(query, [profile.uid(), bgstdlevels, bgevstdlevels, origlevels, ptlevels, bglevels])
+
 
 def findGridCell(p, gridLong, gridLat):
     '''
@@ -178,16 +196,12 @@ def readENBackgroundCheckAux():
     
     return data
 
-#import parameters on load
-auxParam = readENBackgroundCheckAux()
+def loadParameters(parameterStore):
 
-# Initialise global variables to hold data needed for the
-# EN background and buddy check on standard levels.
-uid           = None
-qc            = None
-origLevels    = []
-ptLevels      = []
-bgLevels      = []
-bgevStdLevels = []
-bgStdLevels   = []
+    main.dbinteract("DROP TABLE IF EXISTS enbackground")
+    main.dbinteract("CREATE TABLE IF NOT EXISTS enbackground (uid INTEGER, bgstdlevels BLOB, bgevstdlevels BLOB, origlevels BLOB, ptlevels BLOB, bglevels BLOB)")
+    parameterStore['enbackground'] = readENBackgroundCheckAux()
+
+
+
 

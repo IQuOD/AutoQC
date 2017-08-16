@@ -6,8 +6,7 @@ http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 import numpy as np
 import util.main as main
 import util.geo as geo
-import copy, datetime, math, psycopg2
-import sys, datetime, calendar
+import copy, datetime, math, sys, calendar
 
 # module constants
 DistRes = 20000. # meters
@@ -28,19 +27,20 @@ def test(p, parameters):
         return np.zeros(1, dtype=bool)
     
     # don't bother if this has already been analyzed
-    command = 'SELECT en_track_check FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid) + ';'
+    command = 'SELECT en_track_check FROM ' + parameters["table"] + ' WHERE uid = ' + str(uid) + ';'
     en_track_result = main.dbinteract(command)
     if en_track_result[0][0] is not None:
-      result = np.zeros(1, dtype=bool)
-      result[0] = en_track_result[0][0]
-      return result
+        en_track_result = main.unpack_row(en_track_result[0])[0]
+        result = np.zeros(1, dtype=bool)
+        result[0] = np.any(en_track_result)
+        return result
     
     # some detector types cannot be assessed by this test; do not raise flag.
     if p.probe_type() in [None]:
         return np.zeros(1, dtype=bool)
     
     # fetch all profiles on track, sorted chronologically, earliest first (None sorted as highest)
-    command = 'SELECT uid, year, month, day, time, lat, long, probe FROM ' + sys.argv[1] + ' WHERE cruise = ' + str(cruise) + ' and year is not null and month is not null and day is not null and time is not null ORDER BY year, month, day, time ASC;'
+    command = 'SELECT uid, year, month, day, time, lat, long, probe FROM ' + parameters["table"] + ' WHERE cruise = ' + str(cruise) + ' and year is not null and month is not null and day is not null and time is not null ORDER BY year, month, day, time ASC;'
     track_rows = main.dbinteract(command)
 
     # start all as passing by default:
@@ -65,8 +65,11 @@ def test(p, parameters):
    
     # write all to db
     for i in range(len(track_rows)):
-        query = "UPDATE " + sys.argv[1] + " SET en_track_check " + " = " + str(EN_track_results[track_rows[i][0]][0]) + " WHERE uid = " + str(track_rows[i][0]) + ";"
-        main.dbinteract(query)
+        result = main.pack_array(EN_track_results[track_rows[i][0]])
+        
+        query = "UPDATE " + sys.argv[1] + " SET en_track_check=? WHERE uid = " + str(track_rows[i][0]) + ";"
+
+        main.dbinteract(query, (result,))
 
     return EN_track_results[uid]
 
