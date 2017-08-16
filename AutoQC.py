@@ -3,16 +3,7 @@ import glob, time
 import numpy as np
 import sys, os, data.ds
 import util.main as main
-import pandas
-try:
-    import psycopg2 as db
-    dbtype = 'postgres'
-    concom = "dbname='root' user='root'"
-except:
-    import sqlite3 as db
-    concom = 'qcresults.sqlite'
-    dbtype = 'sqlite'
-print('Database type is ' + dbtype)
+import pandas, psycopg2
 from multiprocessing import Pool
 import tempfile
 
@@ -57,7 +48,7 @@ if len(sys.argv)>2:
     '''run all tests on the ith database row'''
   
     # extract profile
-    cur.execute('SELECT * FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid) )
+    cur.execute('SELECT * FROM validate WHERE uid = ' + str(uid) )
     row = cur.fetchall()
     fProfile = tempfile.TemporaryFile()
     fProfile.write(row[0][0]) # a file-like object containing only the profile from the queried row
@@ -77,16 +68,13 @@ if len(sys.argv)>2:
     for itest, test in enumerate(testNames):
       
       result = run(test, [profile])
-      query = "UPDATE " + sys.argv[1] + " SET " + test.lower() + " = " + str(int(result[0][0])) + " WHERE uid = " + str(profile.uid()) + ";"
+      query = "UPDATE validate SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile.uid()) + ";"
       cur.execute(query)
-      if dbtype == 'sqlite':
-          # Seem to need to do this after every update for sqlite database.
-          conn.commit()
       
   # connect to database & fetch list of all uids
-  conn = db.connect(concom)
+  conn = psycopg2.connect("dbname='root' user='root'")
   cur = conn.cursor()
-  cur.execute('SELECT uid FROM ' + sys.argv[1])
+  cur.execute('SELECT uid FROM validate')
   uids = cur.fetchall()
   
   # launch async processes
@@ -100,5 +88,5 @@ if len(sys.argv)>2:
   
 else:
   print 'Please add command line arguments to name your output file and set parallelization:'
-  print 'python AutoQC databasetable 4'
-  print 'will result in output written to table in the database, and will run the calculation parallelized across 4 cores.'
+  print 'python AutoQC myFile 4'
+  print 'will result in output written to results-myFile.csv, and will run the calculation parallelized across 4 cores.'
