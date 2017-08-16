@@ -10,33 +10,21 @@ import data.ds
 # work on a testing profile.
 def dummycatchflagsfunc(arg): 
     pass
+def dummyprofiledatafunc(p, dummy1, dummy2):
+    fid = open('data/quota_subset.dat') # Need an open file handle for program to close. 
+    return p, '', fid
 realcatchflagsfunc = main.catchFlags
-realgetproffunc    = main.get_profile_from_db
-
-# Set up the profile information for the check to work using the information put into the data.ds module.
-def profile_to_info_list(p):
-    return (p.uid(),p.year(),p.month(),p.cruise(),p.latitude(),p.longitude())
-
-def get_profiles_info_list():
-    ps = []
-    for p in data.ds.profiles:
-        ps.append(profile_to_info_list(p))
-    return ps
-
-def dummy_get_profile_from_db(cur, uid):
-    for profile in data.ds.profiles:
-        if profile.uid() == uid:
-            return profile
+realprofiledatafunc = main.profileData
 
 ##### EN_std_lev_bkg_and_buddy_check ---------------------------------------------------
 
 def setUp():
     main.catchFlags = dummycatchflagsfunc
-    main.get_profile_from_db = dummy_get_profile_from_db
+    main.profileData = dummyprofiledatafunc
 
 def tearDown():
     main.catchFlags = realcatchflagsfunc
-    main.get_profile_from_db = realgetproffunc
+    main.profileData = realprofiledatafunc
 
 def test_EN_std_level_bkg_and_buddy_check_temperature():
     '''
@@ -45,7 +33,6 @@ def test_EN_std_level_bkg_and_buddy_check_temperature():
 
     p = util.testingProfile.fakeProfile([1.8, 1.8, 1.8, 7.1], [0.0, 2.5, 5.0, 7.5], latitude=55.6, longitude=12.9, date=[1900, 01, 15, 0], probe_type=7) 
     data.ds.profiles = [p]
-    qctests.EN_std_lev_bkg_and_buddy_check.profiles_info_list = get_profiles_info_list()
     qc = qctests.EN_std_lev_bkg_and_buddy_check.test(p)
     expected = [False, False, False, False]
     print qc
@@ -147,23 +134,23 @@ def test_assessBuddyDistance_invalid_buddies():
 
     p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
     p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 13], uid=0, cruise=2)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) is None, 'accepted buddies with same uid'
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies with same uid'
 
     p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
-    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1901, 1, 1, 13], uid=1, cruise=2)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) is None, 'accepted buddies with different year'
+    p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], date=[1901, 1, 1, 13], uid=1, cruise=2)
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies with different year'
 
     p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
     p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 2, 1, 13], uid=1, cruise=2)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) is None, 'accepted buddies with different month'
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies with different month'
 
     p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
     p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 13], uid=1, cruise=1)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) is None, 'accepted buddies with same cruise'
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies with same cruise'
 
     p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
     p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 5.01, 0, date=[1900, 1, 1, 13], uid=1, cruise=2)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) is None, 'accepted buddies too far apart in latitude'
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) is None, 'accepted buddies too far apart in latitude'
 
 def test_assessBuddyDistance_haversine():
     '''
@@ -172,7 +159,7 @@ def test_assessBuddyDistance_haversine():
 
     p1 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 0, 0, date=[1900, 1, 1, 12], uid=0, cruise=1)
     p2 = util.testingProfile.fakeProfile([0,0,0],[0,0,0], 1, 1, date=[1900, 1, 1, 13], uid=1, cruise=2)
-    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, profile_to_info_list(p2)) == haversine(0,0,1,1), 'haversine calculation inconsistent with cotede.qctests.possible_speed.haversine'
+    assert qctests.EN_std_lev_bkg_and_buddy_check.assessBuddyDistance(p1, p2) == haversine(0,0,1,1), 'haversine calculation inconsistent with cotede.qctests.possible_speed.haversine'
 
 
 def test_timeDiff():
@@ -202,7 +189,6 @@ def test_EN_std_level_bkg_and_buddy_real_profiles_1():
     '''
 
     data.ds.profiles = [realProfile1]
-    qctests.EN_std_lev_bkg_and_buddy_check.profiles_info_list = get_profiles_info_list()
     qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile1)
 
     assert numpy.array_equal(qc, truthQC1), 'mismatch between qc results and expected values'
@@ -213,7 +199,6 @@ def test_EN_std_level_bkg_and_buddy_real_profiles_2():
     '''
 
     data.ds.profiles = [realProfile2, realProfile3]
-    qctests.EN_std_lev_bkg_and_buddy_check.profiles_info_list = get_profiles_info_list()
     qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile2, allow_level_reinstating=False)
 
     assert numpy.array_equal(qc, truthQC2), 'mismatch between qc results and expected values'
@@ -224,7 +209,6 @@ def test_EN_std_level_bkg_and_buddy_real_profiles_3():
     '''
 
     data.ds.profiles = [realProfile2, realProfile3]
-    qctests.EN_std_lev_bkg_and_buddy_check.profiles_info_list = get_profiles_info_list()
     qc = qctests.EN_std_lev_bkg_and_buddy_check.test(realProfile2)
     assert numpy.all(qc == False), 'mismatch between qc results and expected values'
 
