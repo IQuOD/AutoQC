@@ -23,7 +23,7 @@ etoph[width:-width, 0:width] = etoph[width:-width, -2*width:-width]
 etoph[width:-width, -width:] = etoph[width:-width, width:2*width]
 nc.close()
 
-def test(p):
+def test(p, parameters):
     '''Return an array of QC decisions. There is a QC result per level but these
        are all set to the same value, determined by the location.
     ''' 

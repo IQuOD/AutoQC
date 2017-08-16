@@ -29,11 +29,11 @@ zr         = None
 tr         = None
 qc         = None
 
-def test(p):
+def test(p, parameters):
     '''Return a set of QC decisions. This corresponds to levels with
        negative depths.
     '''
-
+    
     level_order(p)
 
     return qc

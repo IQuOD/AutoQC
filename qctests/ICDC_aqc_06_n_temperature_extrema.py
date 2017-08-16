@@ -19,10 +19,10 @@ c    find profiles with unrealistically large number of temperature extrema
 import ICDC_aqc_01_level_order as ICDC
 import numpy as np
 
-def test(p):
+def test(p, parameters):
     '''Return quality control decisions.
     '''
-
+    
     # Initialise data.
     qc = np.zeros(p.n_levels(), dtype=bool)
     parminover = -2.3

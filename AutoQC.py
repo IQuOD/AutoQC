@@ -3,11 +3,12 @@ import glob, time
 import numpy as np
 import sys, os, data.ds
 import util.main as main
-import pandas, psycopg2
+import pandas
+import psycopg2
 from multiprocessing import Pool
 import tempfile
 
-def run(test, profiles):
+def run(test, profiles, parameters):
   '''
   run <test> on a list of <profiles>, return an array summarizing when exceptions were raised
   '''
@@ -15,7 +16,7 @@ def run(test, profiles):
   verbose = []
   exec('from qctests import ' + test)
   for profile in profiles:
-    exec('result = ' + test + '.test(profile)')
+    exec('result = ' + test + '.test(profile, parameters)')
 
     #demand tests returned bools:
     for i in result:
@@ -33,8 +34,6 @@ if len(sys.argv)>2:
   # Identify and import tests
   testNames = main.importQC('qctests')
   testNames.sort()
-  testNames.remove('EN_std_lev_bkg_and_buddy_check')
-  testNames.remove('EN_track_check')
   print('{} quality control checks have been found'.format(len(testNames)))
   testNames = main.checkQCTestRequirements(testNames)
   print('{} quality control checks are able to be run:'.format(len(testNames)))
@@ -45,16 +44,10 @@ if len(sys.argv)>2:
   print('\nPlease wait while QC is performed\n')
 
   def process_row(uid):
-    '''run all tests on the ith database row'''
+    '''run all tests on the indicated database row'''
   
     # extract profile
-    cur.execute('SELECT * FROM validate WHERE uid = ' + str(uid) )
-    row = cur.fetchall()
-    fProfile = tempfile.TemporaryFile()
-    fProfile.write(row[0][0]) # a file-like object containing only the profile from the queried row
-    fProfile.seek(0)
-    profile = wod.WodProfile(fProfile)
-    fProfile.close()
+    profile = main.get_profile_from_db(uid)
 
     # Check that there are temperature data in the profile, otherwise skip.
     if profile.var_index() is None:
@@ -64,29 +57,32 @@ if len(sys.argv)>2:
       return
 
     # run tests
-    results = [row[0][1]]
     for itest, test in enumerate(testNames):
-      
-      result = run(test, [profile])
-      query = "UPDATE validate SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile.uid()) + ";"
-      cur.execute(query)
+      result = run(test, [profile], parameterStore)
+      query = "UPDATE " + sys.argv[1] + " SET " + test.lower() + " = " + str(result[0][0]) + " WHERE uid = " + str(profile.uid()) + ";"
+      main.dbinteract(query)
+
+  # set up global parmaeter store
+  parameterStore = {}
+  for test in testNames:
+    exec('from qctests import ' + test)
+    try:
+      exec(test + '.loadParameters(parameterStore)')
+    except:
+      print 'No parameters to load for', test
       
   # connect to database & fetch list of all uids
-  conn = psycopg2.connect("dbname='root' user='root'")
-  cur = conn.cursor()
-  cur.execute('SELECT uid FROM validate')
-  uids = cur.fetchall()
+  query = 'SELECT uid FROM ' + sys.argv[1] + ' ORDER BY uid OFFSET ' + sys.argv[2] + ' LIMIT ' + str(int(sys.argv[3]) - int(sys.argv[2])) + ';' 
+  uids = main.dbinteract(query)
   
   # launch async processes
-  pool = Pool(processes=int(sys.argv[2]))
+  pool = Pool(processes=1)
   for i in range(len(uids)):
     pool.apply_async(process_row, (uids[i][0],))
   pool.close()
   pool.join()
-  
-  conn.commit()
-  
+    
 else:
   print 'Please add command line arguments to name your output file and set parallelization:'
-  print 'python AutoQC myFile 4'
-  print 'will result in output written to results-myFile.csv, and will run the calculation parallelized across 4 cores.'
+  print 'python AutoQC <database table> <from> <to>'
+  print 'will write qc results to <database table> in the database, and run the calculation on database rows starting at <from> and going to but not including <to>.'

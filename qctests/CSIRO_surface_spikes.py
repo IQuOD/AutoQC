@@ -5,7 +5,7 @@ All questionable features result in a flag, in order to minimize false negatives
 
 import numpy
 
-def test(p):
+def test(p, parameters):
     """
     Runs the quality control check on profile p and returns a numpy array
     of quality control decisions with False where the data value has

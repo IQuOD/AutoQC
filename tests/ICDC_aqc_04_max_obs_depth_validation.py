@@ -28,7 +28,7 @@ def test_ICDC_max_obs_level():
             
             p  = util.testingProfile.fakeProfile(depths, depths, probe_type=probe_type)
             p.primary_header['Country code'] = 'JP'
-            qc = ICDC_mol.test(p)
+            qc = ICDC_mol.test(p, None)
        
             assert np.array_equal(qc, qctruth), 'Failed profile with header ' + line
 

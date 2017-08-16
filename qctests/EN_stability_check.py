@@ -5,7 +5,7 @@ http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 
 import math, numpy
 
-def test(p):
+def test(p, parameters):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 

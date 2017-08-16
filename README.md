@@ -22,10 +22,10 @@ docker pull iquod/autoqc
 Start the image via
 
 ```
-docker run -i -t iquod/autoqc /bin/bash
+docker run --sysctl "kernel.shmmax=18446744073692774399" -v $PWD:/rawdata -i -t iquod/autoqc /bin/bash
 ```
 
-And you'll find AutoQC all set up and ready to use in the directory `/AutoQC`. Note that the version of AutoQC that ships with the docker image may be behind master on GitHub; you can always do `git pull origin master` from the `/AutoQC` directory inside the image, if you need an update.
+And you'll find AutoQC all set up and ready to use in the directory `/AutoQC`. Note that the version of AutoQC that ships with the docker image may be behind master on GitHub; you can always do `git pull origin master` from the `/AutoQC` directory inside the container, if you need an update. Also, whatever directory you launched this command from will be mounted on `/rawdata` inside your Docker container; use this to bring data into the container, or copy logs and files from within the container to this location to access them after Docker exits.
 
 If you want to run AutoQC without Docker, have a look at the setup steps in `docker/Dockerfile`; these correspond to the same setup steps you'll need to do on a similar machine (i.e. on Debian with miniconda already installed).
 
@@ -65,26 +65,64 @@ cd data
 Finally, launch your docker image with the `data` directory mounted inside it at `/rawdata`:
 
 ```
-sudo docker run -v $PWD:/rawdata -i -t iquod/autoqc /bin/bash
+sudo docker run --sysctl "kernel.shmmax=18446744073692774399" -v $PWD:/rawdata -i -t iquod/autoqc /bin/bash
 ```
 
 And once again, AutoQC will be all set up in `/AutoQC`. Remember to `git pull` if necessary, and add any external data or parameter files to the correct places.
 
 ##Usage
-To execute the quality control checks,
-`python AutoQC.py name nProcessors`
 
-where `name` names the output csv naming as `result-name.csv`, and `nProcessors` is the number of cores to parallelize over.
+AutoQC runs in three steps: database construction, qc running, and result summarization.
 
-##Structure
-`AutoQC.py` performs the following:
- - automatically detects all quality control tests found in `/qctests`
- - takes the list of raw data files from `datafiles.json`, and decodes their contents into an array of profile objects
- - runs all the automatically detected tests over each of these profiles
- - return an array for each test indicating which profiles exceptions were raised for, and an array indicating the expected result for each profile
+### Database Construction
+
+```
+python build-db.py filename tablename
+```
+
+Where `filename` is the name of a WOD-ascii file to read profiles from, and `tablename` is the name of a postgres table to write the results to; `tablename` will be created if it doesn't
+exist, or appended to if it does. `tablename` will have the following columns:
+
+column name | description
+------------|-----------
+`raw`       | the raw WOD-ASCII text originally found in the input file
+`truth`     | whether any temperature qc levels were flagged at 3 or greater
+`uid`       | unique profile serial number
+`year`      | timestamp year
+`month`     | timestamp month, integers [1,12]
+`day`       | timestamp day, integers [1,31]
+`time`      | timestamp walltime, real [0,24)
+`lat`       | profile latitude
+`long`      | profile longitude
+`cruise`    | cruise id
+`probe`     | probe index, per WOD specifications
+
+Additionally, there is a column in the table for the qc results of every test found in the `/qctests` directory; these columns are filled in in the next step.
+
+### QC Execution
+
+```
+python AutoQC.py tablename nProcessors
+```
+
+where `tablename` is the postgres table to pull profiles from (probably the same as `tablename` in the last step), and `nProcessors` is how many processors you'd like to parallelize over
+
+### Result Summary
+
+```
+python summarize-results.py tablename
+```
+
+where `tablename` is the postgres table used in the previous steps. A summary of true flags, true passes, false positives and false negatives is generated for each test.
+
+
+##Testing
 
 ###Testing Data
-Each quality control test must be written as its own file in `/qctests`, of the form `def test(p)`, where `p` is a profile object; each test returns a bool, where `True` indicates the test has *failed*.
+Each quality control test must be written as its own file in `/qctests`, of the form `def test(p, parameters)`, where `p` is a profile object; each test returns a bool, where `True` indicates the test has *failed*.
+`parameters` is a dictionary for conveniently persisting *static* parameters and sharing them between threads; if your test has a great deal of parameters to load before it runs, include alongside its definition a `loadParmaeters(dict)` method, which writes those
+parameters to keys of your choosing on the dictionary passed in as an argument to `loadParameters`. That dictionary will subsequently be passed into every qc test as the `parameters` argument. Calling this `loadParameters` function is done automatically by the qc framework;
+it is enough for you to just write it, and the parameters you want will be available in your qc test on the keys you defined on the `parameters` object.
 
 ###Testing Code
 To run the code tests:
@@ -94,11 +132,9 @@ pip install nose
 nosetests tests/*.py
 ```
 
-###Data
-Each data file listed in `datafiles.json` is in the World Ocean Database (WOD; http://www.nodc.noaa.gov/OC5/WOD/pr_wod.html) ASCII format.
-
-###Profile Objects Specification
-See [the docs](https://github.com/IQuOD/AutoQC/blob/master/dataio/README.md) for the WodProfile class, a decoding helper for the WOD ASCII format.
+##Profile Objects Specification
+See [wodpy package](https://github.com/IQuOD/wodpy) for more information on the WodProfile class, a decoding helper for the WOD ASCII format.
 
 ##Contributing
 Quality control checks waiting to be implemented are listed in the Issues. If you would like to work on coding up a check, please assign yourself to the issue to avoid others duplicating the effort.
+If you have an idea for a new QC check, please open an issue and let us know, so we can help get you started on the right track.

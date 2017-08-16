@@ -5,7 +5,7 @@ Implements the spike test on page 8 of http://w3.jcommops.org/FTPRoot/Argo/Doc/a
 import numpy
 from util import obs_utils
 
-def test(p):
+def test(p, parameters):
     """
     Runs the quality control check on profile p and returns a numpy array
     of quality control decisions with False where the data value has

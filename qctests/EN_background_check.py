@@ -8,7 +8,7 @@ import numpy as np
 import util.obs_utils as outils
 from netCDF4 import Dataset
 
-def test(p):
+def test(p, parameters):
     """ 
     Runs the quality control check on profile p and returns a numpy array 
     of quality control decisions with False where the data value has 
@@ -18,12 +18,12 @@ def test(p):
     # Check if the QC of this profile was already done and if not
     # run the QC.
     if p.uid() != uid or p.uid() is None:
-        run_qc(p)
+        run_qc(p, parameters)
 
     # QC results are in the module variable.
     return qc
 
-def run_qc(p):
+def run_qc(p, parameters):
     """
     Performs the QC check.
     """
@@ -70,7 +70,7 @@ def run_qc(p):
     isData = isTemperature & isDepth
 
     # Use the EN_spike_and_step_check to find suspect values.
-    suspect = EN_spike_and_step_check.test(p, suspect=True)
+    suspect = EN_spike_and_step_check.test(p, parameters, suspect=True)
 
     # Loop over levels.
     for iLevel in range(p.n_levels()):

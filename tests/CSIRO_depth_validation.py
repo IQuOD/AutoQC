@@ -11,7 +11,7 @@ def test_CSIRO_depth():
 
     # too shallow for an xbt
     p = util.testingProfile.fakeProfile([0,0,0], [0,1,20], probe_type=2) 
-    qc = qctests.CSIRO_depth.test(p)
+    qc = qctests.CSIRO_depth.test(p, None)
     truth = numpy.zeros(3, dtype=bool)
     truth[0] = True
     truth[1] = True
@@ -19,13 +19,13 @@ def test_CSIRO_depth():
 
     # shallow but not an xbt - don't flag
     p = util.testingProfile.fakeProfile([0,0,0], [0,1,20], probe_type=1) 
-    qc = qctests.CSIRO_depth.test(p)
+    qc = qctests.CSIRO_depth.test(p, None)
     truth = numpy.zeros(3, dtype=bool)
     assert numpy.array_equal(qc, truth), 'flagged a non-xbt measurement'    
 
     # threshold value - don't flag
     p = util.testingProfile.fakeProfile([0,0,0], [0,3.6,20], probe_type=2) 
-    qc = qctests.CSIRO_depth.test(p)
+    qc = qctests.CSIRO_depth.test(p, None)
     truth = numpy.zeros(3, dtype=bool)
     truth[0] = True
     print qc

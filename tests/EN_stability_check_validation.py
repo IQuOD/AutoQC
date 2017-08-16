@@ -32,7 +32,7 @@ def test_EN_stability_check_padded():
     '''
 
     p = util.testingProfile.fakeProfile([13.5, 25.5, 20.4, 13.5, 13.5, 13.5, 13.5, 13.5, 13.5], [0, 10, 20, 30, 40, 50, 60, 70, 80], salinities=[40, 35, 20, 40, 40, 40, 40, 40, 40], pressures=[8000, 2000, 1000, 8000, 8000, 8000, 8000, 8000, 8000])
-    qc = qctests.EN_stability_check.test(p)
+    qc = qctests.EN_stability_check.test(p, None)
     truth = numpy.ma.array([False, True, True, False, False, False, False, False, False], mask=False)
     assert numpy.array_equal(qc, truth), 'failed to flag padded stability example'
 
@@ -44,6 +44,6 @@ def test_EN_stability_check_unpadded():
     '''
 
     p = util.testingProfile.fakeProfile([13.5, 25.5, 20.4, 13.5], [0, 10, 20, 30], salinities=[40, 35, 20, 40], pressures=[8000, 2000, 1000, 8000])
-    qc = qctests.EN_stability_check.test(p)
+    qc = qctests.EN_stability_check.test(p, None)
     truth = numpy.ma.array([True, True, True, True], mask=False)
     assert numpy.array_equal(qc, truth), 'failed to flag unpadded stability example'

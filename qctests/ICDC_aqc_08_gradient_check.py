@@ -19,10 +19,10 @@ c    to check temperature profile for unrealistic vertical gradients
 import ICDC_aqc_01_level_order as ICDC
 import numpy as np
 
-def test(p):
+def test(p, parameters):
     '''Return quality control decisions.
     '''
-
+    
     # Global ranges - data outside these bounds are ignored.
     parminover = -2.3
     parmaxover = 33.0

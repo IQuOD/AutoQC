@@ -12,26 +12,26 @@ def test_EN_range_check_temperature():
 
     # should fail despite rounding
     p = util.testingProfile.fakeProfile([-4.00000001], [100]) 
-    qc = qctests.EN_range_check.test(p)
+    qc = qctests.EN_range_check.test(p, None)
     truth = numpy.zeros(1, dtype=bool)
     truth[0] = True
     assert numpy.array_equal(qc, truth), 'failed to flag temperature slightly colder than -4 C'
 
     # -4 OK
     p = util.testingProfile.fakeProfile([-4], [100]) 
-    qc = qctests.EN_range_check.test(p)
+    qc = qctests.EN_range_check.test(p, None)
     truth = numpy.zeros(1, dtype=bool)
     assert numpy.array_equal(qc, truth), 'incorrectly flagging -4 C'
 
     # 40 OK
     p = util.testingProfile.fakeProfile([40], [100]) 
-    qc = qctests.EN_range_check.test(p)
+    qc = qctests.EN_range_check.test(p, None)
     truth = numpy.zeros(1, dtype=bool)
     assert numpy.array_equal(qc, truth), 'incorrectly flagging 40 C'
 
     # should fail despite rounding
     p = util.testingProfile.fakeProfile([40.0000001], [100]) 
-    qc = qctests.EN_range_check.test(p)
+    qc = qctests.EN_range_check.test(p, None)
     truth = numpy.zeros(1, dtype=bool)
     truth[0] = True
     assert numpy.array_equal(qc, truth), 'failed to flag temperature slightly warmer than 40 C'

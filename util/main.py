@@ -6,6 +6,8 @@ from wodpy import wod
 from netCDF4 import Dataset
 import testingProfile
 from numbers import Number
+import sys
+import tempfile, psycopg2
 
 def importQC(dir):
   '''
@@ -124,3 +126,71 @@ def calcRates(testResults, trueResults):
   tnr = nPP * 100.0 / nTruePasses
 
   return tpr, fpr, fnr, tnr 
+
+def get_profile_from_db(uid):
+  '''
+  Given a unique id found in the current database table, return the corresponding WodPy profile object.
+  '''
+ 
+  command = 'SELECT * FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid)
+  row = dbinteract(command)
+  return text2wod(row[0][0])
+
+def text2wod(raw):
+  '''
+  given the raw text of a wod ascii profile, return a wodpy object representing the same.
+  '''
+  
+  fProfile = tempfile.TemporaryFile()
+  fProfile.write(raw) # a file-like object containing only the profile from the queried row
+  fProfile.seek(0)
+  profile = wod.WodProfile(fProfile)
+  fProfile.close()
+ 
+  return profile
+
+def dictify(rows, keys):
+  '''
+  given a list of rows from the db, return a list of dicts in the same order
+  representing the same information keyed by the key names found in the tuple <keys>
+  '''
+
+  dicts = []
+
+  for i in range(len(rows)):
+    d = {}
+    for j in range(len(keys)):
+      d[keys[j]] = rows[i][j]
+
+    dicts.append(d)
+
+  return dicts
+
+def dbinteract(command, tries=0):
+  '''
+  execute the given postgres command;
+  catch errors and retry a maximum number of times.
+  '''
+
+  max_retry = 99
+  conn = psycopg2.connect("dbname='root' user='root'")
+  conn.autocommit = True
+  cur = conn.cursor()
+  try:
+    cur.execute(command)
+    try:
+      result = cur.fetchall()
+    except:
+      result = None
+    cur.close()
+    conn.close()
+    return result
+  except psycopg2.Error as e:
+    print 'failed', command, 'on try number', tries
+    conn.rollback()
+    cur.close()
+    conn.close()
+    if tries < max_retry:
+      dbinteract(command, tries+1)
+    else:
+      return -1
