@@ -61,15 +61,8 @@ if len(sys.argv) == 3:
         # set up dictionary for populating query string
         wodDict = profile.npdict()
         wodDict['raw'] = "'" + raw + "'"
-        # Below avoids failures if all profile data are missing.
-        # We have no use for this profile in that case so skip it.
-        try:
-            wodDict['truth'] = int(sum(profile.t_level_qc(originator=True) >= 3) >= 1)
-        except:
-            if profile.is_last_profile_in_file(fid) == True:
-                break
-            continue
-
+        wodDict['truth'] = int(sum(profile.t_level_qc(originator=True) >= 3) >= 1)
+    
         query = "INSERT INTO " + sys.argv[2] + " (raw, truth, uid, year, month, lat, long, cruise) "  + """ VALUES(
                     {p[raw]},
                     {p[truth]},
