@@ -29,6 +29,8 @@ def test(p, parameters):
         if isData[i] and isData[i+1]:
             deltaD = (d.data[i+1] - d.data[i]) 
             deltaT = (t.data[i+1] - t.data[i])
+            if deltaT == 0:
+                continue
             gradshort = deltaD / deltaT 
             if (deltaT > 0.5 and deltaD < 30) or abs(gradshort) < 0.4 or (gradshort > 0 and gradshort < 12.5):
                 if abs(deltaT) > 0.4:
