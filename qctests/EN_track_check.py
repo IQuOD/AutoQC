@@ -40,7 +40,7 @@ def test(p, parameters):
         return np.zeros(1, dtype=bool)
     
     # fetch all profiles on track, sorted chronologically, earliest first (None sorted as highest)
-    command = 'SELECT uid, year, month, day, time, lat, long, probe FROM ' + sys.argv[1] + ' WHERE cruise = ' + str(cruise) + ' and year is not null and month is not null and day is not null and time is not null ORDER BY year, month, day, time ASC;'
+    command = 'SELECT uid, year, month, day, time, lat, long, probe FROM ' + sys.argv[1] + ' WHERE cruise = ' + str(cruise) + ' and year is not null and month is not null and day is not null and time is not null ORDER BY year, month, day, time, uid ASC;'
     track_rows = main.dbinteract(command)
 
     # start all as passing by default:
