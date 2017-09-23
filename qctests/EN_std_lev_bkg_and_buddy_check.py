@@ -211,7 +211,7 @@ def update_pgeData(pgeData, pgeBuddy, levels, levelsBuddy, minDist, profile, bud
 
         errVarA = obev[iLevel] + bgev[iLevel]
         errVarB = obev[iLevel] + bgevBuddy[iLevel]
-        rho2    = covar**2 / (errVarA + errVarB)
+        rho2    = covar**2 / (errVarA * errVarB)
         expArg  = (-(0.5 * rho2 / (1.0 - rho2)) *  
                    (levels[iLevel]**2 / errVarA + 
                     levelsBuddy[iLevel]**2 / errVarB - 
