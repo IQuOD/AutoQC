@@ -62,7 +62,7 @@ def test_deltaTime_times():
     diff = geo.deltaTime(early, late)
     assert diff == 82800., 'incorrect time difference for earlier times but later days'
 
-def test_haversineAngle():
+def test_courseCorrection():
     '''
     check some nominal behavior of great circle intersections.
     '''
@@ -74,12 +74,12 @@ def test_haversineAngle():
     lat3 = 0
     lon3 = 30
 
-    angle = geo.haversineAngle(lat1, lon1, lat2, lon2, lat3, lon3) 
-    assert angle - math.pi < 0.000001, 'point on a circle had a non-zero angle between them: %f' % angle
+    angle = geo.courseCorrection(lat1, lon1, lat2, lon2, lat3, lon3) 
+    assert angle < 0.000001, 'point on a circle had a non-zero angle between them: %f' % angle
 
     lat3 = 90
     lon3 = 20
-    angle = geo.haversineAngle(lat1, lon1, lat2, lon2, lat3, lon3)
+    angle = geo.courseCorrection(lat1, lon1, lat2, lon2, lat3, lon3)
     assert angle - math.pi/2 < 0.000001, 'orthogonal great circles had an angle of %f between them.' % angle
 
 def test_archaversine_domain():
