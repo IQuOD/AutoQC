@@ -39,10 +39,10 @@ def haversineDistance(lat1, lon1, lat2, lon2):
     assert km >= 0, 'haversine returned negative distance'
     return km*1000.
 
-def courseCorrection(lat1, lon1, lat2, lon2, lat3, lon3):
+def haversineAngle(lat1, lon1, lat2, lon2, lat3, lon3):
     '''
-    Calculate the course correction angle between an initial track from lat/lon1 to lat/lon2,
-    and a post-correction track from lat/lon2 and lat/lon3
+    Calculate the angle subtended by the great circle passing through lat/lon1 and lat/lon2,
+    with that passing through lat/lon2 and lat/lon3
     return None if any required information is missing.
     '''
     
@@ -62,7 +62,7 @@ def courseCorrection(lat1, lon1, lat2, lon2, lat3, lon3):
     if cosC < -1:
         cosC = -1
 
-    return math.pi - math.acos(cosC)
+    return math.acos(cosC)
 
 def deltaTime(earlier, later):
     '''
