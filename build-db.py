@@ -19,7 +19,7 @@ if len(sys.argv) == 3:
     query = "CREATE TABLE " + sys.argv[2] + """(
                 raw text,
                 truth BLOB,
-                uid integer,
+                uid integer PRIMARY KEY,
                 year integer,
                 month integer,
                 day integer,

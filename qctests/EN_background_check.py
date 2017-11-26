@@ -134,7 +134,7 @@ def record_parameters(profile, bgStdLevels, bgevStdLevels, origLevels, ptLevels,
     origlevels = main.pack_array(origLevels)
     ptlevels = main.pack_array(ptLevels)
     bglevels = main.pack_array(bgLevels)
-    query = "INSERT INTO enbackground VALUES(?,?,?,?,?,?);"
+    query = "REPLACE INTO enbackground VALUES(?,?,?,?,?,?);"
     main.dbinteract(query, [profile.uid(), bgstdlevels, bgevstdlevels, origlevels, ptlevels, bglevels])
 
 
@@ -199,7 +199,7 @@ def readENBackgroundCheckAux():
 def loadParameters(parameterStore):
 
     main.dbinteract("DROP TABLE IF EXISTS enbackground")
-    main.dbinteract("CREATE TABLE IF NOT EXISTS enbackground (uid INTEGER, bgstdlevels BLOB, bgevstdlevels BLOB, origlevels BLOB, ptlevels BLOB, bglevels BLOB)")
+    main.dbinteract("CREATE TABLE IF NOT EXISTS enbackground (uid INTEGER PRIMARY KEY, bgstdlevels BLOB, bgevstdlevels BLOB, origlevels BLOB, ptlevels BLOB, bglevels BLOB)")
     parameterStore['enbackground'] = readENBackgroundCheckAux()
 
 

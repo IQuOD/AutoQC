@@ -6,7 +6,7 @@ http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 import numpy as np
 import util.main as main
 import util.geo as geo
-import copy, datetime, math, sys, calendar
+import copy, datetime, math, sys, calendar, sqlite3
 
 # module constants
 DistRes = 20000. # meters
@@ -64,12 +64,12 @@ def test(p, parameters):
             EN_track_results[track_rows[i][0]][0] = True
    
     # write all to db
+    result = []
     for i in range(len(track_rows)):
-        result = main.pack_array(EN_track_results[track_rows[i][0]])
-        
-        query = "UPDATE " + sys.argv[1] + " SET en_track_check=? WHERE uid = " + str(track_rows[i][0]) + ";"
+        result.append((main.pack_array(EN_track_results[track_rows[i][0]]), track_rows[i][0]))
 
-        main.dbinteract(query, (result,))
+    query = "UPDATE " + sys.argv[1] + " SET en_track_check=? WHERE uid=?"
+    main.interact_many(query, result)
 
     return EN_track_results[uid]
 

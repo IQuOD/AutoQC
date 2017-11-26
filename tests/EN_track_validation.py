@@ -84,8 +84,12 @@ class TestClass():
         speeds, angles = qctests.EN_track_check.calculateTraj(rows)
 
         assert numpy.array_equal(speeds, trueSpeeds)
-        assert numpy.array_equal(angles, trueAngles)
-
+        assert angles[0] is None
+        assert angles[5] is None
+        for i in range(1, len(angles)-1):
+            assert abs(angles[i] - trueAngles[i]) < 0.000001
+        
+ 
     def meanSpeed_test(self):
         '''
         make sure mean speed rejects speeds that are too fast

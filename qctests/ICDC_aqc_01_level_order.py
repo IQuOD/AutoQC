@@ -111,7 +111,7 @@ def level_order(p):
     tr_p = pickle.dumps(tr, -1)
     qc_p = pickle.dumps(qc, -1)
     
-    query = "INSERT INTO icdclevelorder VALUES(?,?,?,?,?,?)"
+    query = "REPLACE INTO icdclevelorder VALUES(?,?,?,?,?,?)"
     main.dbinteract(query, [p.uid(), nlevels, sqlite3.Binary(origlevels_p), sqlite3.Binary(zr_p), sqlite3.Binary(tr_p), sqlite3.Binary(qc_p)])
 
     return p.uid(), nlevels, origlevels, zr, tr, qc
@@ -119,4 +119,4 @@ def level_order(p):
 def loadParameters(parameterStore):
 
     main.dbinteract("DROP TABLE IF EXISTS icdclevelorder")
-    main.dbinteract("CREATE TABLE IF NOT EXISTS icdclevelorder (uid INTEGER, nlevels INTEGER, origlevels BLOB, zr BLOB, tr BLOB, qc BLOB)")
+    main.dbinteract("CREATE TABLE IF NOT EXISTS icdclevelorder (uid INTEGER PRIMARY KEY, nlevels INTEGER, origlevels BLOB, zr BLOB, tr BLOB, qc BLOB)")
