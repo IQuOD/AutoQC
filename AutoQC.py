@@ -1,5 +1,5 @@
 from wodpy import wod
-import pickle, psycopg2, sys
+import pickle, psycopg2, sys, os, calendar, time
 import numpy as np
 import util.main as main
 from multiprocessing import Pool
@@ -18,9 +18,13 @@ def run(test, profiles, parameters):
 
   return verbose
 
-def process_row(uid):
+def process_row(uid, logdir):
   '''run all tests on the indicated database row'''
   
+  # reroute stdout, stderr to separate files for each profile to preserve logs
+  sys.stdout = open(logdir + "/" + str(uid) + ".stdout", "w")
+  sys.stderr = open(logdir + "/" + str(uid) + ".stderr", "w")
+
   # extract profile
   profile = main.get_profile_from_db(uid)
   
@@ -30,16 +34,22 @@ def process_row(uid):
   main.catchFlags(profile)
   if np.sum(profile.t().mask == False) == 0:
     return
-  # run tests
-  results = []
-  query = "UPDATE " + sys.argv[1] + " SET "
-  for itest, test in enumerate(testNames):
-    result = run(test, [profile], parameterStore)[0]
-    results.append(main.pack_array(result))
-    query += test.lower() + "=?,"
 
-  query = query[:-1] + " WHERE uid = " + str(profile.uid()) + ";"
-  main.dbinteract(query, results)
+  # run tests
+  for itest, test in enumerate(testNames):
+    try:
+      result = run(test, [profile], parameterStore)[0]
+    except:
+      print test, 'exception', sys.exc_info()
+      result = np.zeros(1, dtype=bool)
+
+    try:
+      query = "UPDATE " + sys.argv[1] + " SET " + test + "=? WHERE uid=" + str(profile.uid()) + ";"
+      main.dbinteract(query, [main.pack_array(result)])
+    except:
+      print 'db exception', sys.exc_info()
+
+
 ########################################
 # main
 ########################################
@@ -54,6 +64,10 @@ if len(sys.argv)>2:
   print('{} quality control checks are able to be run:'.format(len(testNames)))
   for testName in testNames:
     print('  {}'.format(testName))
+
+  # set up a directory for logging
+  logdir = "autoqc-logs-" + str(calendar.timegm(time.gmtime()))
+  os.makedirs(logdir)
 
   # Parallel processing.
   print('\nPlease wait while QC is performed\n')
@@ -76,7 +90,7 @@ if len(sys.argv)>2:
   # launch async processes
   pool = Pool(processes=int(sys.argv[2]))
   for i in range(len(uids)):
-    pool.apply_async(process_row, (uids[i][0],))
+    pool.apply_async(process_row, (uids[i][0], logdir))
   pool.close()
   pool.join()
     

@@ -6,7 +6,6 @@ from wodpy import wod
 from netCDF4 import Dataset
 import testingProfile
 from numbers import Number
-import sys
 import tempfile
 
 def importQC(dir):
@@ -173,9 +172,9 @@ def dbinteract(command, values=[], tries=0):
   catch errors and retry a maximum number of times;
   '''
   
-  max_retry = 3
+  max_retry = 100
 
-  conn = sqlite3.connect('iquod.db', isolation_level=None)
+  conn = sqlite3.connect('iquod.db', isolation_level=None, timeout=60)
   cur = conn.cursor()
   
   try:
@@ -187,17 +186,48 @@ def dbinteract(command, values=[], tries=0):
     cur.close()
     conn.close()
     return result
-  except sqlite3.Error as e:
+  except:
     print 'bad db request'
-    print e
+    print command
+    print values
+    print sys.exc_info()
     conn.rollback()
     cur.close()
     conn.close()
     if tries < max_retry:
       dbinteract(command, values, tries+1)
     else:
+      print 'database interaction failed after', max_retry, 'retries'
       return -1  
 
+def interact_many(query, values, tries=0):
+  # similar to dbinteract, but does executemany
+  # intended exclusively for writes
+
+  max_retry = 100
+
+  conn = sqlite3.connect('iquod.db', isolation_level=None, timeout=60)
+  cur = conn.cursor()
+
+  try:
+    cur.executemany(query, values)
+    cur.close()
+    conn.close()
+    return 0
+  except:
+    print 'executemany failed'
+    print query
+    print values
+    print sys.exc_info()
+    conn.rollback()
+    cur.close()
+    conn.close()
+    if tries < max_retry:
+      interact_many(query, values, tries+1)
+    else:
+      print 'excecutemany failed after', max_retry, 'retries'
+      return -1
+      
 def faketable(name):
   '''
   generate a table <name> in root/root with the same structure as the main data table

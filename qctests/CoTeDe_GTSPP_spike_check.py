@@ -7,10 +7,7 @@ def test(p, parameters):
     config   = 'gtspp'
     testname = 'spike'
 
-    try:
-        qc = get_qc(p, config, testname)
-    except:
-        qc = numpy.zeros(1, dtype=bool)
+    qc = get_qc(p, config, testname)
 
     return qc
 

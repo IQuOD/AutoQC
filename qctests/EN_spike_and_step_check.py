@@ -102,7 +102,7 @@ def run_qc(p, suspect):
 
     # register suspects, if computed, to db
     if suspect:
-        query = "INSERT INTO enspikeandstep VALUES(?,?);"
+        query = "REPLACE INTO enspikeandstep VALUES(?,?);"
         main.dbinteract(query, [p.uid(), main.pack_array(qc)] )
 
     return qc
@@ -203,4 +203,4 @@ def interpolate(depth, shallow, deep, shallowVal, deepVal):
 def loadParameters(parameterStore):
 
     main.dbinteract("DROP TABLE IF EXISTS enspikeandstep")
-    main.dbinteract("CREATE TABLE IF NOT EXISTS enspikeandstep (uid INTEGER, suspect BLOB)")
+    main.dbinteract("CREATE TABLE IF NOT EXISTS enspikeandstep (uid INTEGER PRIMARY KEY, suspect BLOB)")

@@ -12,8 +12,6 @@ class TestClass():
 
     parameters = {}
     
-    ICDC_lc.loadParameters(parameters)
-
     def setUp(self):
         # refresh this table every test
         ICDC.loadParameters(self.parameters)
@@ -27,6 +25,7 @@ class TestClass():
         '''
 
         lines = data.splitlines()
+        nc = Dataset('data/climatological_t_median_and_amd_for_aqc.nc', 'r')
         for i, line in enumerate(lines):
             if line[0:2] == 'HH':
                 header  = line.split()
@@ -65,7 +64,7 @@ class TestClass():
                                                               lat, 
                                                               lon,
                                                               p.month(), 
-                                                              self.parameters['nc'])
+                                                              nc)
 
                 assert np.max(np.abs(tmin - climmin)) < 0.001, 'TMIN failed for profile with header ' + line
                 assert np.max(np.abs(tmax - climmax)) < 0.001, 'TMAX failed for profile with header ' + line
