@@ -3,6 +3,7 @@
 from wodpy import wod
 import sys, sqlite3
 import util.main as main
+import numpy as np
 
 if len(sys.argv) == 3:
 
@@ -53,13 +54,21 @@ if len(sys.argv) == 3:
         # set up dictionary for populating query string
         p = profile.npdict()
         p['raw'] = "'" + raw + "'"
-        # Below avoids failures if all profile data are missing.
-        # We have no use for this profile in that case so skip it.
+
+        # Require temperature data, otherwise skip.
+        skip = False
+        if profile.var_index() is None:
+            skip = True
+        if np.sum(profile.t().mask == False) == 0:
+            skip = True
+        # Require truth data, otherwise skip
         try:
             p['truth'] = main.pack_array(profile.t_level_qc(originator=True))
         except:
-            if profile.is_last_profile_in_file(fid) == True:
-                break
+            skip = True
+        if skip and profile.is_last_profile_in_file(fid) == True:
+            break
+        elif skip:
             continue
 
         query = "INSERT INTO " + sys.argv[2] + " (raw, truth, uid, year, month, day, time, lat, long, cruise, probe) values (?,?,?,?,?,?,?,?,?,?,?);"

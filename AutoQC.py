@@ -28,12 +28,8 @@ def process_row(uid, logdir):
   # extract profile
   profile = main.get_profile_from_db(uid)
   
-  # Check that there are temperature data in the profile, otherwise skip.
-  if profile.var_index() is None:
-    return
+  # mask out error codes in temperature data
   main.catchFlags(profile)
-  if np.sum(profile.t().mask == False) == 0:
-    return
 
   # run tests
   for itest, test in enumerate(testNames):
