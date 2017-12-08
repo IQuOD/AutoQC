@@ -51,7 +51,7 @@ def test(p, parameters):
         return defaultqc
     
     # parameters
-    nc = parameters['nc']
+    nc = Dataset('data/climatological_t_median_and_amd_for_aqc.nc', 'r')
     
     # Get range.
     ranges = get_climatology_range(nlevels, z, lat, lon, p.month(), nc)
@@ -126,7 +126,4 @@ def get_climatology_range(nlevels, z, lat, lon, month, nc):
 
     return tmin, tmax
 
-def loadParameters(parameterStore):
-
-  parameterStore['nc'] = Dataset('data/climatological_t_median_and_amd_for_aqc.nc', 'r')
 

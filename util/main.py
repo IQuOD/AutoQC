@@ -1,13 +1,12 @@
 ## helper functions used in the top level AutoQC.py
 
-import json, os, glob, time, pandas, csv, sys, fnmatch
+import json, os, glob, time, pandas, csv, sys, fnmatch, sqlite3, io, pickle, StringIO
 import numpy as np
 from wodpy import wod
 from netCDF4 import Dataset
 import testingProfile
 from numbers import Number
-import sys
-import tempfile, psycopg2
+import tempfile
 
 def importQC(dir):
   '''
@@ -134,7 +133,8 @@ def get_profile_from_db(uid):
  
   command = 'SELECT * FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid)
   row = dbinteract(command)
-  return text2wod(row[0][0])
+  profile = text2wod(row[0][0][1:-1])
+  return profile
 
 def text2wod(raw):
   '''
@@ -166,18 +166,19 @@ def dictify(rows, keys):
 
   return dicts
 
-def dbinteract(command, tries=0):
+def dbinteract(command, values=[], tries=0):
   '''
-  execute the given postgres command;
-  catch errors and retry a maximum number of times.
+  execute the given SQL command;
+  catch errors and retry a maximum number of times;
   '''
+  
+  max_retry = 100
 
-  max_retry = 99
-  conn = psycopg2.connect("dbname='root' user='root'")
-  conn.autocommit = True
+  conn = sqlite3.connect('iquod.db', isolation_level=None, timeout=60)
   cur = conn.cursor()
+  
   try:
-    cur.execute(command)
+    cur.execute(command, values)
     try:
       result = cur.fetchall()
     except:
@@ -185,12 +186,143 @@ def dbinteract(command, tries=0):
     cur.close()
     conn.close()
     return result
-  except psycopg2.Error as e:
-    print 'failed', command, 'on try number', tries
+  except:
+    print 'bad db request'
+    print command
+    print values
+    print sys.exc_info()
     conn.rollback()
     cur.close()
     conn.close()
     if tries < max_retry:
-      dbinteract(command, tries+1)
+      dbinteract(command, values, tries+1)
     else:
+      print 'database interaction failed after', max_retry, 'retries'
+      return -1  
+
+def interact_many(query, values, tries=0):
+  # similar to dbinteract, but does executemany
+  # intended exclusively for writes
+
+  max_retry = 100
+
+  conn = sqlite3.connect('iquod.db', isolation_level=None, timeout=60)
+  cur = conn.cursor()
+
+  try:
+    cur.executemany(query, values)
+    cur.close()
+    conn.close()
+    return 0
+  except:
+    print 'executemany failed'
+    print query
+    print values
+    print sys.exc_info()
+    conn.rollback()
+    cur.close()
+    conn.close()
+    if tries < max_retry:
+      interact_many(query, values, tries+1)
+    else:
+      print 'excecutemany failed after', max_retry, 'retries'
       return -1
+      
+def faketable(name):
+  '''
+  generate a table <name> in root/root with the same structure as the main data table
+  '''
+
+  # Identify tests
+  testNames = importQC('qctests')
+  testNames.sort()
+
+  # set up our table
+  query = "CREATE TABLE IF NOT EXISTS " + name + """(
+              raw text,
+              truth integer,
+              uid integer,
+              year integer,
+              month integer,
+              day integer,
+              time real,
+              lat real, 
+              long real, 
+              cruise integer,
+              probe integer,
+              """
+  for i in range(len(testNames)):
+      query += testNames[i].lower() + ' text'
+      if i<len(testNames)-1:
+          query += ','
+      else:
+          query += ');'
+  
+  dbinteract(query)
+
+def fakerow(tablename, raw='x', truth=0, uid=8888, year=1999, month=12, day=31, time=23.99, lat=0, longitude=0, cruise=1234, probe=2):
+  '''
+  insert a row containing pre-qc info into a table with the same structure as the main data table
+  '''
+
+  wodDict = {
+    "raw": raw,
+    "truth": truth,
+    "uid": uid,
+    "year": year,
+    "month": month,
+    "day": day,
+    "time": time,
+    "latitude": lat,
+    "longitude": longitude,
+    "cruise": cruise,
+    "probe_type": probe
+  }
+
+  query = "INSERT INTO " + tablename + " (raw, truth, uid, year, month, day, time, lat, long, cruise, probe) "  + """ VALUES(
+              '{p[raw]}',
+              {p[truth]},
+              {p[uid]},
+              {p[year]},
+              {p[month]},
+              {p[day]},
+              {p[time]},
+              {p[latitude]}, 
+              {p[longitude]}, 
+              {p[cruise]},
+              {p[probe_type]}
+             );""".format(p=wodDict)
+  
+  dbinteract(query)
+
+def pack_array(arr):
+    # chew up a numpy array, masked array, or list for insertion into a sqlite column of type blob
+    out = io.BytesIO()
+
+    if type(arr) is np.ndarray:
+        np.save(out, arr)
+    elif type(arr) is np.ma.core.MaskedArray:
+        arr.dump(out)
+    elif type(arr) is list:
+        pickle.dump(arr, out)
+    out.seek(0)
+    return sqlite3.Binary(out.read())  
+
+def unpack_row(row):
+    # given a tuple row from sqlite, return a tuple with 
+    # typical datatypes
+
+    res = []
+    for elt in row:
+        if type(elt) is unicode:
+            # unicode -> str
+            res.append(str(elt))
+        elif type(elt) is buffer:
+            # buffer -> numpy array
+            res.append(np.load(io.BytesIO(elt)))
+        else:
+            res.append(elt)
+
+    return tuple(res)
+
+

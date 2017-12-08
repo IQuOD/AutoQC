@@ -9,6 +9,7 @@ remove these elements and include them within the background check code.
 """
 
 import numpy as np
+import util.main as main
 
 def test(p, parameters, suspect=False):
     """ 
@@ -19,17 +20,18 @@ def test(p, parameters, suspect=False):
     By default the test returns definite rejections. If the suspect keyword is
     set to True the test instead returns suspect levels.
     """
-
-    if p.uid() != uid or suspect != suspectSetting or p.uid() is None:
-        run_qc(p, suspect)
-
-    # QC results are in the global variable.
-    return qc
+    
+    return run_qc(p, suspect)
 
 def run_qc(p, suspect):
 
-    global uid, qc, suspectSetting
-
+    # check for pre-registered suspect tabulation, if that's what we want:
+    if suspect:
+        query = 'SELECT suspect FROM enspikeandstep WHERE uid = ' + str(p.uid()) + ';'
+        susp = main.dbinteract(query)
+        if len(susp) > 0:
+            return main.unpack_row(susp[0])[0]
+            
     # Define tolerances used.
     tolD     = np.array([0, 200, 300, 500, 600])
     tolDTrop = np.array([0, 300, 400, 500, 600])
@@ -98,11 +100,12 @@ def run_qc(p, suspect):
         if nRejects >= 4 or nRejects > p.n_levels()/2:
             qc[:] = True
 
-    # Save details of the QC performed in module variables.
-    uid            = p.uid()
-    suspectSetting = suspect
+    # register suspects, if computed, to db
+    if suspect:
+        query = "REPLACE INTO enspikeandstep VALUES(?,?);"
+        main.dbinteract(query, [p.uid(), main.pack_array(qc)] )
 
-    return None
+    return qc
 
 
 def composeDT(var, z, nLevels):
@@ -197,6 +200,7 @@ def interpolate(depth, shallow, deep, shallowVal, deepVal):
 
     return (depth - shallow) / (deep - shallow) * (deepVal - shallowVal) + shallowVal 
 
-uid            = None
-qc             = None
-suspectSetting = None
+def loadParameters(parameterStore):
+
+    main.dbinteract("DROP TABLE IF EXISTS enspikeandstep")
+    main.dbinteract("CREATE TABLE IF NOT EXISTS enspikeandstep (uid INTEGER PRIMARY KEY, suspect BLOB)")

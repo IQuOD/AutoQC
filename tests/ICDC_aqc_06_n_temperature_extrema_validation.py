@@ -1,35 +1,47 @@
+import qctests.ICDC_aqc_01_level_order as ICDC
 import qctests.ICDC_aqc_06_n_temperature_extrema as ICDC_nte
 
 import util.testingProfile
+import util.main as main
 import numpy as np
 
 ##### ICDC number of temperature extrema.
 ##### --------------------------------------------------
+class TestClass():
 
-def test_ICDC_n_temperature_extrema():
-    '''Make sure code processes data supplied by Viktor Gouretski
-       correctly.
-    '''
+    parameters = {}
 
-    lines = data.splitlines()
-    for i, line in enumerate(lines):
-        if line[0:2] == 'HH':
-            header  = line.split()
-            nlevels = int(header[-1][:-3])
-            
-            depths  = []
-            temps   = []
-            qctruth = []
-            for j in range(nlevels):
-                d = lines[i + j + 1].split()
-                depths.append(float(d[0]))
-                temps.append(float(d[1]))
-                qctruth.append(int(d[2]) > 0)
-            
-            p  = util.testingProfile.fakeProfile(temps, depths)
-            qc = ICDC_nte.test(p, None)
-       
-            assert np.array_equal(qc, qctruth), 'Failed profile with header ' + line
+    def setUp(self):
+        # refresh this table every test
+        ICDC.loadParameters(self.parameters)
+
+    def tearDown(self):
+        main.dbinteract('DROP TABLE icdclevelorder;')
+
+    def test_ICDC_n_temperature_extrema(self):
+        '''Make sure code processes data supplied by Viktor Gouretski
+           correctly.
+        '''
+
+        lines = data.splitlines()
+        for i, line in enumerate(lines):
+            if line[0:2] == 'HH':
+                header  = line.split()
+                nlevels = int(header[-1][:-3])
+                
+                depths  = []
+                temps   = []
+                qctruth = []
+                for j in range(nlevels):
+                    d = lines[i + j + 1].split()
+                    depths.append(float(d[0]))
+                    temps.append(float(d[1]))
+                    qctruth.append(int(d[2]) > 0)
+                
+                p  = util.testingProfile.fakeProfile(temps, depths, uid=i)
+                qc = ICDC_nte.test(p, self.parameters)
+           
+                assert np.array_equal(qc, qctruth), 'Failed profile with header ' + line
 
 # Data provided by Viktor Gouretski, ICDC, University of Hamburg.
 data = '''

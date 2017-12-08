@@ -33,6 +33,8 @@ ADD climatological_t_median_and_amd_for_aqc.nc /AutoQC/data/.
 # set up database; load quota_subset.dat into a table 'demo'.
 RUN /etc/init.d/postgresql start && su postgres -c 'createuser -s root' && su postgres -c 'createdb root'
 
+# set default environment variables
 ENV OCEANSDB_DIR /AutoQC/data/
 
-ADD bashrc /.bashrc
+# initialize database on login
+ENTRYPOINT /etc/init.d/postgresql start; /bin/bash

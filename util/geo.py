@@ -56,9 +56,13 @@ def haversineAngle(lat1, lon1, lat2, lon2, lat3, lon3):
     if a == 0 or b == 0:
         return 0
 
-    C = arcHaversine( (haversine(c) - haversine(a-b)) / math.sin(a) / math.sin(b) )
+    cosC = (math.cos(c) - math.cos(a)*math.cos(b))/math.sin(a)/math.sin(b)
+    if cosC > 1:
+        cosC = 1
+    if cosC < -1:
+        cosC = -1
 
-    return C
+    return math.acos(cosC)
 
 def deltaTime(earlier, later):
     '''

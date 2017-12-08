@@ -1,29 +1,42 @@
+import qctests.ICDC_aqc_01_level_order as ICDC
 import qctests.ICDC_aqc_02_crude_range as ICDC_crude_range
 
 import util.testingProfile
+import util.main as main
 import numpy as np
 
 ##### ICDC crude range check.
 ##### --------------------------------------------------
 
-def test_ICDC_crude_range():
-    '''Make sure code processes data supplied by Viktor Gouretski
-       correctly.
-    '''
+class TestClass():
 
-    examples = [example1, example2, example3, 
-                example4, example5, example6]
+    parameters = {}
 
-    for example in examples:
-        z = example[:, 0]
-        t = example[:, 1]
-        f = example[:, 2]
+    def setUp(self):
+        # refresh this table every test
+        ICDC.loadParameters(self.parameters)
 
-        qctruth = f > 0
-        p = util.testingProfile.fakeProfile(t, z)
-        qc = ICDC_crude_range.test(p, None)
+    def tearDown(self):
+        main.dbinteract('DROP TABLE icdclevelorder;')
 
-        assert np.array_equal(qc, qctruth), 'Example %i failed' % (i + 1)
+    def test_ICDC_crude_range(self):
+        '''Make sure code processes data supplied by Viktor Gouretski
+           correctly.
+        '''
+
+        examples = [example1, example2, example3, 
+                    example4, example5, example6]
+
+        for i, example in enumerate(examples):
+            z = example[:, 0]
+            t = example[:, 1]
+            f = example[:, 2]
+
+            qctruth = f > 0
+            p = util.testingProfile.fakeProfile(t, z, uid=i)
+            qc = ICDC_crude_range.test(p, self.parameters)
+
+            assert np.array_equal(qc, qctruth), 'Example %i failed' % (i + 1)
 
 # Data provided by Viktor Gouretski, ICDC, University of Hamburg.
 example1 = np.array([

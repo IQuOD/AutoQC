@@ -1,17 +1,13 @@
 # usage: python build-db.py <wod ascii file name> <table name to append to>
 
 from wodpy import wod
-import sys, psycopg2
+import sys, sqlite3
 import util.main as main
+import numpy as np
 
 if len(sys.argv) == 3:
 
-    # connect to database and create a cursor by which to interact with it.
-    try:
-        conn = psycopg2.connect("dbname='root' user='root'")
-    except:
-        print "I am unable to connect to the database"
-
+    conn = sqlite3.connect('iquod.db', isolation_level=None)
     cur = conn.cursor()
 
     # Identify tests
@@ -19,10 +15,12 @@ if len(sys.argv) == 3:
     testNames.sort()
 
     # set up our table
-    query = "CREATE TABLE IF NOT EXISTS " + sys.argv[2] + """(
+    query = "DROP TABLE IF EXISTS " + sys.argv[2] + ";"
+    cur.execute(query)
+    query = "CREATE TABLE " + sys.argv[2] + """(
                 raw text,
-                truth boolean,
-                uid integer,
+                truth BLOB,
+                uid integer PRIMARY KEY,
                 year integer,
                 month integer,
                 day integer,
@@ -33,7 +31,7 @@ if len(sys.argv) == 3:
                 probe integer,
                 """
     for i in range(len(testNames)):
-        query += testNames[i].lower() + ' boolean'
+        query += testNames[i].lower() + ' BLOB'
         if i<len(testNames)-1:
             query += ','
         else:
@@ -54,33 +52,29 @@ if len(sys.argv) == 3:
         fid.seek(end)
 
         # set up dictionary for populating query string
-        wodDict = profile.npdict()
-        wodDict['raw'] = "'" + raw + "'"
-        # Below avoids failures if all profile data are missing.
-        # We have no use for this profile in that case so skip it.
+        p = profile.npdict()
+        p['raw'] = "'" + raw + "'"
+
+        # Require temperature data, otherwise skip.
+        skip = False
+        if profile.var_index() is None:
+            skip = True
+        if np.sum(profile.t().mask == False) == 0:
+            skip = True
+        # Require truth data, otherwise skip
         try:
-            wodDict['truth'] = sum(profile.t_level_qc(originator=True) >= 3) >= 1
+            p['truth'] = main.pack_array(profile.t_level_qc(originator=True))
         except:
-            if profile.is_last_profile_in_file(fid) == True:
-                break
+            skip = True
+        if skip and profile.is_last_profile_in_file(fid) == True:
+            break
+        elif skip:
             continue
 
-        query = "INSERT INTO " + sys.argv[2] + " (raw, truth, uid, year, month, day, time, lat, long, cruise, probe) "  + """ VALUES(
-                    {p[raw]},
-                    {p[truth]},
-                    {p[uid]},
-                    {p[year]},
-                    {p[month]},
-                    {p[day]},
-                    {p[time]},
-                    {p[latitude]}, 
-                    {p[longitude]}, 
-                    {p[cruise]},
-                    {p[probe_type]}
-                   )""".format(p=wodDict)
-        query = query.replace('--', 'NULL')
-        query = query.replace('None', 'NULL')
-        cur.execute(query)
+        query = "INSERT INTO " + sys.argv[2] + " (raw, truth, uid, year, month, day, time, lat, long, cruise, probe) values (?,?,?,?,?,?,?,?,?,?,?);"
+        values = (p['raw'], p['truth'], p['uid'], p['year'], p['month'], p['day'], p['time'], p['latitude'], p['longitude'], p['cruise'], p['probe_type'])
+        main.dbinteract(query, values)
+
         if profile.is_last_profile_in_file(fid) == True:
             break
 

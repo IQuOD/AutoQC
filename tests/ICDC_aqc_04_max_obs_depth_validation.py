@@ -1,36 +1,49 @@
+import qctests.ICDC_aqc_01_level_order as ICDC
 import qctests.ICDC_aqc_04_max_obs_depth as ICDC_mol
 
 import util.testingProfile
+import util.main as main
 import numpy as np
 
 ##### ICDC maximum observed depth check.
 ##### --------------------------------------------------
 
-def test_ICDC_max_obs_level():
-    '''Make sure code processes data supplied by Viktor Gouretski
-       correctly.
-    '''
+class TestClass():
 
-    lines = data.splitlines()
-    for i, line in enumerate(lines):
-        if line[0:2] == 'HH':
-            header  = line.split()
-            dataset = header[-1][-3:]
-            probe_type = probe_types[dataset]
-            nlevels = int(header[-1][:-3])
-            
-            depths  = []
-            qctruth = []
-            for j in range(nlevels):
-                d = lines[i + j + 1].split()
-                depths.append(float(d[0]))
-                qctruth.append(int(d[1]) > 0)
-            
-            p  = util.testingProfile.fakeProfile(depths, depths, probe_type=probe_type)
-            p.primary_header['Country code'] = 'JP'
-            qc = ICDC_mol.test(p, None)
-       
-            assert np.array_equal(qc, qctruth), 'Failed profile with header ' + line
+    parameters = {}
+
+    def setUp(self):
+        # refresh this table every test
+        ICDC.loadParameters(self.parameters)
+
+    def tearDown(self):
+        main.dbinteract('DROP TABLE icdclevelorder;')
+
+    def test_ICDC_max_obs_level(self):
+        '''Make sure code processes data supplied by Viktor Gouretski
+           correctly.
+        '''
+
+        lines = data.splitlines()
+        for i, line in enumerate(lines):
+            if line[0:2] == 'HH':
+                header  = line.split()
+                dataset = header[-1][-3:]
+                probe_type = probe_types[dataset]
+                nlevels = int(header[-1][:-3])
+                
+                depths  = []
+                qctruth = []
+                for j in range(nlevels):
+                    d = lines[i + j + 1].split()
+                    depths.append(float(d[0]))
+                    qctruth.append(int(d[1]) > 0)
+                
+                p  = util.testingProfile.fakeProfile(depths, depths, probe_type=probe_type)
+                p.primary_header['Country code'] = 'JP'
+                qc = ICDC_mol.test(p, self.parameters)
+           
+                assert np.array_equal(qc, qctruth), 'Failed profile with header ' + line
 
 probe_types = {'OSD': 7, 'CTD': 4, 'PFL': 9, 'APB': 13, 'MBT': 1, 'XBT': 2}
 
