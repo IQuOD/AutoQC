@@ -7,7 +7,6 @@ import numpy, pandas
 import util.testingProfile
 import qctests.EN_track_check
 import util.geo
-import data.ds as ds
 
 class TestClass():
     distRes = 20000. #meters
@@ -17,13 +16,11 @@ class TestClass():
         qctests.EN_track_check.EN_track_results = {}
         qctests.EN_track_check.EN_track_headers = {}
         qctests.EN_track_check.threadFile       = ''
-        ds.threadFile                           = 'test'
 
     def tearDown(self):
         del qctests.EN_track_check.EN_track_results
         del qctests.EN_track_check.EN_track_headers
         del qctests.EN_track_check.threadFile
-        del ds.threadFile
 
     def trackSpeed_test(self):
         '''

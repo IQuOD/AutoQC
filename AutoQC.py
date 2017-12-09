@@ -1,5 +1,5 @@
 from wodpy import wod
-import pickle, psycopg2, sys, os, calendar, time
+import pickle, sys, os, calendar, time
 import numpy as np
 import util.main as main
 from multiprocessing import Pool
