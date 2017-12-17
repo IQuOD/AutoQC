@@ -16,8 +16,20 @@ sudo apt-get update -y
 
 # install dependencies
 sudo apt-get -y install libhdf5-serial-dev libnetcdf-dev unzip python-dev libgl1-mesa-glx
-conda install --yes python=2.7 pip nose Shapely netCDF4 matplotlib numpy scipy pyproj pandas
-pip install seabird==0.8.0 gsw==3.0.3 scikit-fuzzy==0.3 oceansdb==0.6.0 cotede==0.18.0 wodpy==1.5.0
+conda install --yes python=2.7 pip nose \
+                    Shapely=1.6.2 \
+                    netCDF4=1.3.1 \
+                    matplotlib=2.1.1 \
+                    numpy=1.11.3 \
+                    scipy=0.19.0 \
+                    pyproj=1.9.5.1 \
+                    pandas=0.21.1
+pip install seabird==0.8.0 \
+            gsw==3.0.3 \
+            scikit-fuzzy==0.3 \
+            oceansdb==0.6.0 \
+            cotede==0.18.0 \
+            wodpy==1.5.0
 
 # Add AutoQC parameter files
 cd data
