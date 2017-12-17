@@ -30,7 +30,7 @@ The IQuOD proposal is to set up an open quality control benchmarking system.  Wo
  To run AutoQC in a containerized environment, make sure `docker` is installed, then:
 
  ```
- $ docker image run -it -v /my/data/directory:/rawdata iquod/autoqc bash
+ $ docker image run -it -v /my/data/directory:/rawdata iquod/autoqc:ubuntu-16.04 bash
  ```
 
  Anything in `/my/daya/directory` on your machine will be available at `/rawdata` inside the container, and vice versa. Use this to add raw WOD-ASCII data to your container, and add multiple `-v origin:destination` paths to include multiple directories in the same way.
@@ -72,7 +72,7 @@ Additionally, there is a column in the table for the qc results of every test fo
 python AutoQC.py tablename nProcessors
 ```
 
-where `tablename` is the postgres table to pull profiles from (probably the same as `tablename` in the last step), and `nProcessors` is how many processors you'd like to parallelize over
+where `tablename` is the postgres table to pull profiles from (probably the same as `tablename` in the last step), and `nProcessors` is how many processors you'd like to parallelize over.
 
 ### Result Summary
 
