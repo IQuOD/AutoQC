@@ -3,7 +3,7 @@ AutoQC
 
 [![Build Status](https://travis-ci.org/IQuOD/AutoQC.svg?branch=master)](https://travis-ci.org/IQuOD/AutoQC)
 
-##Introduction
+## Introduction
 
 Recent studies suggest that changes to global climate as have been seen at the Earth's land and ocean surface are also making their way into the deep ocean, which is the largest active storage system for heat and carbon available on the timescale of a human lifetime. Historical measurements of subsurface ocean temperature are essential to the scientific research investigating the changes in the amount of heat stored in the ocean and also to other climate research activities such as combining observations with numerical models to provide estimates of the global ocean's and Earth's climate state  in the past and predictions for the future. Unfortunately, as with all observations, these measurements contain errors and biases that must be identified to prevent a negative impact on the applications and investigations that rely on them. Various groups from around the world have developed quality control tests to perform this important task. However, this has led to duplication of effort, code that is not easily available to other researchers and the introduction of climate model differences solely due to the varying performance of these software systems whose nuances relative to one another are poorly known.
 
@@ -70,7 +70,7 @@ sudo docker run --sysctl "kernel.shmmax=18446744073692774399" -v $PWD:/rawdata -
 
 And once again, AutoQC will be all set up in `/AutoQC`. Remember to `git pull` if necessary, and add any external data or parameter files to the correct places.
 
-##Usage
+## Usage
 
 AutoQC runs in three steps: database construction, qc running, and result summarization.
 
@@ -116,15 +116,15 @@ python summarize-results.py tablename
 where `tablename` is the postgres table used in the previous steps. A summary of true flags, true passes, false positives and false negatives is generated for each test.
 
 
-##Testing
+## Testing
 
-###Testing Data
+### Testing Data
 Each quality control test must be written as its own file in `/qctests`, of the form `def test(p, parameters)`, where `p` is a profile object; each test returns a bool, where `True` indicates the test has *failed*.
 `parameters` is a dictionary for conveniently persisting *static* parameters and sharing them between threads; if your test has a great deal of parameters to load before it runs, include alongside its definition a `loadParmaeters(dict)` method, which writes those
 parameters to keys of your choosing on the dictionary passed in as an argument to `loadParameters`. That dictionary will subsequently be passed into every qc test as the `parameters` argument. Calling this `loadParameters` function is done automatically by the qc framework;
 it is enough for you to just write it, and the parameters you want will be available in your qc test on the keys you defined on the `parameters` object.
 
-###Testing Code
+### Testing Code
 To run the code tests:
 
 ```
@@ -132,7 +132,7 @@ pip install nose
 nosetests tests/*.py
 ```
 
-##Profile Objects Specification
+## Profile Objects Specification
 See [wodpy package](https://github.com/IQuOD/wodpy) for more information on the WodProfile class, a decoding helper for the WOD ASCII format.
 
 ##Contributing
