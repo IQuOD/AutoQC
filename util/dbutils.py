@@ -28,7 +28,7 @@ def parse(results):
 def summarize_truth(levels):
     'given an array of originator qc decisions, return true iff any of the levels are flagged'
 
-    return sum(levels >= 3) >= 1
+    return numpy.sum(levels >= 3) >= 1
 
 def parse_truth(results):
 
