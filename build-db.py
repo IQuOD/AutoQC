@@ -41,7 +41,7 @@ if len(sys.argv) == 3:
 
     # populate table from wod-ascii data
     fid = open(sys.argv[1])
-
+    uids = []
     while True:
         # extract profile as wodpy object and raw text
         start = fid.tell()
@@ -54,6 +54,17 @@ if len(sys.argv) == 3:
         # set up dictionary for populating query string
         p = profile.npdict()
         p['raw'] = "'" + raw + "'"
+
+        # check for duplicate profiles in raw data
+        if p['uid'] in uids: 
+            print 'Skipping duplicate UID: ', str(p['uid'])
+            print 'File:', sys.argv[1]
+            print 'File position (bytes):', str(start)
+            if profile.is_last_profile_in_file(fid) == True:
+                break
+            else:
+                continue
+        uids.append(p['uid'])
 
         # Require temperature data, otherwise skip.
         skip = False
