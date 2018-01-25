@@ -19,7 +19,7 @@ def importQC(dir):
 
 def catchFlags(profile):
   '''
-  In some IQuOD datasets temperature values of 99.9 are special values to
+  In some IQuOD datasets temperature values of 99.9 or 99.99 are special values to
   signify not to use the data value. These are flagged here so they are not
   sent to the quality control programs for testing.
   '''
@@ -28,7 +28,7 @@ def catchFlags(profile):
   for i in range(profile.n_levels()):
       if profile.profile_data[i]['variables'][index]['Missing']:
           continue
-      if profile.profile_data[i]['variables'][index]['Value'] == 99.9:
+      if profile.profile_data[i]['variables'][index]['Value'] >= 99.9 and profile.profile_data[i]['variables'][index]['Value'] < 100:
           profile.profile_data[i]['variables'][index]['Missing'] = True
 
 def checkQCTestRequirements(checks):
