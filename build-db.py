@@ -73,8 +73,13 @@ if len(sys.argv) == 3:
         if np.sum(profile.t().mask == False) == 0:
             skip = True
         # Require truth data, otherwise skip
+        # also, register any level with temperature ~99 as QC code 99 in the truth array
         try:
-            p['truth'] = main.pack_array(profile.t_level_qc(originator=True))
+            truth = p.t_level_qc(originator=True)
+            for i,temp in enumerate(p.t()):
+                if temp > 99 and temp < 100:
+                    truth[i] = 99
+            p['truth'] = main.pack_array(truth)
         except:
             skip = True
         if skip and profile.is_last_profile_in_file(fid) == True:
