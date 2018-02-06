@@ -44,7 +44,7 @@ def test(p, parameters):
                 end_inv_temp = t.data[i]
                 end_inv_depth = d.data[i]
                 on_inv = False
-                gradlong = (end_inv_depth - start_inv_depth) / (end_inv_temp - start_inv_depth)
+                gradlong = (end_inv_depth - start_inv_depth) / (end_inv_temp - start_inv_temp)
 
                 if abs(gradlong) < 4:
                     qc[potential_flag] = True
