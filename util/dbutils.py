@@ -28,7 +28,7 @@ def parse(results):
 def summarize_truth(levels):
     'given an array of originator qc decisions, return true iff any of the levels are flagged, ignoring t=99 levels'
 
-    return numpy.sum([x >= 3 and x < 99 for x in levels ]) >= 1
+    return numpy.sum( [not levels.mask[i] and x>=3 and x<99 for i, x in enumerate(levels)]) >= 1
 
 def parse_truth(results):
 
@@ -68,23 +68,23 @@ def db_to_df(table,
     cur = conn.cursor()
 
     # extract matrix of test results and true flags into a dataframe
-    query = 'SELECT truth'
+    query = 'SELECT uid, truth'
     for test in testNames:
         query += ', ' + test.lower()
-    query += ' FROM ' + table
-    query += ' LIMIT ' + str(n_to_extract)    
+    query += ' FROM ' + table   
+    query += ' WHERE uid IN (SELECT uid FROM ' + table + ' ORDER BY RANDOM() LIMIT ' + str(n_to_extract) + ')' 
 
     cur.execute(query)
     rawresults = cur.fetchall()
     df = pandas.DataFrame(rawresults).astype('str')
-    df.columns = ['Truth'] + testNames
+    df.columns = ['uid', 'Truth'] + testNames
 
     if filter_on_wire_break_test:
         nlevels = get_n_levels_before_fail(df['CSIRO_wire_break'])
         del df['CSIRO_wire_break'] # No use for this now.
-        testNames = df.columns[1:].values.tolist()
+        testNames = df.columns[2:].values.tolist()
         for i in range(len(df.index)):
-            for j in range(len(df.columns)):
+            for j in range(1, len(df.columns)):
                 qc = unpack_qc(df.iloc[i, j])
                 # Some QC tests may return only one value so check for this.
                 if len(qc) > 1:

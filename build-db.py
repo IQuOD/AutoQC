@@ -102,7 +102,8 @@ if len(sys.argv) == 3:
     uids = []
     good = 0
     bad = 0
-    while True:
+    #while True:
+    for qq in range(100):
         # extract profile as wodpy object and raw text
         start = fid.tell()
         profile = wod.WodProfile(fid)
