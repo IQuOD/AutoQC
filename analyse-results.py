@@ -184,10 +184,8 @@ def find_roc(table,
 
 if __name__ == '__main__':
 
-    if len(sys.argv) == 2:
-        find_roc(sys.argv[1])
-    elif len(sys.argv) == 3:
+    if len(sys.argv) == 3:
         find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2])
     else:
-        print 'Usage - python analyse_results.py tablename [number of profiles to read from database]'
+        print 'Usage - python analyse_results.py tablename <number of profiles to train ROC curve on>'
 
