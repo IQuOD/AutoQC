@@ -3,7 +3,9 @@
 from wodpy import wod
 import sys, sqlite3
 import util.main as main
+import util.dbutils as dbutils
 import numpy as np
+import qctests.CSIRO_wire_break
 
 if len(sys.argv) == 3:
 
@@ -25,10 +27,11 @@ if len(sys.argv) == 3:
                 month integer,
                 day integer,
                 time real,
-                lat real, 
-                long real, 
+                lat real,
+                long real,
                 cruise integer,
                 probe integer,
+                training integer,
                 """
     for i in range(len(testNames)):
         query += testNames[i].lower() + ' BLOB'
@@ -39,9 +42,66 @@ if len(sys.argv) == 3:
 
     cur.execute(query)
 
+    def assessProfile(p):
+        'decide whether this profile is acceptable for QC or not; False = skip this profile'
+
+        # not interested in standard levels
+        if int(p.primary_header['Profile type']) == 1:
+            return False
+
+        # no temperature data in profile
+        if p.var_index() is None:
+            return False
+
+        # temperature data is in profile but all masked out
+        if np.sum(p.t().mask == False) == 0:
+            return False
+
+        # all depths are less than 10 cm and there are at least two levels (ie not just a surface measurement)
+        if np.sum(p.z() < 0.1) == len(p.z()) and len(p.z()) > 1:
+            return False
+
+        # no valid originator flag type
+        if int(p.originator_flag_type()) not in range(1,15):
+            return False
+
+        temp = p.t()
+        tempqc = p.t_level_qc(originator=True)
+
+        for i in range(len(temp)):
+            # don't worry about levels with masked temperature
+            if temp.mask[i]:
+                continue
+
+            # if temperature isn't masked:
+            # it had better be a float
+            if not isinstance(temp.data[i], float):
+                return False
+            # needs to have a valid QC decision:
+            if tempqc.mask[i]:
+                return False
+            if not isinstance(tempqc.data[i], int):
+                return False
+            if not tempqc.data[i] > 0:
+                return False
+
+        return True
+
+    def encodeTruth(p):
+        'encode a per-level true qc array, with levels marked with 99 temperature set to qc code 99'
+
+        truth = p.t_level_qc(originator=True)
+        for i,temp in enumerate(p.t()):
+            if temp > 99 and temp < 100:
+                truth[i] = 99
+        return truth
+
+
     # populate table from wod-ascii data
     fid = open(sys.argv[1])
     uids = []
+    good = 0
+    bad = 0
     while True:
         # extract profile as wodpy object and raw text
         start = fid.tell()
@@ -50,52 +110,55 @@ if len(sys.argv) == 3:
         fid.seek(start)
         raw = fid.read(end-start)
         fid.seek(end)
-
         # set up dictionary for populating query string
         p = profile.npdict()
         p['raw'] = "'" + raw + "'"
 
         # check for duplicate profiles in raw data
-        if p['uid'] in uids: 
-            print 'Skipping duplicate UID: ', str(p['uid'])
-            print 'File:', sys.argv[1]
-            print 'File position (bytes):', str(start)
+        if p['uid'] in uids:
             if profile.is_last_profile_in_file(fid) == True:
                 break
             else:
                 continue
         uids.append(p['uid'])
 
-        # Require temperature data, otherwise skip.
-        skip = False
-        if profile.var_index() is None:
-            skip = True
-        if np.sum(profile.t().mask == False) == 0:
-            skip = True
-        # Require truth data, otherwise skip
-        # also, register any level with temperature ~99 as QC code 99 in the truth array
-        try:
-            truth = p.t_level_qc(originator=True)
-            for i,temp in enumerate(p.t()):
-                if temp > 99 and temp < 100:
-                    truth[i] = 99
-            p['truth'] = main.pack_array(truth)
-        except:
-            skip = True
-        if skip and profile.is_last_profile_in_file(fid) == True:
+        # skip pathological profiles
+        isgood = assessProfile(profile)
+        if not isgood and profile.is_last_profile_in_file(fid) == True:
             break
-        elif skip:
+        elif not isgood:
             continue
+
+        # encode temperature error codes into truth array
+        truth = encodeTruth(profile)
+        p['truth'] = main.pack_array(truth)
+
+        # keep tabs on how many good and how many bad profiles have been added to db
+        # nowire == index of first wire break level
+        wireqc = qctests.CSIRO_wire_break.test(profile, {})
+        try:
+            nowire = list(wireqc).index(True)
+        except:
+            nowire = len(truth)
+        # flag only counts if its before the wire break:
+        flagged = dbutils.summarize_truth(truth[0:nowire])
+        if flagged:
+            bad += 1
+        else:
+            good += 1
 
         query = "INSERT INTO " + sys.argv[2] + " (raw, truth, uid, year, month, day, time, lat, long, cruise, probe) values (?,?,?,?,?,?,?,?,?,?,?);"
         values = (p['raw'], p['truth'], p['uid'], p['year'], p['month'], p['day'], p['time'], p['latitude'], p['longitude'], p['cruise'], p['probe_type'])
         main.dbinteract(query, values)
-
         if profile.is_last_profile_in_file(fid) == True:
             break
 
     conn.commit()
-
+    print 'number of clean profiles written:', good
+    print 'number of flagged profiles written:', bad
 else:
 
     print 'Usage: python build-db.py inputdatafile databasetable' 
+
+
+
