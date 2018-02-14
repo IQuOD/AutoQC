@@ -6,7 +6,6 @@ import EN_spike_and_step_check
 import numpy as np
 from collections import Counter
 import util.main as main
-import sys
 
 def test(p, parameters):
     """
