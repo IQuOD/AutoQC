@@ -1,5 +1,5 @@
-""" 
-Implements the EN increasing depth check. 
+"""
+Implements the EN increasing depth check.
 """
 
 import EN_spike_and_step_check
@@ -8,12 +8,12 @@ from collections import Counter
 import util.main as main
 
 def test(p, parameters):
-    """ 
-    Runs the quality control check on profile p and returns a numpy array 
-    of quality control decisions with False where the data value has 
-    passed the check and True where it failed. 
     """
- 
+    Runs the quality control check on profile p and returns a numpy array
+    of quality control decisions with False where the data value has
+    passed the check and True where it failed.
+    """
+
     # Check if the QC of this profile was already done and if not
     # run the QC.
     query = 'SELECT en_increasing_depth_check FROM ' + parameters["table"] + ' WHERE uid = ' + str(p.uid()) + ';'
@@ -21,8 +21,20 @@ def test(p, parameters):
     qc_log = main.unpack_row(qc_log[0])
     if qc_log[0] is not None:
         return qc_log[0]
-        
+
     return run_qc(p, parameters)
+
+def mask_index(mat, index):
+    """
+    update comparison matrix by setting (index,j) and (i,index) to 0 for all i,j
+    corresponds to recomputing the matrix after qc[index] is set True.
+    """
+
+    n = len(mat)
+
+    for i in range(n):
+        mat[index, i] = 0
+        mat[i, index] = 0
 
 def run_qc(p, parameters):
 
@@ -48,29 +60,32 @@ def run_qc(p, parameters):
     # Now check for inconsistencies in the depth levels.
     comp       = np.ndarray((n, n), dtype=int)
     currentMax = 1
+
+    # initialize matrix
+    # Comp gets set to 1 if there is not an increase in depth.
+    comp[:, :] = 0
+    for i in range(n):
+        if qc[i] or mask[i]: continue
+        for j in range(n):
+            if qc[j] or mask[j] or (i == j): continue
+            if i < j:
+                if d[i] >= d[j]: comp[i, j] = 1
+            else:
+                if d[i] <= d[j]: comp[i, j] = 1
+
     while currentMax > 0:
-        # Comp gets set to 1 if there is not an increase in depth.
-        comp[:, :] = 0
-        for i in range(n):
-            if qc[i] or mask[i]: continue
-            for j in range(n):
-                if qc[j] or mask[j] or (i == j): continue
-                if i < j:
-                    if d[i] >= d[j]: comp[i, j] = 1
-                else:
-                    if d[i] <= d[j]: comp[i, j] = 1
-        
         # Check if comp was set to 1 anywhere and which level was
         # most inconsistent with the others.
         currentMax = 0
         currentLev  = -1
+        otherLev = -1
         for i in range(n):
             lineSum = np.sum(comp[:, i])
             if lineSum >= currentMax:
                 currentMax = lineSum
                 currentLev = i
 
-        # Reject immediately if more than one inconsistency or 
+        # Reject immediately if more than one inconsistency or
         # investigate further if one inconsistency.
         if currentMax > 1:
             qc[currentLev] = True
@@ -89,6 +104,10 @@ def run_qc(p, parameters):
             if spikeqc[currentLev] == False and spikeqc[otherLev] == False:
                 qc[currentLev] = True
                 qc[otherLev]   = True
-
+        # update comp matrix:
+        if currentLev > -1 and qc[currentLev]:
+            mask_index(comp, currentLev)
+        if otherLev > -1 and qc[otherLev]:
+            mask_index(comp, otherLev)
     return qc
 
