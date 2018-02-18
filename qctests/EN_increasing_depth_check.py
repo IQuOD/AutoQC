@@ -105,10 +105,9 @@ def run_qc(p, parameters):
                 qc[currentLev] = True
                 qc[otherLev]   = True
         # update comp matrix:
-        if currentLev > -1:
+        if currentLev > -1 and qc[currentLev]:
             mask_index(comp, currentLev)
-        if otherLev > -1:
+        if otherLev > -1 and qc[otherLev]:
             mask_index(comp, otherLev)
-
     return qc
 
