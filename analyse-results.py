@@ -1,4 +1,4 @@
-import json
+import json, pandas
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -33,11 +33,31 @@ def find_roc(table,
     '''
 
     # Read data from database into a pandas data frame.
-    df        = dbutils.db_to_df(sys.argv[1], 
+    df        = dbutils.db_to_df(sys.argv[1],
                                  filter_on_wire_break_test=filter_on_wire_break_test,
                                  n_to_extract=n_profiles_to_analyse)
-    testNames = df.columns[1:].values.tolist()
-    if verbose: 
+
+    # mark chosen profiles as part of the training set 
+    all_uids = main.dbinteract('SELECT uid from ' + sys.argv[1] + ';')
+    for uid in all_uids:
+        uid = uid[0]
+        is_training = int(uid in df['uid'].astype(int).as_matrix())
+        query = "UPDATE " + sys.argv[1] + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
+        main.dbinteract(query)
+
+    # drop nondiscriminating tests
+    nondiscrim = []
+    cols = list(df.columns)
+    for c in cols:
+        if len(pandas.unique(df[c])) == 1:
+            nondiscrim.append(c)
+    cols = [t for t in cols if t not in nondiscrim]
+    df = df[cols]
+    print list(df)
+
+    testNames = df.columns[2:].values.tolist()
+
+    if verbose:
         print 'Number of profiles from database was: ', len(df.index)
         print 'Number of quality checks from database was: ', len(testNames)
 
@@ -56,7 +76,7 @@ def find_roc(table,
         for reversal in reverselist:
             results = df[testname].as_matrix() != reversal
             tpr, fpr, fnr, tnr = main.calcRates(results, truth)
-            if tpr > 0.0: 
+            if tpr > 0.0:
                 tests.append(results)
                 if reversal:
                     addtext = 'r'
@@ -82,7 +102,7 @@ def find_roc(table,
 
                 results = np.logical_and(tests[i], tests[j])
                 tpr, fpr, fnr, tnr = main.calcRates(results, truth)
-                if tpr > 0.0: 
+                if tpr > 0.0:
                     tests.append(results)
                     tprs.append(tpr)
                     fprs.append(fpr)
@@ -164,10 +184,8 @@ def find_roc(table,
 
 if __name__ == '__main__':
 
-    if len(sys.argv) == 2:
-        find_roc(sys.argv[1])
-    elif len(sys.argv) == 3:
+    if len(sys.argv) == 3:
         find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2])
     else:
-        print 'Usage - python analyse_results.py tablename [number of profiles to read from database]'
-         
+        print 'Usage - python analyse_results.py tablename <number of profiles to train ROC curve on>'
+
