@@ -17,9 +17,7 @@ if len(sys.argv) == 3:
     testNames.sort()
 
     # set up our table
-    query = "DROP TABLE IF EXISTS " + sys.argv[2] + ";"
-    cur.execute(query)
-    query = "CREATE TABLE " + sys.argv[2] + """(
+    query = "CREATE TABLE IF NOT EXISTS " + sys.argv[2] + """(
                 raw text,
                 truth BLOB,
                 uid integer PRIMARY KEY,
