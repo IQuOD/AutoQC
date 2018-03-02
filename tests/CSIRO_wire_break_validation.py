@@ -8,6 +8,8 @@ def test_CSIRO_wire_break():
     '''
     Spot-check the nominal behavior of the CSIRO wire break test.
     '''
+   
+    # bottom level tests
 
     # too cold at the bottom of xbt profile
     p = util.testingProfile.fakeProfile([0,0,-20], [10,20,30], probe_type=2) 
@@ -48,4 +50,21 @@ def test_CSIRO_wire_break():
     qc = qctests.CSIRO_wire_break.test(p, None)
     truth = numpy.zeros(3, dtype=bool)
     truth[1] = False
-    assert numpy.array_equal(qc, truth), "flagged cold temperature that wasn't at bottom of profile"    
+    assert numpy.array_equal(qc, truth), "flagged cold temperature that wasn't at bottom of profile"   
+
+    # transition tests 
+
+    p = util.testingProfile.fakeProfile([10,10,20,50,50], [1,2,3,4,5], probe_type=2) 
+    qc = qctests.CSIRO_wire_break.test(p, None)
+    truth = numpy.asarray([False, False, True, True, True])
+    assert numpy.array_equal(qc, truth), "misflagged gradient (warm)"
+
+    p = util.testingProfile.fakeProfile([10,10,-20,-50,-50], [1,2,3,4,5], probe_type=2) 
+    qc = qctests.CSIRO_wire_break.test(p, None)
+    truth = numpy.asarray([False, False, True, True, True])
+    assert numpy.array_equal(qc, truth), "misflagged gradient (cold)"
+
+    p = util.testingProfile.fakeProfile([10,10,20,30,30], [1,2,3,4,5], probe_type=2) 
+    qc = qctests.CSIRO_wire_break.test(p, None)
+    truth = truth = numpy.zeros(5, dtype=bool)
+    assert numpy.array_equal(qc, truth), "flagged gradient when final level didn't look like a wire break"         
