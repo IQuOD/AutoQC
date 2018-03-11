@@ -3,7 +3,7 @@ Implements the background check on reported levels from the EN quality control
 system, http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 """
 
-import EN_spike_and_step_check
+import EN_spike_and_step_check, gsw
 import numpy as np
 import util.obs_utils as outils
 from netCDF4 import Dataset
@@ -72,6 +72,9 @@ def run_qc(p, parameters):
     isDepth = (z.mask==False)
     isData = isTemperature & isDepth
 
+    # prep pressures ahead of time
+    pressures = gsw.p_from_z(-z, p.latitude())
+
     # Use the EN_spike_and_step_check to find suspect values.
     suspect = EN_spike_and_step_check.test(p, parameters, suspect=True)
 
@@ -98,14 +101,14 @@ def run_qc(p, parameters):
         
         # Set up an initial estimate of probability of gross error. 
         pge = estimatePGE(p.probe_type(), suspect[iLevel])
-    
+
         # Calculate potential temperature.
         if isSalinity[iLevel]:
             sLevel = s[iLevel]
         else:
             sLevel = 35.0
-        potm = outils.pottem(t[iLevel], sLevel, z[iLevel], lat=p.latitude())
-    
+        potm = outils.pottem(t[iLevel], sLevel, pressures[iLevel], pressure=True)
+
         # Do Bayesian calculation.
         evLevel = obevLevel + bgevLevel
         sdiff   = (potm - climLevel)**2 / evLevel
@@ -120,7 +123,6 @@ def run_qc(p, parameters):
             origLevels.append(iLevel)
             ptLevels.append(potm)
             bgLevels.append(climLevel)
-    
     record_parameters(p, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels)
 
     return qc
