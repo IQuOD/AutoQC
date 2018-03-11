@@ -57,21 +57,28 @@ def run_qc(p, parameters):
     qc[d < 0]     = True
     qc[d > 11000] = True
 
-    # Now check for inconsistencies in the depth levels.
-    comp       = np.ndarray((n, n), dtype=int)
-    currentMax = 1
-
     # initialize matrix
     # Comp gets set to 1 if there is not an increase in depth.
-    comp[:, :] = 0
+    rows = []
     for i in range(n):
-        if qc[i] or mask[i]: continue
-        for j in range(n):
-            if qc[j] or mask[j] or (i == j): continue
-            if i < j:
-                if d[i] >= d[j]: comp[i, j] = 1
-            else:
-                if d[i] <= d[j]: comp[i, j] = 1
+        # generate ith row
+        row = d[i] < d
+        # invert logic for columns gt row
+        row = np.concatenate([row[0:i], ~row[i:]])
+        rows.append(row)
+    comp = np.vstack(rows)
+    # enforce initial qc, masks:
+    qcs = [i for i,q in enumerate(qc) if q]
+    masks = [i for i,m in enumerate(mask) if m]
+    for m in list(set(qcs+masks)):
+        mask_index(comp, m)
+    # enforce diagonal
+    for i in range(n):
+        comp[i,i] = 0
+    comp.astype(int)
+
+    # Now check for inconsistencies in the depth levels.
+    currentMax = 1
 
     while currentMax > 0:
         # Check if comp was set to 1 anywhere and which level was
