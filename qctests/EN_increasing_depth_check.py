@@ -46,6 +46,10 @@ def run_qc(p, parameters):
     # Initialize qc array.
     qc = np.zeros(n, dtype=bool)
 
+    # don't flag single-level profiles
+    if n == 1:
+        return qc
+
     # if all the depths are the same, flag all levels and finish immediately
     most_common_depth = Counter(d.data).most_common(1)
     if most_common_depth[0][1] == len(d.data):
