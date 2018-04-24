@@ -1,0 +1,52 @@
+Test group,Rule,QC test,Comment
+Sensible lat/lon,Pre-chosen,Argo_impossible_location_test.py,Non controversial sanity check on location
+Sensible date,Pre-chosen,Argo_impossible_date_test.py,Non controversial sanity check on date
+Near surface XBT data,Pre-chosen,CSIRO_depth.py,Standard reject of XBT data < 3.6 m
+Wire break,Pre-chosen,CSIRO_wire_break.py,Expert opinion is that this is highly reliable at detecting XBT wire breaks
+Depth above surface,Pre-chosen,ICDC_aqc_01_level_order.py,Flags depths less than zero (plus preprocessing for other ICDC checks)
+Range,At least one from group,Argo_global_range_check.py
+Range,At least one from group,Argo_regional_range_test.py
+Range,At least one from group,CoTeDe_GTSPP_global_range.py
+Range,At least one from group,CoTeDe_GTSPP_profile_envelop.py
+Range,At least one from group,EN_range_check.py
+Range,At least one from group,ICDC_aqc_02_crude_range.py
+Range,At least one from group,ICDC_aqc_06_n_temperature_extrema.py
+Range,At-least one from group,WOD_range_check.py
+Gradient,At least one from group,Argo_gradient_test.py
+Gradient,At least one from group,CoTeDe_gradient.py
+Gradient,At least one from group,CoTeDe_GTSPP_gradient.py
+Gradient,At least one from group,CoTeDe_rate_of_change.py
+Gradient,At least one from group,CSIRO_long_gradient.py
+Gradient,At least one from group,CSIRO_short_gradient.py
+Gradient,At least one from group,ICDC_aqc_08_gradient_check.py
+Gradient,At least one from group,WOD_gradient_check.py
+Location,At least one from group,CoTeDe_location_at_sea_test.py
+Location,At least one from group,EN_background_available_check.py
+Location,At least one from group,loose_location_at_sea.py
+Increasing depth,At least one from group,Argo_pressure_increasing_test.py
+Increasing depth,At least one from group,EN_increasing_depth_check.py
+Spike or step,At least one from group,Argo_spike_test.py
+Spike or step,At least one from group,CoTeDe_GTSPP_spike_check.py
+Spike or step,At least one from group,CoTeDe_spike.py
+Spike or step,At least one from group,EN_spike_and_step_check.py
+Spike or step,At least one from group,EN_spike_and_step_suspect.py
+Spike or step,At least one from group,ICDC_aqc_07_spike_check.py
+Density,At least one from group,CoTeDe_Argo_density_inversion.py
+Density,At least one from group,EN_stability_check.py
+Climatology,At least one from group,CoTeDe_GTSPP_WOA_normbias.py
+Climatology,At least one from group,CoTeDe_tukey53H_norm.py
+Climatology,At least one from group,CoTeDe_WOA_normbias.py
+Climatology,At least one from group,EN_background_check.py
+Climatology,At least one from group,EN_std_lev_bkg_and_buddy_check.py
+Climatology,At least one from group,ICDC_aqc_09_local_climatology_check.py
+Constant values,At least one from group,CSIRO_constant_bottom.py
+Constant values,At least one from group,EN_constant_value_check.py
+Constant values,At least one from group,ICDC_aqc_05_stuck_value.py
+Anomaly detection,Optional,CoTeDe_anomaly_detection.py,Machine learning
+Digit roll over,Optional,CoTeDe_digit_roll_over.py,Argo digit rollover test
+Fuzzy logic,Optional,CoTeDe_fuzzy_logic.py,
+Fuzzy logic,Optional,CoTeDe_Morello2014.py,
+XBT surface spikes,Optional,CSIRO_surface_spikes.py,Not a standard spike check; specific to XBTs
+Track check,Optional,EN_track_check.py,Check on position of successive profiles
+Maximum depth,Optional,ICDC_aqc_04_max_obs_depth.py,Defines maximum possible depth for instruments and flags data exceeding these
+
