@@ -73,7 +73,8 @@ def run_qc(p, parameters):
     isData = isTemperature & isDepth
 
     # prep pressures ahead of time
-    pressures = gsw.p_from_z(-z, p.latitude())
+    depth = np.ma.filled(z,30000)
+    pressures = gsw.p_from_z(-depth, p.latitude())
 
     # Use the EN_spike_and_step_check to find suspect values.
     suspect = EN_spike_and_step_check.test(p, parameters, suspect=True)
