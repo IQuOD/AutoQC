@@ -5,45 +5,44 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
-from util import wod_stats
 from util import dbutils, main
 
 def read_qc_groups(filename='qctest_groups.csv'):
     # Read a csv file containing information on QC test groups.
+    # The program returns a dictionary containing the information 
+    # from csv file.
+
     csvfile = open(filename) 
     groupinfo = csv.reader(csvfile)
 
     # Create empty lists for each type of group.
-    removeabove    = []
-    removebelow    = []
-    removelevels   = []
-    removeprofile  = []
-    requiredgroups = {}
+    groupdefinition = {'Remove above reject':[],
+                       'Remove below reject':[],
+                       'Remove rejected levels':[],
+                       'Remove profile':[],
+                       'Optional':[],
+                       'At least one from group':{}}
 
     # Fill out the lists.
     for i, spec in enumerate(groupinfo):
         if i == 0: continue # Miss the header line.
-        if spec[1] == 'Remove above reject':
-            removeabove.append(spec[2])
-        elif spec[1] == 'Remove below reject':
-            removebelow.append(spec[2])
-        elif spec[1] == 'Remove rejected levels':
-            removelevels.append(spec[2])
-        elif spec[1] == 'Remove profile':
-            removeprofile.append(spec[2])
-        elif spec[1] == 'At least one from group':
-            if spec[0] in requiredgroups:
-                requiredgroups[spec[0]].append(spec[2])
+        if spec[1] in groupdefinition:
+            # For the 'at least one from group' rule we maintain lists of 
+            # the tests in each group.
+            if spec[1] == 'At least one from group':
+                if spec[0] in groupdefinition[spec[1]]:
+                    groupdefinition[spec[1]][spec[0]].append(spec[2])
+                else:
+                    groupdefinition[spec[1]][spec[0]] = [spec[2]]
             else:
-                requiredgroups[spec[0]] = [spec[2]]
-        elif spec[1] == 'Optional':
-            continue
+                # Other rules have a list of the tests that fall into them.
+                groupdefinition[spec[1]].append(spec[2])
         else:
             raise NameError('Rule not recognised: ', spec)
 
     csvfile.close()
 
-    return removeabove, removebelow, removelevels, removeprofile, requiredgroups
+    return groupdefinition
 
 def find_roc(table, 
              filter_on_wire_break_test=False,
@@ -76,20 +75,15 @@ def find_roc(table,
     '''
 
     # Read QC test specifications if required.
+    groupdefinition = {}
     if filter_from_file_spec or enforce_types_of_check:
-        removeabove, removebelow, removelevels, removeprofile, requiredgroups = read_qc_groups()
-    filters = []
-    if filter_from_file_spec:
-        for val in removeabove:   filters.append([val, 'removeabove'])
-        for val in removebelow:   filters.append([val, 'removebelow'])
-        for val in removelevels:  filters.append([val, 'removelevels'])
-        for val in removeprofile: filters.append([val, 'removeprofile'])
+        groupdefinition = read_qc_groups()
 
     # Read data from database into a pandas data frame.
-    df        = dbutils.db_to_df(sys.argv[1],
-                                 filter_on_wire_break_test=filter_on_wire_break_test,
-                                 filter_on_tests = filters,
-                                 n_to_extract=n_profiles_to_analyse)
+    df = dbutils.db_to_df(sys.argv[1],
+                          filter_on_wire_break_test = filter_on_wire_break_test,
+                          filter_on_tests = groupdefinition,
+                          n_to_extract = n_profiles_to_analyse)
 
     # drop nondiscriminating tests
     nondiscrim = []
@@ -140,27 +134,29 @@ def find_roc(table,
                 tprs.append(tpr)
                 fprs.append(fpr)
     del df # No further need for the data frame.
-    if verbose: print 'Number of quality checks after reverses and removing zero TPR was: ', len(names)
+    if verbose: print 'Number of quality checks after adding reverses and removing zero TPR was: ', len(names)
 
     # Create storage to hold the roc curve.
     cumulative = truth.copy()
     cumulative[:] = False
     currenttpr    = 0.0
     currentfpr    = 0.0
-    r_fprs    = []
-    r_tprs    = []
-    testcomb  = []
+    r_fprs        = [] # The false positive rate for each ROC point.
+    r_tprs        = [] # True positive rate for each ROC point.
+    testcomb      = [] # The QC test that was added at each ROC point.
+    groupsel      = [] # Set to True if the ROC point was from an enforced group.
 
     # Pre-select some tests if required.
     if enforce_types_of_check:
         if verbose: print 'Enforcing types of checks'
-        for key in requiredgroups:
+        for key in groupdefinition['At least one from group']:
             if verbose: print '  Selecting from group: ' + key
             bestchoice = ''
             bestdist   = 100.0**2 + 100.0**2
             besti      = -1
-            for testname in requiredgroups[key]:
-                # Need to check that the test exists in the data frame.
+            for testname in groupdefinition['At least one from group'][key]:
+                # Need to check that the test exists - it may have been removed
+                # if it was non-discriminating.
                 if testname in names:
                     for itest, name in enumerate(names):
                         if name == testname: 
@@ -170,11 +166,11 @@ def find_roc(table,
                             print '    ', tpr, fpr, newdist, bestdist, testname
                             if newdist == bestdist:
                                 if verbose:
-                                    print '  ' + bestchoice + ' and ' + testname + ' have the same results'
+                                    print '  ' + bestchoice + ' and ' + testname + ' have the same results and the first is kept'
                             elif newdist < bestdist:
                                 bestchoice = testname
-                                bestdist = newdist
-                                besti    = itest
+                                bestdist   = newdist
+                                besti      = itest
                 else:
                     if verbose: print '    ' + testname + ' not found and so was skipped'
             assert bestchoice != '', '    Error, did not make a choice in group ' + key
@@ -184,11 +180,13 @@ def find_roc(table,
             testcomb.append(names[besti])
             r_fprs.append(currentfpr)
             r_tprs.append(currenttpr)
+            groupsel.append(True)
+            # Once a test has been added, it can be deleted so that it is not considered again.
             del names[besti]
             del tests[besti]
             del fprs[besti]
             del tprs[besti]
-            print 'ROC point: ', currenttpr, currentfpr, testcomb[-1]
+            print 'ROC point from enforced group: ', currenttpr, currentfpr, testcomb[-1]
 
     # Make combinations of the single checks and store.
     assert n_combination_iterations <= 2, 'Setting n_combination_iterations > 2 results in a very large number of combinations'
@@ -254,10 +252,17 @@ def find_roc(table,
             testcomb.append(names[besti])
             r_fprs.append(currentfpr)
             r_tprs.append(currenttpr)
+            groupsel.append(False)
             print 'ROC point: ', currenttpr, currentfpr, names[besti]
 
     if plot_roc:
-        plt.plot(r_fprs, r_tprs)
+        plt.plot(r_fprs, r_tprs, 'k')
+        for i in range(len(r_fprs)):
+            if groupsel[i]:
+                colour = 'r'
+            else:
+                colour = 'b'
+            plt.plot(r_fprs[i], r_tprs[i], colour + 'o')
         plt.xlim(0, 100)
         plt.ylim(0, 100)
         plt.xlabel('False positive rate (%)')
@@ -271,13 +276,18 @@ def find_roc(table,
         r['tpr'] = r_tprs
         r['fpr'] = r_fprs
         r['tests'] = testcomb
+        r['groupsel'] = groupsel
         json.dump(r, f)
         f.close()
 
 if __name__ == '__main__':
 
+    # python analyse-results.py <database table name> <number of profiles to extract> <flag to run combinations and no enforce of groups - can be any value>
+
     if len(sys.argv) == 3:
         find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2])
+    elif len(sys.argv) == 4:
+        find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2], enforce_types_of_check=False, n_combination_iterations=1)
     else:
         print 'Usage - python analyse_results.py tablename <number of profiles to train ROC curve on>'
 
