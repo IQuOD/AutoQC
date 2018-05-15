@@ -26,15 +26,16 @@ def test(p, parameters):
     
     # The test is run on re-ordered data.
     nlevels, z, t = ICDC.reordered_data(p)
-    qc = np.zeros(nlevels, dtype=bool)
-    if nlevels < 3: return qc # Not enough levels to check.
+    qc = np.zeros(nlevels, dtype=bool) # Reordered data may be a subset of available levels.
+    defaultqc = np.zeros(p.n_levels(), dtype=bool) # Default QC flags for full set of levels.
+    if nlevels < 3: return defaultqc # Not enough levels to check.
 
     # Ignore any levels outside of limits.
     parminover = -2.3
     parmaxover = 33.0
     use = (t > parminover) & (t < parmaxover)
     nuse = np.count_nonzero(use)
-    if nuse < 3: return qc
+    if nuse < 3: return defaultqc
     zuse = z[use]
     tuse = t[use]
     origlevels = (np.arange(nlevels))[use]

@@ -67,12 +67,12 @@ def check_for_fail(results):
 
     fails = []
     for result in results:
-        result = False
+        answer = False
         for qc in unpack_qc(result):
             if qc == True:
-                result = True
+                answer = True
                 break
-        fails.append(result)
+        fails.append(answer)
 
     return fails
 
@@ -130,8 +130,12 @@ def db_to_df(table,
         # Check if the action is relevant.
         if action == 'Optional' or action == 'At least one from group': continue
 
+        # Initialise variables.
+        nlevels   = -1
+        outcomes  = False
+        qcresults = []
         for testname in filter_on_tests[action]:
-            for i in range(0, len(df.index), -1):
+            for i in range(len(df.index) - 1, -1, -1):
                 if action == 'Remove above reject':
                     nlevels = get_reversed_n_levels_before_fail([df[testname][i]])[0]
                 elif action == 'Remove below reject':
@@ -143,9 +147,9 @@ def db_to_df(table,
                 else:
                     raise NameError('Unrecognised action: ' + action)
 
-                if (((action == 'Remove above reject' or action == 'Remove below reject') and nlevels[i] == 0) or
-                     (action == 'Remove profile' and outcomes[i] == True) or
-                     (action == 'Remove rejected levels' and np.count_nonzero(qcresults == False) == 0)):
+                if (((action == 'Remove above reject' or action == 'Remove below reject') and nlevels == 0) or
+                    (action == 'Remove profile' and outcomes == True) or
+                    (action == 'Remove rejected levels' and numpy.count_nonzero(qcresults == False) == 0)):
                     # Completely remove a profile if it has no valid levels or if it
                     # has a fail and the action is to remove.
                     df.drop(df.index[i])
@@ -156,9 +160,9 @@ def db_to_df(table,
                         qc = unpack_qc(df.iloc[i, j])
                         if len(qc) > 1:
                             if action == 'Remove above reject':
-                                qc = qc[nlevels[i]:]
+                                qc = qc[nlevels:]
                             elif action == 'Remove below reject':
-                                qc = qc[:nlevels[i]] 
+                                qc = qc[:nlevels] 
                             elif action == 'Remove rejected levels':
                                 qc = qc[qcresults == False]            
                             df.iat[i, j] = main.pack_array(qc)
