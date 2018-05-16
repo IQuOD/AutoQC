@@ -289,5 +289,5 @@ if __name__ == '__main__':
     elif len(sys.argv) == 4:
         find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2], enforce_types_of_check=False, n_combination_iterations=1)
     else:
-        print 'Usage - python analyse_results.py tablename <number of profiles to train ROC curve on>'
+        print 'Usage - python analyse_results.py tablename <number of profiles to train ROC curve on> <optional character or number to indicate that we run one test combination iteration and no enforcing of groups>'
 
