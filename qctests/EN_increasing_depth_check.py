@@ -61,10 +61,6 @@ def run_qc(p, parameters):
         uid = p.uid()
         return qc
 
-    # Now check for inconsistencies in the depth levels.
-    comp       = np.ndarray((n, n), dtype=int)
-    currentMax = 1
-
     # initialize matrix
     # Comp gets set to 1 if there is not an increase in depth.
     rows = []
