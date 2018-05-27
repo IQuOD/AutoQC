@@ -46,7 +46,11 @@ def run_qc(p, parameters):
     # Initialize qc array.
     qc = np.zeros(n, dtype=bool)
 
-    # don't flag single-level profiles
+    # Basic check on each level.
+    qc[d < 0]     = True
+    qc[d > 11000] = True
+
+    # don't perform more sophisticated tests for single-level profiles
     if n == 1:
         return qc
 
@@ -56,10 +60,6 @@ def run_qc(p, parameters):
         qc = np.ones(n, dtype=bool)
         uid = p.uid()
         return qc
-
-    # Basic check on each level.
-    qc[d < 0]     = True
-    qc[d > 11000] = True
 
     # Now check for inconsistencies in the depth levels.
     comp       = np.ndarray((n, n), dtype=int)
