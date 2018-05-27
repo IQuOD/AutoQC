@@ -46,16 +46,20 @@ def run_qc(p, parameters):
     # Initialize qc array.
     qc = np.zeros(n, dtype=bool)
 
+    # Basic check on each level.
+    qc[d < 0]     = True
+    qc[d > 11000] = True
+
+    # don't perform more sophisticated tests for single-level profiles
+    if n == 1:
+        return qc
+
     # if all the depths are the same, flag all levels and finish immediately
     most_common_depth = Counter(d.data).most_common(1)
     if most_common_depth[0][1] == len(d.data):
         qc = np.ones(n, dtype=bool)
         uid = p.uid()
         return qc
-
-    # Basic check on each level.
-    qc[d < 0]     = True
-    qc[d > 11000] = True
 
     # initialize matrix
     # Comp gets set to 1 if there is not an increase in depth.
