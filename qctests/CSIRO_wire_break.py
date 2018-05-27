@@ -1,9 +1,16 @@
 """
-Implements the wire break test of DOI: 10.1175/JTECHO539.1
-All questionable features result in a flag, in order to minimize false negatives 
+Implements the wire break test of https://github.com/BecCowley/Mquest/blob/083b9a3dc7ec9076705aca0e90bcb500d241be03/GUI/detectwirebreak.m
 """
 
 import numpy
+
+def istight(t, thresh=0.1):
+    # given a temperature profile, return an array of bools
+    # true = this level is within thresh of both its neighbors
+    gaps = numpy.absolute(numpy.diff(t))
+    left = numpy.append(gaps,0)
+    right = numpy.insert(gaps,0,0)
+    return (left<thresh) & (right<thresh)
 
 def test(p, parameters):
     """
@@ -12,43 +19,23 @@ def test(p, parameters):
     passed the check and True where it failed.
     """
 
-    # Get temperature values from the profile.
     t = p.t()
-    d = p.z()
 
-    # initialize qc as a bunch of falses;
+    # initialize qc as a bunch of falses:
     qc = numpy.zeros(len(t.data), dtype=bool)
 
     # only meaningful for XBT data
     if p.probe_type() != 2:
         return qc
 
-    # check for gaps in data
-    isTemperature = (t.mask==False)
-    isDepth = (d.mask==False)
-    isData = isTemperature & isDepth
+    no_wb = numpy.where( (t >= -2.4) & (t <= 32) & istight(t) )[0]
 
-    # wire breaks at bottom of profile;
-    # don't bother continuing if the bottom level doesn't look like a wb
-    if isTemperature[-1] and (t.data[-1] < -2.8 or t.data[-1] > 36):
-           qc[-1] = True
+    if len(no_wb) > 0:
+        last_good = no_wb[-1]
+        qc = numpy.append(numpy.zeros(last_good + 1, dtype=bool), numpy.ones(len(t) - last_good - 1, dtype=bool))
     else:
-        return qc
-
-    i = 2
-    while i<len(t):
-        # extreme temperatures at end
-        if isTemperature[-1*i] and (t.data[-1*i] < -2.8 or t.data[-1*i] > 36):
-            qc[-1*i] = True
-        # hard gradient between physical data and wire break
-        elif isData[-1*i] and isData[-1*(i+1)]:
-            grad = abs((t.data[-1*i] - t.data[-1*(i+1)]) / (d.data[-1*i] - d.data[-1*(i+1)]))
-            qc[-1*i] = grad > 0.5
-
-        # break out as soon as wire break behavior ends:
-        if not qc[-1*i]:
-            break
-
-        i+=1
+        qc = numpy.ones(len(t.data), dtype=bool)
 
     return qc
+
+
