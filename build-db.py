@@ -27,7 +27,7 @@ if len(sys.argv) == 3:
                 time real,
                 lat real,
                 long real,
-                cruise integer,
+                cruise text,
                 probe integer,
                 training integer,
                 """
@@ -100,6 +100,7 @@ if len(sys.argv) == 3:
     uids = []
     good = 0
     bad = 0
+
     while True:
         # extract profile as wodpy object and raw text
         start = fid.tell()
@@ -131,6 +132,9 @@ if len(sys.argv) == 3:
         truth = encodeTruth(profile)
         p['truth'] = main.pack_array(truth)
 
+        # extract country code to prefix cruise
+        country = profile.primary_header['Country code']
+
         # keep tabs on how many good and how many bad profiles have been added to db
         # nowire == index of first wire break level
         wireqc = qctests.CSIRO_wire_break.test(profile, {})
@@ -146,7 +150,7 @@ if len(sys.argv) == 3:
             good += 1
 
         query = "INSERT INTO " + sys.argv[2] + " (raw, truth, uid, year, month, day, time, lat, long, cruise, probe) values (?,?,?,?,?,?,?,?,?,?,?);"
-        values = (p['raw'], p['truth'], p['uid'], p['year'], p['month'], p['day'], p['time'], p['latitude'], p['longitude'], p['cruise'], p['probe_type'])
+        values = (p['raw'], p['truth'], p['uid'], p['year'], p['month'], p['day'], p['time'], p['latitude'], p['longitude'], country + str(p['cruise']), p['probe_type'])
         main.dbinteract(query, values)
         if profile.is_last_profile_in_file(fid) == True:
             break

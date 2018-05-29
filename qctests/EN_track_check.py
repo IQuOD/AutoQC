@@ -1,4 +1,4 @@
-""" 
+"""
 Implements the EN track check, described on pp 7 and 21 of
 http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 """
@@ -13,19 +13,15 @@ DistRes = 20000. # meters
 TimeRes = 600. # seconds
 
 def test(p, parameters):
-    """ 
-    Runs the quality control check on profile p and returns a numpy array 
-    of quality control decisions with False where the data value has 
-    passed the check and True where it failed. 
     """
-    
-    cruise = p.cruise()
+    Runs the quality control check on profile p and returns a numpy array
+    of quality control decisions with False where the data value has
+    passed the check and True where it failed.
+    """
+
+    cruise = p.primary_header['Country code'] + str(p.cruise())
     uid = p.uid()
-    
-    # don't bother if cruise == 0 or None, or if timestamp is corrupt
-    if (cruise in [0, None]) or (None in [p.year(), p.month(), p.day(), p.time()]):
-        return np.zeros(1, dtype=bool)
-    
+
     # don't bother if this has already been analyzed
     command = 'SELECT en_track_check FROM ' + parameters["table"] + ' WHERE uid = ' + str(uid) + ';'
     en_track_result = main.dbinteract(command)
@@ -34,35 +30,38 @@ def test(p, parameters):
         result = np.zeros(1, dtype=bool)
         result[0] = np.any(en_track_result)
         return result
-    
-    # some detector types cannot be assessed by this test; do not raise flag.
-    if p.probe_type() in [None]:
+
+    # make sure this profile makes sense in the track check
+    if not assess_usability(p):
         return np.zeros(1, dtype=bool)
-    
+
     # fetch all profiles on track, sorted chronologically, earliest first (None sorted as highest)
-    command = 'SELECT uid, year, month, day, time, lat, long, probe FROM ' + parameters["table"] + ' WHERE cruise = ' + str(cruise) + ' and year is not null and month is not null and day is not null and time is not null ORDER BY year, month, day, time, uid ASC;'
+    command = 'SELECT uid, year, month, day, time, lat, long, probe, raw FROM ' + parameters["table"] + ' WHERE cruise = "' + str(cruise) + '" and year is not null and month is not null and day is not null and time is not null ORDER BY year, month, day, time, uid ASC;'
     track_rows = main.dbinteract(command)
 
-    # start all as passing by default:
+    # avoid inappropriate profiles
+    track_rows = [tr for tr in track_rows if assess_usability_raw(tr[8][1:-1])]
+
+    # start all as passing by default
     EN_track_results = {}
     for i in range(len(track_rows)):
         EN_track_results[track_rows[i][0]] = np.zeros(1, dtype=bool)
-    
+
     # copy the list of headers;
     # remove entries as they are flagged.
     passed_rows = copy.deepcopy(track_rows)
     rejects = findOutlier(passed_rows, EN_track_results)
-    
+
     while rejects != []:
         passed_index = [x for x in range(len(passed_rows)) if x not in rejects ]
         passed_rows = [passed_rows[index] for index in passed_index ]
         rejects = findOutlier(passed_rows, EN_track_results)
-    
+
     # if more than half got rejected, reject everyone
     if len(passed_rows) < len(track_rows) / 2:
         for i in range(len(track_rows)):
             EN_track_results[track_rows[i][0]][0] = True
-   
+
     # write all to db
     result = []
     for i in range(len(track_rows)):
@@ -70,7 +69,6 @@ def test(p, parameters):
 
     query = "UPDATE " + sys.argv[1] + " SET en_track_check=? WHERE uid=?"
     main.interact_many(query, result)
-
     return EN_track_results[uid]
 
 #def sliceTrack(p, rows, margin=7):
@@ -91,6 +89,48 @@ def test(p, parameters):
 
 #    return inrange
 
+def assess_usability(p):
+    '''
+    given a profile p, return true if the track check is suitable for this profile
+    '''
+
+    # don't bother if cruise == 0 or None, or if timestamp is corrupt
+    if (p.cruise() in [0, None]) or (None in [p.year(), p.month(), p.day(), p.time()]):
+        return False
+
+    # don't bother if country code is 99
+    if str(p.primary_header['Country code']) == '99':
+        return False
+
+    # some detector types cannot be assessed by this test; do not raise flag.
+    if p.probe_type() in [None]:
+        return False
+
+    # avoid aircraft
+    if isAircraft(p):
+        return False
+
+    return True
+
+def assess_usability_raw(raw):
+    p = main.text2wod(raw)
+    return assess_usability(p)
+
+def isAircraft(profile):
+    '''
+    decide if platform is aircraft
+    '''
+
+    platform = profile.extract_secondary_header(3)
+    if platform is not None:
+        platform = int(platform)
+
+    return platform in [2635, 1053, 5178, 6876, 305, 879, 7841, 6743, 2911, 183]
+
+def aircraft_raw(raw):
+    trk = main.text2wod(raw)
+    return isAircraft(trk)
+
 def findOutlier(rows, results):
     '''
     given a list of rows, find the fastest one;
@@ -98,18 +138,18 @@ def findOutlier(rows, results):
     once the fastest is within limits, return [].
     '''
 
-    maxShipSpeed = 15. # m/s
-    maxBuoySpeed = 2. # m/s
+    maxShipSpeed = 30. # m/s  15
+    maxBuoySpeed = 4. # m/s   2
 
     if rows == []:
         return []
 
     # determine speeds and angles for list of headers
     speeds, angles = calculateTraj(rows)
-  
+
     # decide if something needs to be flagged
     maxSpeed = maxShipSpeed
-    if isBuoy(rows[0]):
+    if isBuoy(rows[0][7]):
         maxSpeed = maxBuoySpeed
     iMax = speeds.index(max(speeds))
     flag = detectExcessiveSpeed(speeds, angles, iMax, maxSpeed)
@@ -130,15 +170,15 @@ def chooseReject(rows, speeds, angles, index, maxSpeed):
     '''
 
     # chain of tests breaks when a reject is found:
-    reject = condition_a(rows, speeds, angles, index, maxSpeed)[0]
+    reject, rejecting_condition = condition_a(rows, speeds, angles, index, maxSpeed)
 
     # condition i needs to run at the end of the chain in all cases:
     # if no decision, reject both:
     if reject == -1:
         reject = [index-1, index]
-    # if excessive speed is created by removing the flag, reject both instead 
+    # if excessive speed is created by removing the flag, reject both instead
     # can't create new excessive speed by removing last profile.
-    elif reject < len(rows)-1: 
+    elif reject < len(rows)-1:
         new_rows = copy.deepcopy(rows)
         del new_rows[reject]
         newSpeeds, newAngles = calculateTraj(new_rows)
@@ -173,11 +213,11 @@ def calculateTraj(rows):
 
     return speeds, angles
 
-def isBuoy(row):
+def isBuoy(probeindex):
     '''
-    decide if row belongs to a buoy-based measurement
+    decide if probe is buoy-based
     '''
-    return row[7] in [4,7,9,10,11,12,13,15]
+    return probeindex in [4,7,9,10,11,12,13,15]
 
 def detectExcessiveSpeed(speeds, angles, index, maxSpeed):
     '''
