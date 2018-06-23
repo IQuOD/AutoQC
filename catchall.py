@@ -1,4 +1,5 @@
 # algorithm:
+# 0. remove from consideration any QC test that fails to produce TPR / FPR >= some tunable threshold
 # 1. remove from consideration any bad profile not flagged by any test; put these aside for new qc test design
 # 2. accept all individual qc tests with 0% fpr; remove these from consideration, along with all profiles they flag
 # 3. form list of ntuple AND combos, add their decisions to consideration
@@ -36,9 +37,15 @@ def amend(combo, df):
     name = '&'.join(combo)
     return df.assign(xx=decision).rename(index=str, columns={'xx': name})
 
+print '=============='
+print sys.argv[1]
+print '=============='
+
 # get tests names and dataframe
 testNames = main.importQC('qctests')
+
 df = dbutils.db_to_df(sys.argv[1], n_to_extract=sys.argv[2])
+
 # declare some downstream constructs
 accepted = []
 unflagged = []
@@ -53,6 +60,19 @@ for uid in all_uids:
     is_training = int(uid in df['uid'].astype(int).as_matrix())
     query = "UPDATE " + sys.argv[1] + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
     main.dbinteract(query)
+
+# algo. step 0:
+# demand individual QC tests have TPR/FPR > some threshold
+perf_thresh = 2
+drop_tests = []
+for test in testNames:
+    tpr, fpr, fnr, tnr = main.calcRates(df[test].tolist(), df['Truth'].tolist())
+    if fpr > 0 and tpr / fpr < perf_thresh:
+        print 'dropping', test, '; tpr/fpr = ', tpr/fpr
+        df.drop([test], axis=1)
+        bad.drop([test], axis=1)
+        drop_tests.append(test)
+testNames = [x for x in testNames if x not in drop_tests]
 
 # algo. step 1:
 # note profiles that weren't flagged by any test
