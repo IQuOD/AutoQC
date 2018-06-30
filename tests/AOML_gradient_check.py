@@ -4,8 +4,6 @@ import util.testingProfile
 import numpy
 from util import obs_utils
 
-##### Argo_spike_test ---------------------------------------------------
-
 def test_AOML_gradient_boundaries():
     '''
     Test critical values in AOML check
