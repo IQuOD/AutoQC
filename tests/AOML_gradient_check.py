@@ -1,8 +1,6 @@
 import qctests.AOML_gradient
-
 import util.testingProfile
 import numpy
-from util import obs_utils
 
 def test_AOML_gradient_boundaries():
     '''
