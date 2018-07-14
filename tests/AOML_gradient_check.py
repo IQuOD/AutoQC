@@ -12,10 +12,23 @@ def test_AOML_gradient_boundaries():
     qc = qctests.AOML_gradient.test(p, None)
     truth = numpy.zeros(3, dtype=bool)
     truth[1] = True
+    truth[2] = True
     assert numpy.array_equal(qc, truth), 'incorrectly flagging boundaries of decreasing temperature gradient.'
 
     p = util.testingProfile.fakeProfile([480000,500000,520000], [100000,200000,299999]) 
     qc = qctests.AOML_gradient.test(p, None)
     truth = numpy.zeros(3, dtype=bool)
     truth[1] = True
-    assert numpy.array_equal(qc, truth), 'incorrectly flagging boundaries of increasing temperature gradient.'    
+    truth[2] = True
+    assert numpy.array_equal(qc, truth), 'incorrectly flagging boundaries of increasing temperature gradient.'
+
+def test_AOML_gradient_edge():
+    '''
+    check the edge case pointed out in
+    https://github.com/IQuOD/AutoQC/pull/228
+    '''
+
+    p = util.testingProfile.fakeProfile([1.8,1], [2,1]) 
+    qc = qctests.AOML_gradient.test(p, None)
+    truth = numpy.zeros(2, dtype=bool)
+    assert numpy.array_equal(qc, truth), 'flagged a moderate gradient even though temperature was decreasing'
