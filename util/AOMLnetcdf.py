@@ -7,6 +7,54 @@ import AOMLinterpolation as interp_helper
 import numpy as np
 from netCDF4 import Dataset
 
+def subset_data(x, y, netcdFile, cScope, clima, fieldType):
+  """
+    Function is expecting 6 arguments:
+      Float for longitude
+      Float for latitude
+      String for path and filename to configuration file
+      Float for range of coordinates to gather
+      Boolean for evaluating if climatology data or not
+      String for type of climatology data
+
+    Process:
+      Open netCDF as read only
+      Get timestamp, depth measurements, longitudes and latitudes
+      Get ranges of index numbers from latitude and longitude lists of
+        points near coordinates to limit size
+      Call functions to organize longitude and latitude in list of lists and
+        map its index numbers with a list of temperatures index numbers
+
+    Return list of lists of latitude and longitude points, list for depth
+      measurements, list of lists with temperatures, timestamp in netCDF
+    Return empty list, an empty list, an empty list, -1 if exception
+  """
+
+  nf = Dataset(netcdFile, "r")
+    
+  if clima:
+    time = nf.variables["time"][0]
+    deps = nf.variables["depth"][:]
+    lats = nf.variables["lat"][:]
+    lons = nf.variables["lon"][:]
+  else:
+    time = nf.variables["Time"][0]
+    deps = nf.variables["zt_k"][:]
+    lats = nf.variables["yt_j"][:]
+    lons = nf.variables["xt_i"][:]
+  temperatureType = fieldType
+
+  minIndexLat = interp_helper.closest_index(lats, y - cScope)
+  maxIndexLat = interp_helper.closest_index(lats, y + cScope)
+  minIndexLon = interp_helper.closest_index(lons, x - cScope)
+  maxIndexLon = interp_helper.closest_index(lons, x + cScope)
+
+  latLonList = []
+  latLonTemp = []
+  latLonList, latLonTemp = lon_lat_temp_lists(nf, minIndexLat, maxIndexLat, minIndexLon, maxIndexLon, len(deps), lats, lons, temperatureType)
+  nf.close()
+  return latLonTemp, deps, latLonList, time
+
 def lon_lat_temp_lists(netFile, minIndexLat, maxIndexLat, minIndexLon,
                        maxIndexLon, depthRange, lats, lons, temperatureType):
   """
@@ -106,15 +154,11 @@ def organize_data(netFile, minLatIndexNumber, maxLatIndexNumber,
   latLonTemp = []
   latLonTempDict = {}
   numberOfLongitudes = len(range(minLonIndexNumber, maxLonIndexNumber+1))
-  indicator = [ (y, x) for y in range(minLatIndexNumber,
-                                      maxLatIndexNumber+1)
-                       for x in range(minLonIndexNumber,
-                                      maxLonIndexNumber+1)]
-  oceanDepthData = (
-      netFile.variables[tType][0, 0:dRange,
-                               minLatIndexNumber:maxLatIndexNumber+1,
-                               minLonIndexNumber:maxLonIndexNumber+1]
-  )
+  indicator = [ (y, x) for y in range(minLatIndexNumber, maxLatIndexNumber+1)
+                       for x in range(minLonIndexNumber, maxLonIndexNumber+1)]
+  oceanDepthData = netFile.variables[tType][0, 0:dRange,
+                    minLatIndexNumber:maxLatIndexNumber+1,
+                    minLonIndexNumber:maxLonIndexNumber+1]
 
   for oddata in oceanDepthData:
     for numY, ytemperatures in enumerate(oddata):
@@ -122,7 +166,7 @@ def organize_data(netFile, minLatIndexNumber, maxLatIndexNumber,
         indicatorNum = numY * numberOfLongitudes + numX
         indicatorKey = indicator[indicatorNum]
 
-        if (np.ma.is_masked(xtemperature)):
+        if np.ma.is_masked(xtemperature):
           xtemperature = np.nan
 
         if indicatorKey in latLonTempDict:
@@ -130,55 +174,7 @@ def organize_data(netFile, minLatIndexNumber, maxLatIndexNumber,
         else:
           latLonTempDict[indicatorKey] = [xtemperature]
 
-  latLonList = [[lats[latLonIndexTuple[0]],
-                 lons[latLonIndexTuple[1]]+degrees]
-                for latLonIndexTuple in list(latLonTempDict.keys())]
+  latLonList = [[lats[latLonIndexTuple[0]], lons[latLonIndexTuple[1]]+degrees] for latLonIndexTuple in list(latLonTempDict.keys())]
+  
   return latLonList, list(latLonTempDict.values())
 
-def subset_data(x, y, netcdFile, cScope, clima, fieldType):
-  """
-    Function is expecting 6 arguments:
-      Float for longitude
-      Float for latitude
-      String for path and filename to configuration file
-      Float for range of coordinates to gather
-      Boolean for evaluating if climatology data or not
-      String for type of climatology data
-
-    Process:
-      Open netCDF as read only
-      Get timestamp, depth measurements, longitudes and latitudes
-      Get ranges of index numbers from latitude and longitude lists of
-        points near coordinates to limit size
-      Call functions to organize longitude and latitude in list of lists and
-        map its index numbers with a list of temperatures index numbers
-
-    Return list of lists of latitude and longitude points, list for depth
-      measurements, list of lists with temperatures, timestamp in netCDF
-    Return empty list, an empty list, an empty list, -1 if exception
-  """
-
-  nf = Dataset(netcdFile, "r")
-    
-  if clima:
-    time = nf.variables["time"][0]
-    deps = nf.variables["depth"][:]
-    lats = nf.variables["lat"][:]
-    lons = nf.variables["lon"][:]
-  else:
-    time = nf.variables["Time"][0]
-    deps = nf.variables["zt_k"][:]
-    lats = nf.variables["yt_j"][:]
-    lons = nf.variables["xt_i"][:]
-  temperatureType = fieldType
-
-  minIndexLat = interp_helper.closest_index(lats, y - cScope)
-  maxIndexLat = interp_helper.closest_index(lats, y + cScope)
-  minIndexLon = interp_helper.closest_index(lons, x - cScope)
-  maxIndexLon = interp_helper.closest_index(lons, x + cScope)
-
-  latLonList = []
-  latLonTemp = []
-  latLonList, latLonTemp = lon_lat_temp_lists(nf, minIndexLat, maxIndexLat, minIndexLon, maxIndexLon, len(deps), lats, lons, temperatureType)
-  nf.close()
-  return latLonTemp, deps, latLonList, time

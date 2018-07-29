@@ -18,8 +18,9 @@ def closest_index(coordinateList, point):
 
 def get_index_and_next(lList, plot):
   """
-    return the indices of lList values bracketing the value plot
-    note if list is not monotonic, will return bracket to which plot falls the closest to an edge of.
+    return two list indices in order: the index i of the value closest to <plot>, 
+    and the next index if <plot> > lList[i],
+    or the previous if <plot> < lList[i].
 
     lList: list of floats
     plot: float
@@ -149,20 +150,25 @@ def temperature_interpolation_process(x, y, depth, depthColumns, llList,
     Return a temperature that has been interpolated
   """
 
-  depIndex1, depIndex2 = (get_index_and_next(depthColumns, depth))
+  # find depths bracketing the depth of interest
+  depIndex1, depIndex2 = get_index_and_next(depthColumns, depth)
   if depth > depthColumns[depIndex2]:
     return 99999.99
-    
-  indicesNotNanList = (indices_without_nan(depIndex1, depIndex2, llList, llTempList))
-  numberOfNeighbors = 100
+
+  # find all valid lat, lon, and temperatures at this depth bracket
+  indicesNotNanList = indices_without_nan(depIndex1, depIndex2, llList, llTempList)
   nonanllList = [llList[indx] for indx in indicesNotNanList]
   nonanllTempList = [llTempList[indx] for indx in indicesNotNanList]
+
+  # find the nearest point from the list above to the point of interest
+  numberOfNeighbors = 100
   if nonanllList:
-    distancesList, locationIndicesList = (nearest_indices(y, x, nonanllList, numberOfNeighbors))
+    distancesList, locationIndicesList = nearest_indices(y, x, nonanllList, numberOfNeighbors)
     nearestRadDistance = distancesList[0]
     nearestIndex = locationIndicesList[0]
   else:
     return 99999.99
+
   if (0.0 <= nearestRadDistance <= 0.25):
     tempByDepth = nonanllTempList[nearestIndex][depIndex1:depIndex2+1]
     depthColumnsSection = [depthColumns[depIndex1], depthColumns[depIndex2]]
@@ -171,7 +177,7 @@ def temperature_interpolation_process(x, y, depth, depthColumns, llList,
       tempByDepth.insert(0, tempByDepth[depIndex1])
     if (tempType == "climaInterpStandardDev"):
       depthColumnsSection = np.array(depthColumnsSection).clip(min=0)
-    interpDepthTemp = (interpolate_with_interp1d(depth, depthColumnsSection,tempByDepth))
+    interpDepthTemp = interpolate_with_interp1d(depth, depthColumnsSection,tempByDepth)
     return interpDepthTemp
   else:
     return 99999.99

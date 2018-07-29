@@ -20,6 +20,7 @@ def test(p, parameters):
 
     for i in range(p.n_levels()):
 
+        # find best interpolated temperature and standard deviation at this depth
         if not isData[i]: continue
 
         interpTemp = interp_helper.temperature_interpolation_process(p.longitude(), p.latitude(), p.z()[i], depthColumns1, latLonsList1, lonlatWithTempsList1, False, "climaInterpTemperature")
@@ -30,33 +31,34 @@ def test(p, parameters):
         if interpTempSD == 99999.99:
             continue
 
+        # check if temperature at this depth is sufficiently close to the climatological expectation
         qc[i] = climatology_check(p.t()[i], interpTemp, interpTempSD) >= 4
 
     return qc 
 
-def climatology_check(temperature, interpMNTemp, interpSDTemp):
+def climatology_check(temperature, interpMNTemp, interpSDTemp, sigmaFactor=5.0):
   """
   temperature: Float for temperature
   interpMNTemp: interpolated temperature from climatology file
   interpSDTemp: interpolated standard deviation from climatology file
+  sigmaFactor: tolerated deviation from climatological temperature, in standard deviations.
   """
-  if interpMNTemp == 99999.99 or interpSDTemp == 99999.99:
+
+  if interpMNTemp == 99999.99 or interpSDTemp == 99999.99 or interpSDTemp <= 0.0:
     return 0
 
-  sigmaFactor = 5.0
-
-  if interpSDTemp <= 0.0:
-    return 0
-  elif ((abs(temperature-interpMNTemp)/(interpSDTemp*sigmaFactor)) <= 1):
+  if abs(temperature-interpMNTemp)/interpSDTemp <= sigmaFactor:
     return 1
   else:
     return 4
 
-def subset_climatology_data(longitude, latitude, statType):
+def subset_climatology_data(longitude, latitude, statType, coordRange=1, filePathName='data/woa13_00_025.nc'):
   """
     longitude: float
     latitude: float
     statType: either 'analyzed mean' or 'standard deviations'
+    coordRange: degrees plus / minus around longitude and latitude to consider.
+    filePathName: relative path from root of climatology file
 
     Return list of lists with temperatures that maps one to one with list
       of lists with tuples of latitude and longitude coordinates, list for
@@ -65,19 +67,17 @@ def subset_climatology_data(longitude, latitude, statType):
       temperature
     Return an empty list, an empty list, and an empty list if exception
   """
+
   if statType == "analyzed mean":
     fieldType = "t_an"
-    coordinatesScope = 1
   elif statType == "standard deviations":
     fieldType = "t_sd"
-    coordinatesScope = 1
   else:
     sys.stderr.write("Cannot process climatology file with a statistical "
                      "field as " + statType + "\n")
     return [], [], []
 
-  filePathName = 'data/woa13_00_025.nc'
-  latLonDepthTempList, depthColumns, latLonList, time = (read_netcdf.subset_data(longitude, latitude, filePathName, coordinatesScope, True, fieldType))
+  latLonDepthTempList, depthColumns, latLonList, time = read_netcdf.subset_data(longitude, latitude, filePathName, coordRange, True, fieldType)
 
   return latLonDepthTempList, depthColumns, latLonList
 
