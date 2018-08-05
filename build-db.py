@@ -32,6 +32,7 @@ if len(sys.argv) == 3:
                 ocruise text,
                 probe integer,
                 training integer,
+                flagged integer,
                 """
     for i in range(len(testNames)):
         query += testNames[i].lower() + ' BLOB'
@@ -154,8 +155,8 @@ if len(sys.argv) == 3:
         else:
             good += 1
 
-        query = "INSERT INTO " + sys.argv[2] + " (raw, truth, uid, year, month, day, time, lat, long, country, cruise, ocruise, probe) values (?,?,?,?,?,?,?,?,?,?,?,?,?);"
-        values = (p['raw'], p['truth'], p['uid'], p['year'], p['month'], p['day'], p['time'], p['latitude'], p['longitude'], country, p['cruise'], orig_cruise, p['probe_type'])
+        query = "INSERT INTO " + sys.argv[2] + " (raw, truth, uid, year, month, day, time, lat, long, country, cruise, ocruise, probe, flagged) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?);"
+        values = (p['raw'], p['truth'], p['uid'], p['year'], p['month'], p['day'], p['time'], p['latitude'], p['longitude'], country, p['cruise'], orig_cruise, p['probe_type'], int(flagged))
         main.dbinteract(query, values)
         if profile.is_last_profile_in_file(fid) == True:
             break
