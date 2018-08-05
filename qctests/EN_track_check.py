@@ -19,7 +19,9 @@ def test(p, parameters):
     passed the check and True where it failed.
     """
 
-    cruise = p.primary_header['Country code'] + str(p.cruise())
+    country = p.primary_header['Country code'] 
+    cruise = p.cruise()
+    originator_cruise = p.originator_cruise()
     uid = p.uid()
 
     # don't bother if this has already been analyzed
@@ -35,8 +37,8 @@ def test(p, parameters):
     if not assess_usability(p):
         return np.zeros(1, dtype=bool)
 
-    # fetch all profiles on track, sorted chronologically, earliest first (None sorted as highest)
-    command = 'SELECT uid, year, month, day, time, lat, long, probe, raw FROM ' + parameters["table"] + ' WHERE cruise = "' + str(cruise) + '" and year is not null and month is not null and day is not null and time is not null ORDER BY year, month, day, time, uid ASC;'
+    # fetch all profiles on track, sorted chronologically, earliest first (None sorted as highest), then by uid
+    command = 'SELECT uid, year, month, day, time, lat, long, probe, raw FROM ' + parameters["table"] + ' WHERE cruise = ' + str(cruise) + ' and country = "' + str(country) + '" and ocruise = "' + str(originator_cruise) + '" and year is not null and month is not null and day is not null and time is not null ORDER BY year, month, day, time, uid ASC;'
     track_rows = main.dbinteract(command)
 
     # avoid inappropriate profiles
@@ -102,6 +104,10 @@ def assess_usability(p):
     if str(p.primary_header['Country code']) == '99':
         return False
 
+    # don't bother if originator cruise is None or 0
+    if (p.originator_cruise() in [0, None]):
+        return False
+
     # some detector types cannot be assessed by this test; do not raise flag.
     if p.probe_type() in [None]:
         return False
@@ -138,8 +144,8 @@ def findOutlier(rows, results):
     once the fastest is within limits, return [].
     '''
 
-    maxShipSpeed = 30. # m/s  15
-    maxBuoySpeed = 4. # m/s   2
+    maxShipSpeed = 15. # m/s
+    maxBuoySpeed = 2. # m/s
 
     if rows == []:
         return []
