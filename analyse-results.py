@@ -107,12 +107,12 @@ def find_roc(table,
         print 'Number of quality checks to process is: ', len(testNames)
 
     # mark chosen profiles as part of the training set 
-#    all_uids = main.dbinteract('SELECT uid from ' + sys.argv[1] + ';')
-#    for uid in all_uids:
-#        uid = uid[0]
-#        is_training = int(uid in df['uid'].astype(int).as_matrix())
-#        query = "UPDATE " + sys.argv[1] + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
-#        main.dbinteract(query)
+    all_uids = main.dbinteract('SELECT uid from ' + sys.argv[1] + ';')
+    for uid in all_uids:
+        uid = uid[0]
+        is_training = int(uid in df['uid'].astype(int).as_matrix())
+        query = "UPDATE " + sys.argv[1] + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
+        main.dbinteract(query)
 
     # Convert to numpy structures and make inverse versions of tests if required.
     # Any test with true positive rate of zero is discarded.
@@ -182,7 +182,7 @@ def find_roc(table,
             if verbose: print '  ' + bestchoice + ' was selected'
             if fprs[besti] > 0:
                 if tprs[besti] / fprs[besti] < effectiveness_threshold:
-                    print '      WARNING - TPR / FPR is below the effectiveness threshold: ', tprs[besti] / fprs[besti]
+                    print 'WARNING - ' + bestchoice + ' TPR / FPR is below the effectiveness threshold: ', tprs[besti] / fprs[besti]
             cumulative = np.logical_or(cumulative, tests[besti])
             currenttpr, currentfpr, fnr, tnr = main.calcRates(cumulative, truth)
             testcomb.append(names[besti])
