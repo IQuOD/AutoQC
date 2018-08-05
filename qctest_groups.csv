@@ -1,9 +1,9 @@
 Test group,Rule,QC test,Comment
-Sensible lat/lon,Pre-chosen,Argo_impossible_location_test,Non controversial sanity check on location
-Sensible date,Pre-chosen,Argo_impossible_date_test,Non controversial sanity check on date
-Near surface XBT data,Pre-chosen,CSIRO_depth,Standard reject of XBT data < 3.6 m
-Wire break,Pre-chosen,CSIRO_wire_break,Expert opinion is that this is highly reliable at detecting XBT wire breaks
-Depth above surface,Pre-chosen,ICDC_aqc_01_level_order,Flags depths less than zero (plus preprocessing for other ICDC checks)
+Sensible lat/lon,Remove profile,Argo_impossible_location_test,Non controversial sanity check on location
+Sensible date,Remove profile,Argo_impossible_date_test,Non controversial sanity check on date
+Near surface XBT data,Remove rejected levels,CSIRO_depth,Standard reject of XBT data < 3.6 m
+Wire break,Remove below reject,CSIRO_wire_break,Expert opinion is that this is highly reliable at detecting XBT wire breaks
+Depth above surface,Remove rejected levels,ICDC_aqc_01_level_order,Flags depths less than zero (plus preprocessing for other ICDC checks)
 Range,At least one from group,Argo_global_range_check,
 Range,At least one from group,Argo_regional_range_test,
 Range,At least one from group,CoTeDe_GTSPP_global_range,
@@ -11,7 +11,7 @@ Range,At least one from group,CoTeDe_GTSPP_profile_envelop,
 Range,At least one from group,EN_range_check,
 Range,At least one from group,ICDC_aqc_02_crude_range,
 Range,At least one from group,ICDC_aqc_06_n_temperature_extrema,
-Range,At-least one from group,WOD_range_check,
+Range,At least one from group,WOD_range_check,
 Gradient,At least one from group,Argo_gradient_test,
 Gradient,At least one from group,CoTeDe_gradient,
 Gradient,At least one from group,CoTeDe_GTSPP_gradient,
@@ -29,7 +29,7 @@ Spike or step,At least one from group,Argo_spike_test,
 Spike or step,At least one from group,CoTeDe_GTSPP_spike_check,
 Spike or step,At least one from group,CoTeDe_spike,
 Spike or step,At least one from group,EN_spike_and_step_check,
-Spike or step,At least one from group,EN_spike_and_step_suspect,
+Spike or step,Optional,EN_spike_and_step_suspect,
 Spike or step,At least one from group,ICDC_aqc_07_spike_check,
 Density,At least one from group,CoTeDe_Argo_density_inversion,
 Density,At least one from group,EN_stability_check,
