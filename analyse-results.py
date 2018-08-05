@@ -51,6 +51,7 @@ def find_roc(table,
              n_profiles_to_analyse=np.iinfo(np.int32).max,
              n_combination_iterations=0, 
              with_reverses=False,
+             effectiveness_threshold=2.0,
              improve_threshold=1.0, 
              verbose=True, 
              plot_roc=True,
@@ -67,6 +68,10 @@ def find_roc(table,
     n_combination_iterations - AND tests together; restricted to max of 2 as otherwise
                                number of tests gets very large.
     with_reverses - if True, a copy of each test with inverted results is made.
+    effectiveness_threshold - test combinations with TPR/FPR less than this are not used when 
+                              making the ROC curve. If enforcing types of check tests with 
+                              TPR/FPR less than effectiveness_threshold are use and a warning
+                              printed to screen. 
     improve_threshold - ignores tests if they do not results in a change in true positive 
                         rate (in %) of at least this amount.
     verbose - if True, will print a lot of messages to screen.
@@ -102,12 +107,12 @@ def find_roc(table,
         print 'Number of quality checks to process is: ', len(testNames)
 
     # mark chosen profiles as part of the training set 
-    all_uids = main.dbinteract('SELECT uid from ' + sys.argv[1] + ';')
-    for uid in all_uids:
-        uid = uid[0]
-        is_training = int(uid in df['uid'].astype(int).as_matrix())
-        query = "UPDATE " + sys.argv[1] + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
-        main.dbinteract(query)
+#    all_uids = main.dbinteract('SELECT uid from ' + sys.argv[1] + ';')
+#    for uid in all_uids:
+#        uid = uid[0]
+#        is_training = int(uid in df['uid'].astype(int).as_matrix())
+#        query = "UPDATE " + sys.argv[1] + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
+#        main.dbinteract(query)
 
     # Convert to numpy structures and make inverse versions of tests if required.
     # Any test with true positive rate of zero is discarded.
@@ -175,6 +180,9 @@ def find_roc(table,
                     if verbose: print '    ' + testname + ' not found and so was skipped'
             assert bestchoice != '', '    Error, did not make a choice in group ' + key
             if verbose: print '  ' + bestchoice + ' was selected'
+            if fprs[besti] > 0:
+                if tprs[besti] / fprs[besti] < effectiveness_threshold:
+                    print '      WARNING - TPR / FPR is below the effectiveness threshold: ', tprs[besti] / fprs[besti]
             cumulative = np.logical_or(cumulative, tests[besti])
             currenttpr, currentfpr, fnr, tnr = main.calcRates(cumulative, truth)
             testcomb.append(names[besti])
@@ -202,7 +210,11 @@ def find_roc(table,
 
                 results = np.logical_and(tests[i], tests[j])
                 tpr, fpr, fnr, tnr = main.calcRates(results, truth)
-                if tpr > 0.0:
+                if fpr > 0:
+                    ratio = effectiveness_threshold + 1
+                else:
+                    ratio = tpr / fpr
+                if tpr > 0.0 and ratio >= effectiveness_threshold:
                     tests.append(results)
                     tprs.append(tpr)
                     fprs.append(fpr)
