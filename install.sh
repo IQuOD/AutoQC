@@ -20,10 +20,11 @@ conda install --yes python=2.7 pip nose \
                     Shapely=1.6.2 \
                     netCDF4=1.3.1 \
                     matplotlib=2.1.1 \
-                    numpy=1.11.3 \
-                    scipy=0.19.0 \
                     pyproj=1.9.5.1 \
-                    pandas=0.21.1
+                    pandas=0.21.1 \
+                    scipy=0.19.0 \
+                    numpy=1.11.3 \
+                    mkl=2018.0.1
 pip install seabird==0.8.0 \
             gsw==3.0.3 \
             scikit-fuzzy==0.3 \
