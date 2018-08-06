@@ -8,7 +8,8 @@ RUN apt-get install -y git nano wget bzip2
 RUN git clone https://github.com/IQuOD/AutoQC
 WORKDIR /AutoQC
 RUN sed -i -e 's/sudo //g' install.sh
-RUN source install.sh
+RUN chmod 777 install.sh
+RUN ./install.sh
 
 # set default environment variables
 ENV OCEANSDB_DIR /AutoQC/data/
