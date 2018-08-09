@@ -2,7 +2,7 @@ FROM ubuntu:16.04
 
 # configure environment for install
 RUN apt-get update
-RUN apt-get install -y git nano wget bzip2
+RUN apt-get install -y git
 
 # install AutoQC and all deps
 RUN git clone https://github.com/IQuOD/AutoQC

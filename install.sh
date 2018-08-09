@@ -1,30 +1,27 @@
 # install and configure environment for AutoQC
-# Validated on 64bit ubuntu, kernel 4.4.0-1041-aws
 # from inside AutoQC, run `bash install.sh`
 
-# set up python environment
-wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh
-bash miniconda.sh -b -p $PWD/miniconda
-export PATH="$PWD/miniconda/bin:$PATH"
-echo export 'PATH="'$PWD'/miniconda/bin:$PATH"' >> $HOME/.bashrc
-rm miniconda.sh
-
-# update all
-conda config --set always_yes yes --set changeps1 no
-conda update -q conda
+# install apt-get packages
 sudo apt-get update -y
+sudo apt-get install -y nano bzip2 wget unzip \
+    python2.7=2.7.12-1ubuntu0~16.04.3 \
+    python-pip \
+    libhdf5-serial-dev=1.8.16+docs-4ubuntu1 \
+    libnetcdf-dev=1:4.4.0-2 \
+    python-dev=2.7.12-1~16.04 \
+    libgl1-mesa-glx=18.0.5-0ubuntu0~16.04.1 \
+    python-qt4=4.11.4+dfsg-1build4 \
+    python-tk=2.7.12-1~16.04
 
-# install dependencies
-sudo apt-get -y install libhdf5-serial-dev libnetcdf-dev unzip python-dev libgl1-mesa-glx python-qt4
-conda install --yes python=2.7 pip nose \
-                    Shapely=1.6.2 \
-                    netCDF4=1.3.1 \
-                    matplotlib=2.1.1 \
-                    pyproj=1.9.5.1 \
-                    pandas=0.21.1 \
-                    scipy=0.19.0 \
-                    numpy=1.11.3 \
-                    mkl=2018.0.1
+# install python packages
+pip install Shapely==1.6.2 \
+            netCDF4==1.3.1 \
+            matplotlib==2.1.1 \
+            pyproj==1.9.5.1 \
+            pandas==0.21.1 \
+            scipy==0.19.0 \
+            numpy==1.11.3 \
+            mkl==2018.0.3
 pip install seabird==0.8.0 \
             gsw==3.0.3 \
             scikit-fuzzy==0.3 \
