@@ -7,6 +7,9 @@ import numpy
 def test(p, parameters):
 
     qc = numpy.zeros(p.n_levels(), dtype=bool)
+    # this spike test only makes sense for 3 or more levels
+    if p.n_levels() < 3:
+        return qc
 
     t = p.t()
 
