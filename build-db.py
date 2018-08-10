@@ -7,6 +7,65 @@ import util.dbutils as dbutils
 import numpy as np
 import qctests.CSIRO_wire_break
 
+def assessProfile(p, check_originator_flag_type, months_to_use):
+    'decide whether this profile is acceptable for QC or not; False = skip this profile'
+
+    # not interested in standard levels
+    if int(p.primary_header['Profile type']) == 1:
+        return False
+
+    # no temperature data in profile
+    if p.var_index() is None:
+        return False
+
+    # temperature data is in profile but all masked out
+    if np.sum(p.t().mask == False) == 0:
+        return False
+
+    # all depths are less than 10 cm and there are at least two levels (ie not just a surface measurement)
+    if np.sum(p.z() < 0.1) == len(p.z()) and len(p.z()) > 1:
+        return False
+
+    # no valid originator flag type
+    if check_originator_flag_type:
+        if int(p.originator_flag_type()) not in range(1,15):
+            return False
+            
+    # check month
+    if p.month() not in months_to_use:
+        return False
+
+    temp = p.t()
+    tempqc = p.t_level_qc(originator=True)
+
+    for i in range(len(temp)):
+        # don't worry about levels with masked temperature
+        if temp.mask[i]:
+            continue
+
+        # if temperature isn't masked:
+        # it had better be a float
+        if not isinstance(temp.data[i], float):
+            return False
+        # needs to have a valid QC decision:
+        if tempqc.mask[i]:
+            return False
+        if not isinstance(tempqc.data[i], int):
+            return False
+        if not tempqc.data[i] > 0:
+            return False
+
+    return True
+
+def encodeTruth(p):
+    'encode a per-level true qc array, with levels marked with 99 temperature set to qc code 99'
+
+    truth = p.t_level_qc(originator=True)
+    for i,temp in enumerate(p.t()):
+        if temp > 99 and temp < 100:
+            truth[i] = 99
+    return truth
+
 def builddb(check_originator_flag_type = True,
             months_to_use = range(1, 13)):
 
@@ -44,66 +103,6 @@ def builddb(check_originator_flag_type = True,
 
     cur.execute(query)
 
-    def assessProfile(p):
-        'decide whether this profile is acceptable for QC or not; False = skip this profile'
-
-        # not interested in standard levels
-        if int(p.primary_header['Profile type']) == 1:
-            return False
-
-        # no temperature data in profile
-        if p.var_index() is None:
-            return False
-
-        # temperature data is in profile but all masked out
-        if np.sum(p.t().mask == False) == 0:
-            return False
-
-        # all depths are less than 10 cm and there are at least two levels (ie not just a surface measurement)
-        if np.sum(p.z() < 0.1) == len(p.z()) and len(p.z()) > 1:
-            return False
-
-        # no valid originator flag type
-        if check_originator_flag_type:
-            if int(p.originator_flag_type()) not in range(1,15):
-                return False
-                
-        # check month
-        if p.month() not in months_to_use:
-            return False
-
-        temp = p.t()
-        tempqc = p.t_level_qc(originator=True)
-
-        for i in range(len(temp)):
-            # don't worry about levels with masked temperature
-            if temp.mask[i]:
-                continue
-
-            # if temperature isn't masked:
-            # it had better be a float
-            if not isinstance(temp.data[i], float):
-                return False
-            # needs to have a valid QC decision:
-            if tempqc.mask[i]:
-                return False
-            if not isinstance(tempqc.data[i], int):
-                return False
-            if not tempqc.data[i] > 0:
-                return False
-
-        return True
-
-    def encodeTruth(p):
-        'encode a per-level true qc array, with levels marked with 99 temperature set to qc code 99'
-
-        truth = p.t_level_qc(originator=True)
-        for i,temp in enumerate(p.t()):
-            if temp > 99 and temp < 100:
-                truth[i] = 99
-        return truth
-
-
     # populate table from wod-ascii data
     fid = open(sys.argv[1])
     uids = []
@@ -131,7 +130,7 @@ def builddb(check_originator_flag_type = True,
         uids.append(p['uid'])
 
         # skip pathological profiles
-        isgood = assessProfile(profile)
+        isgood = assessProfile(profile, check_originator_flag_type, months_to_use)
         if not isgood and profile.is_last_profile_in_file(fid) == True:
             break
         elif not isgood:
@@ -176,17 +175,15 @@ if len(sys.argv) == 3:
 
     builddb()
     
-elif len(sys.argv) == 4:
+elif len(sys.argv) == 5:
 
-   if sys.argv[3] == 'quota':
-       builddb(check_originator_flag_type = False,
-               months_to_use = [1, 2, 3, 6])
-   else:
-       print 'Only configuration set up at the moment is quota but you selected ' + sys.argv[3]
+    months = sys.argv[4].split(',')
+    months = [int(x) for x in months]
+    builddb(bool(sys.argv[3]), months)  
 
 else:
 
-    print 'Usage: python build-db.py inputdatafile databasetable [configuration]' 
+    print 'Usage: python build-db.py <inputdatafile> <databasetable> <demand originator flags> <list of months to include>' 
 
 
 
