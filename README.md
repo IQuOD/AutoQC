@@ -13,62 +13,29 @@ The IQuOD proposal is to set up an open quality control benchmarking system.  Wo
 
 ## Dependencies & Setup:
 
-The easiest way to set up AutoQC is via [Docker](https://www.docker.com/); install Docker per their website, and then grab the autoqc image:
+### Local Install
 
-```
-docker pull iquod/autoqc
-```
+ **Tested on Ubuntu 16.04**
 
-Start the image via
+ To clone this project and set it up, make sure `git` is installed, then:
 
-```
-docker run --sysctl "kernel.shmmax=18446744073692774399" -v $PWD:/rawdata -i -t iquod/autoqc /bin/bash
-```
+ ```
+ $ git clone https://github.com/IQuOD/AutoQC
+ $ cd AutoQC
+ $ source install.sh
+ ```
 
-And you'll find AutoQC all set up and ready to use in the directory `/AutoQC`. Note that the version of AutoQC that ships with the docker image may be behind master on GitHub; you can always do `git pull origin master` from the `/AutoQC` directory inside the container, if you need an update. Also, whatever directory you launched this command from will be mounted on `/rawdata` inside your Docker container; use this to bring data into the container, or copy logs and files from within the container to this location to access them after Docker exits.
+### Containerized Install
 
-If you want to run AutoQC without Docker, have a look at the setup steps in `docker/Dockerfile`; these correspond to the same setup steps you'll need to do on a similar machine (i.e. on Debian with miniconda already installed).
+ To run AutoQC in a containerized environment, make sure `docker` is installed, then:
 
-Docker makes it very convenient for the project to run AutoQC, but note that the data files to run the full set of AutoQC checks are obtained as detailed below:
+ ```
+ $ docker image run -it -v /my/data/directory:/rawdata iquod/autoqc:ubuntu-16.04 bash
+ ```
 
- - EN_bgcheck_info.nc (http://www.metoffice.gov.uk/hadobs/en4) from http://www.metoffice.gov.uk/hadobs/en4/data/EN_bgcheck_info.nc;
- - temperature_seasonal_5deg.nc (https://www.nodc.noaa.gov/OC5/indprod.html) from http://data.nodc.noaa.gov/thredds/fileServer/woa/WOA09/NetCDFdata/temperature_seasonal_5deg.nc;
- - etopo5.nc (http://www.ngdc.noaa.gov/mgg/global/etopo5.HTML) from http://oos.soest.hawaii.edu/thredds/ncss/etopo5?var=ROSE&disableLLSubset=on&disableProjSubset=on&horizStride=1&addLatLon=true;
- - climatological_t_median_and_amd_for_aqc.nc: based on climatological_t_median_and_amd_for_aqc.dat provided by Viktor Gouretski, Integrated Climate Data Center, University of Hamburg, Hamburg, Germany, February 2016.
- - Seasonal WOA13 files:
-   - [all](http://data.nodc.noaa.gov/thredds/fileServer/woa/WOA13/DATAv2/temperature/netcdf/decav/5deg/woa13_decav_t13_5dv2.nc)
-   - [four](http://data.nodc.noaa.gov/thredds/fileServer/woa/WOA13/DATAv2/temperature/netcdf/decav/5deg/woa13_decav_t14_5dv2.nc)
-   - [of](http://data.nodc.noaa.gov/thredds/fileServer/woa/WOA13/DATAv2/temperature/netcdf/decav/5deg/woa13_decav_t15_5dv2.nc)
-   - [these](http://data.nodc.noaa.gov/thredds/fileServer/woa/WOA13/DATAv2/temperature/netcdf/decav/5deg/woa13_decav_t16_5dv2.nc)
+ Anything in `/my/daya/directory` on your machine will be available at `/rawdata` inside the container, and vice versa. Use this to add raw WOD-ASCII data to your container, and add multiple `-v origin:destination` paths to include multiple directories in the same way.
 
-### AutoQC on AWS
-
-Docker makes running AutoQC on the cloud very easy. Once you've set up your Amazon Web Services account, launch an EC2 instance and do:
-
-```
-sudo yum update -y
-sudo yum install -y docker
-sudo service docker start
-sudo docker pull iquod/autoqc
-```
-
-Next we need to add data to our instance; after uploading your files to an S3 bucket called `autoqc`, do:
-
-```
-aws configure
-(fill in permissions fields)
-mkdir data
-aws s3 sync s3://autoqc data
-cd data
-```
-
-Finally, launch your docker image with the `data` directory mounted inside it at `/rawdata`:
-
-```
-sudo docker run --sysctl "kernel.shmmax=18446744073692774399" -v $PWD:/rawdata -i -t iquod/autoqc /bin/bash
-```
-
-And once again, AutoQC will be all set up in `/AutoQC`. Remember to `git pull` if necessary, and add any external data or parameter files to the correct places.
+ You may also want to `git pull origin master` inside the `/AutoQC` directory inside your container, to fetch the latest version of the project.
 
 ## Usage
 
@@ -105,7 +72,7 @@ Additionally, there is a column in the table for the qc results of every test fo
 python AutoQC.py tablename nProcessors
 ```
 
-where `tablename` is the postgres table to pull profiles from (probably the same as `tablename` in the last step), and `nProcessors` is how many processors you'd like to parallelize over
+where `tablename` is the postgres table to pull profiles from (probably the same as `tablename` in the last step), and `nProcessors` is how many processors you'd like to parallelize over.
 
 ### Result Summary
 
