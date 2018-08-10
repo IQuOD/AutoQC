@@ -19,8 +19,8 @@ pip install Shapely==1.6.2 \
             matplotlib==2.1.1 \
             pyproj==1.9.5.1 \
             pandas==0.21.1 \
-            scipy==0.19.0 \
-            numpy==1.11.3 \
+            scipy==0.18.0 \
+            numpy==1.11.1 \
             mkl==2018.0.3
 pip install seabird==0.8.0 \
             gsw==3.0.3 \
