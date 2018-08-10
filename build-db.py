@@ -7,7 +7,8 @@ import util.dbutils as dbutils
 import numpy as np
 import qctests.CSIRO_wire_break
 
-if len(sys.argv) == 3:
+def builddb(check_originator_flag_type = True,
+            months_to_use = range(1, 13)):
 
     conn = sqlite3.connect('iquod.db', isolation_level=None)
     cur = conn.cursor()
@@ -63,7 +64,12 @@ if len(sys.argv) == 3:
             return False
 
         # no valid originator flag type
-        if int(p.originator_flag_type()) not in range(1,15):
+        if check_originator_flag_type:
+            if int(p.originator_flag_type()) not in range(1,15):
+                return False
+                
+        # check month
+        if p.month() not in months_to_use:
             return False
 
         temp = p.t()
@@ -164,9 +170,23 @@ if len(sys.argv) == 3:
     conn.commit()
     print 'number of clean profiles written:', good
     print 'number of flagged profiles written:', bad
+    print 'total number of profiles written:', good+bad
+
+if len(sys.argv) == 3:
+
+    builddb()
+    
+elif len(sys.argv) == 4:
+
+   if sys.argv[3] == 'quota':
+       builddb(check_originator_flag_type = False,
+               months_to_use = [1, 2, 3, 6])
+   else:
+       print 'Only configuration set up at the moment is quota but you selected ' + sys.argv[3]
+
 else:
 
-    print 'Usage: python build-db.py inputdatafile databasetable' 
+    print 'Usage: python build-db.py inputdatafile databasetable [configuration]' 
 
 
 

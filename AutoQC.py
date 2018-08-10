@@ -83,14 +83,22 @@ if len(sys.argv)>2:
   uids = main.dbinteract(query)
   
   # launch async processes
+  if len(sys.argv) > 4:
+    batchnumber = int(sys.argv[3])
+    nperbatch   = int(sys.argv[4])
+    startindex  = batchnumber*nperbatch
+    endindex    = min((batchnumber+1)*nperbatch,len(uids))
+  else:
+    startindex  = 0
+    endindex    = len(uids)
   pool = Pool(processes=int(sys.argv[2]))
-  for i in range(len(uids)):
+  for i in range(startindex, endindex):
     pool.apply_async(process_row, (uids[i][0], logdir))
   pool.close()
   pool.join()
     
 else:
   print 'Please add command line arguments to name your output file and set parallelization:'
-  print 'python AutoQC <database results table> <number of processes>'
-  print 'will use <database results table> to log QC results in the database, and run the calculation parallelized over <number of processes>.'
+  print 'python AutoQC <database results table> <number of processes> <batch> <number of processes per batch> [<batchnumber> <number per batch>]'
+  print 'will use <database results table> to log QC results in the database, and run the calculation parallelized over <number of processes>. By default all profiles will be processed, but optionally the processing can be done in batches of size <number per batch>.'
 
