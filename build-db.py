@@ -6,6 +6,7 @@ import util.main as main
 import util.dbutils as dbutils
 import numpy as np
 import qctests.CSIRO_wire_break
+import ast
 
 def assessProfile(p, check_originator_flag_type, months_to_use):
     'decide whether this profile is acceptable for QC or not; False = skip this profile'
@@ -177,13 +178,12 @@ if len(sys.argv) == 3:
     
 elif len(sys.argv) == 5:
 
-    months = sys.argv[4].split(',')
-    months = [int(x) for x in months]
-    builddb(bool(sys.argv[3]), months)  
+    builddb(ast.literal_eval(sys.argv[3]), ast.literal_eval(sys.argv[4]))  
 
 else:
 
-    print 'Usage: python build-db.py <inputdatafile> <databasetable> <demand originator flags> <list of months to include>' 
+    print 'Usage: python build-db.py <inputdatafile> <databasetable> <demand originator flags> <list of months to include (with no spaces or enclose in quotes)>' 
+    print 'Example: python build-db.py data.wod mytable False [1,2,3,10]'
 
 
 
