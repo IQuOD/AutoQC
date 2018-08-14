@@ -178,13 +178,12 @@ if len(sys.argv) == 3:
     
 elif len(sys.argv) == 5:
 
-    months = sys.argv[4].split(',')
-    months = [int(x) for x in months]
-    builddb(ast.literal_eval(sys.argv[3]), months)  
+    builddb(ast.literal_eval(sys.argv[3]), ast.literal_eval(sys.argv[4]))  
 
 else:
 
-    print 'Usage: python build-db.py <inputdatafile> <databasetable> <demand originator flags> <list of months to include>' 
+    print 'Usage: python build-db.py <inputdatafile> <databasetable> <demand originator flags> <list of months to include (with no spaces or enclose in quotes)>' 
+    print 'Example: python build-db.py data.wod mytable False [1,2,3,10]'
 
 
 
