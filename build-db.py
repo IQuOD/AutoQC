@@ -6,6 +6,7 @@ import util.main as main
 import util.dbutils as dbutils
 import numpy as np
 import qctests.CSIRO_wire_break
+import ast
 
 def assessProfile(p, check_originator_flag_type, months_to_use):
     'decide whether this profile is acceptable for QC or not; False = skip this profile'
@@ -179,7 +180,7 @@ elif len(sys.argv) == 5:
 
     months = sys.argv[4].split(',')
     months = [int(x) for x in months]
-    builddb(bool(sys.argv[3]), months)  
+    builddb(ast.literal_eval(sys.argv[3]), months)  
 
 else:
 
