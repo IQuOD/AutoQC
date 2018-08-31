@@ -97,7 +97,7 @@ def nearest_indices(y, x, latLonList, amountNearNeighbors):
   """
 
   tree = spatial.cKDTree(latLonList)
-  return tree.query([y,x], amountNearNeighbors)
+  return tree.query([y,x], min(amountNearNeighbors, len(latLonList)) )
 
 def temperature_interpolation_process(x, y, depth, depthColumns, llList,
                                       llTempList, zeroDepthMissing,
