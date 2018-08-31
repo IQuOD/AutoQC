@@ -161,11 +161,11 @@ def temperature_interpolation_process(x, y, depth, depthColumns, llList,
   nonanllTempList = [llTempList[indx] for indx in indicesNotNanList]
 
   # find the nearest point from the list above to the point of interest
-  numberOfNeighbors = 100
+  numberOfNeighbors = 1
   if nonanllList:
     distancesList, locationIndicesList = nearest_indices(y, x, nonanllList, numberOfNeighbors)
-    nearestRadDistance = distancesList[0]
-    nearestIndex = locationIndicesList[0]
+    nearestRadDistance = distancesList
+    nearestIndex = locationIndicesList
   else:
     return 99999.99
 
