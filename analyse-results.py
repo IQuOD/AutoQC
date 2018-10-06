@@ -44,14 +44,36 @@ def read_qc_groups(filename='qctest_groups.csv'):
 
     return groupdefinition
 
+def return_cost(costratio, tpr, fpr):
+    # Return cost function.
+    # Inputs are:
+    #     costratio - 2 element iterable used to define the cost function; roughly 
+    #                 they define the minimum required gradient of the ROC curve
+    #                 with the first giving the gradient at the start, the second
+    #                 the gradient at the end. Suggested values: to get a compromise
+    #                 set of QC tests, define costratio = [2.5, 1.0]; to get a 
+    #                 conservative set of QC tests, define costratio = [10.0, 10.0].
+    #     tpr       - True positive rate to get the cost for.
+    #     fpr       - False positive rate to get the cost for.
+    # Returns: the cost function value.
+    # For compromise run.
+    costratio1 = costratio[0]
+    costratio2 = costratio[1]
+    theta1 = np.arctan(costratio1)
+    theta2 = np.arctan(costratio2)
+    cost1 = (100.0 - tpr) * np.cos(theta1) + fpr * np.sin(theta1)
+    cost2 = (100.0 - tpr) * np.cos(theta2) + fpr * np.sin(theta2)
+    cost  = (100.0 - tpr) / 100.0 * cost1 + tpr / 100.0 * cost2
+    return cost
+
 def find_roc(table, 
+             costratio=[2.5, 1.0],
              filter_on_wire_break_test=False,
              filter_from_file_spec=True,
              enforce_types_of_check=True,
              n_profiles_to_analyse=np.iinfo(np.int32).max,
-             n_combination_iterations=0, 
+             n_combination_iterations=1, 
              with_reverses=False,
-             effectiveness_threshold=2.0,
              improve_threshold=1.0, 
              verbose=True, 
              plot_roc=True,
@@ -61,6 +83,9 @@ def find_roc(table,
     of the ROC curve. It will combine different tests together and invert the results
     of tests if requested.
 
+    costratio - two element iterable that defines how the ROC curve is developed. Higher 
+                numbers gives a ROC curve with lower false rates; the two elements allows
+                control over the shape of the ROC curve near the start and end. E.g. [2.5, 1.0].
     filter_on_wire_break_test - filter out the impact of XBT wire breaks from results.
     filter_from_file_spec - use specification from file to choose filtering.
     enforce_types_of_check - use specification from file on particular types of checks to use.
@@ -68,10 +93,7 @@ def find_roc(table,
     n_combination_iterations - AND tests together; restricted to max of 2 as otherwise
                                number of tests gets very large.
     with_reverses - if True, a copy of each test with inverted results is made.
-    effectiveness_threshold - test combinations with TPR/FPR less than this are not used when 
-                              making the ROC curve. If enforcing types of check tests with 
-                              TPR/FPR less than effectiveness_threshold are use and a warning
-                              printed to screen. 
+    effectiveness_ratio - will give a warning if TPR / FPR is less than this value.
     improve_threshold - ignores tests if they do not results in a change in true positive 
                         rate (in %) of at least this amount.
     verbose - if True, will print a lot of messages to screen.
@@ -90,7 +112,7 @@ def find_roc(table,
                           filter_on_tests = groupdefinition,
                           n_to_extract = n_profiles_to_analyse)
 
-    # drop nondiscriminating tests
+    # Drop nondiscriminating tests
     nondiscrim = []
     cols = list(df.columns)
     for c in cols:
@@ -154,35 +176,37 @@ def find_roc(table,
     # Pre-select some tests if required.
     if enforce_types_of_check:
         if verbose: print 'Enforcing types of checks'
-        for key in groupdefinition['At least one from group']:
-            if verbose: print '  Selecting from group: ' + key
+        while len(groupdefinition['At least one from group']) > 0:
             bestchoice = ''
-            bestdist   = 100.0**2 + 100.0**2
+            bestgroup  = ''
+            bestdist   = np.sqrt(100.0**2 + 100.0**2)
             besti      = -1
-            for testname in groupdefinition['At least one from group'][key]:
-                # Need to check that the test exists - it may have been removed
-                # if it was non-discriminating.
-                if testname in names:
-                    for itest, name in enumerate(names):
-                        if name == testname: 
-                            tpr = tprs[itest]
-                            fpr = fprs[itest]                    
-                            newdist = (100.0 - tpr)**2 + fpr**2
-                            print '    ', tpr, fpr, newdist, bestdist, testname
-                            if newdist == bestdist:
-                                if verbose:
-                                    print '  ' + bestchoice + ' and ' + testname + ' have the same results and the first is kept'
-                            elif newdist < bestdist:
-                                bestchoice = testname
-                                bestdist   = newdist
-                                besti      = itest
-                else:
-                    if verbose: print '    ' + testname + ' not found and so was skipped'
-            assert bestchoice != '', '    Error, did not make a choice in group ' + key
-            if verbose: print '  ' + bestchoice + ' was selected'
+            for key in groupdefinition['At least one from group']:
+                for testname in groupdefinition['At least one from group'][key]:
+                    # Need to check that the test exists - it may have been removed
+                    # if it was non-discriminating.
+                    if testname in names:
+                        for itest, name in enumerate(names):
+                            if name == testname: 
+                                cumulativenew = np.logical_or(cumulative, tests[itest])
+                                tpr, fpr, fnr, tnr = main.calcRates(cumulativenew, truth)
+                                newdist = return_cost(costratio, tpr, fpr)
+                                print '    ', tpr, fpr, newdist, bestdist, testname
+                                if newdist == bestdist:
+                                    if verbose:
+                                        print '  ' + bestchoice + ' and ' + testname + ' have the same results and the first is kept'
+                                elif newdist < bestdist:
+                                    bestchoice = testname
+                                    bestdist   = newdist
+                                    besti      = itest
+                                    bestgroup  = key
+                    else:
+                        if verbose: print '    ' + testname + ' not found and so was skipped'
+            #assert bestchoice != '', '    Error, did not make a choice in group ' + key
+            if verbose: print '  ' + bestchoice + ' was selected from group ' + bestgroup
             if fprs[besti] > 0:
-                if tprs[besti] / fprs[besti] < effectiveness_threshold:
-                    print 'WARNING - ' + bestchoice + ' TPR / FPR is below the effectiveness threshold: ', tprs[besti] / fprs[besti]
+                if tprs[besti] / fprs[besti] < effectiveness_ratio:
+                    print 'WARNING - ' + bestchoice + ' TPR / FPR is below the effectiveness ratio limit: ', tprs[besti] / fprs[besti], effectiveness_ratio
             cumulative = np.logical_or(cumulative, tests[besti])
             currenttpr, currentfpr, fnr, tnr = main.calcRates(cumulative, truth)
             testcomb.append(names[besti])
@@ -194,7 +218,8 @@ def find_roc(table,
             del tests[besti]
             del fprs[besti]
             del tprs[besti]
-            print 'ROC point from enforced group: ', currenttpr, currentfpr, testcomb[-1]
+            del groupdefinition['At least one from group'][bestgroup]
+            print 'ROC point from enforced group: ', currenttpr, currentfpr, testcomb[-1], bestgroup
 
     # Make combinations of the single checks and store.
     assert n_combination_iterations <= 2, 'Setting n_combination_iterations > 2 results in a very large number of combinations'
@@ -210,25 +235,21 @@ def find_roc(table,
 
                 results = np.logical_and(tests[i], tests[j])
                 tpr, fpr, fnr, tnr = main.calcRates(results, truth)
-                if fpr > 0:
-                    ratio = effectiveness_threshold + 1
-                else:
-                    ratio = tpr / fpr
-                if tpr > 0.0 and ratio >= effectiveness_threshold:
+                if tpr > 0.0:
                     tests.append(results)
                     tprs.append(tpr)
                     fprs.append(fpr)
                     names.append(newname)
     if verbose: print 'Completed generation of tests, now constructing roc from number of tests: ', len(names)         
 
-    # Create roc by keep adding tests in order of ratio of tpr/fpr change to get the highest
-    # gradient in the roc curve.
-    keepgoing = True
+    # Create roc.
     used      = np.zeros(len(names), dtype=bool)
+    overallbest = return_cost(costratio, tpr, fpr)
+    keepgoing = True
     while keepgoing:
         keepgoing = False
         besti     = -1
-        bestratio = 0.0
+        bestcost  = overallbest
         bestncomb = 100000
         bestdtpr  = 0
         bestdfpr  = 100000
@@ -236,36 +257,37 @@ def find_roc(table,
             if used[i]: continue
             cumulativenew = np.logical_or(cumulative, tests[i])
             tpr, fpr, fnr, tnr = main.calcRates(cumulativenew, truth)
-            dtpr = tpr - currenttpr
-            dfpr = max(fpr - currentfpr, 0.1 / len(cumulative)) # In case of 0 change in fpr.
-            ratio = dtpr / dfpr
-            newbest = False
-            if ratio >= bestratio and dtpr >= improve_threshold and dtpr > 0.0:
-                # If ration is better than found previously, use it else if it is
+            dtpr               = tpr - currenttpr
+            dfpr               = fpr - currentfpr
+            newcost            = return_cost(costratio, tpr, fpr) 
+            newbest            = False
+            if newcost <= bestcost and dtpr >= improve_threshold and dtpr > 0.0:
+                # If cost is better than found previously, use it else if it is
                 # the same then decide if to use it or not.
-                if ratio > bestratio:
+                if newcost < bestcost:
                     newbest = True
                 elif dtpr >= bestdtpr:
                     if dtpr > bestdtpr:
                         newbest = True
                     elif len(names[i].split('&')) < bestncomb:
                         newbest = True
-            if newbest:
-                besti     = i
-                bestratio = ratio
-                bestncomb = len(names[i].split('&'))
-                bestdtpr  = dtpr
-                bestdfpr  = dfpr
+                if newbest:
+                    besti     = i
+                    bestcost  = newcost
+                    bestncomb = len(names[i].split('&'))
+                    bestdtpr  = dtpr
+                    bestdfpr  = dfpr
         if besti >= 0:
-            keepgoing = True
+            keepgoing   = True
             used[besti] = True
-            cumulative = np.logical_or(cumulative, tests[besti])
+            overallbest = bestcost
+            cumulative  = np.logical_or(cumulative, tests[besti])
             currenttpr, currentfpr, fnr, tnr = main.calcRates(cumulative, truth)
             testcomb.append(names[besti])
             r_fprs.append(currentfpr)
             r_tprs.append(currenttpr)
             groupsel.append(False)
-            print 'ROC point: ', currenttpr, currentfpr, names[besti]
+            print 'ROC point: ', currenttpr, currentfpr, names[besti], overallbest
 
     if plot_roc:
         plt.plot(r_fprs, r_tprs, 'k')
@@ -294,12 +316,12 @@ def find_roc(table,
 
 if __name__ == '__main__':
 
-    # python analyse-results.py <database table name> <number of profiles to extract> <flag to run combinations and no enforce of groups - can be any value>
+    # python analyse-results.py <database table name> <number of profiles to extract> <flag to generate a conservative set of QC tests - can be any value>
 
     if len(sys.argv) == 3:
         find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2])
     elif len(sys.argv) == 4:
-        find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2], enforce_types_of_check=False, n_combination_iterations=1)
+        find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2], costratio=[10.0, 10.0])
     else:
-        print 'Usage - python analyse_results.py tablename <number of profiles to train ROC curve on> <optional character or number to indicate that we run one test combination iteration and no enforcing of groups>'
+        print 'Usage - python analyse_results.py tablename <number of profiles to train ROC curve on> <optional character or number to indicate that we want a conservative set of QC tests i.e. with very low false positive rate>'
 
