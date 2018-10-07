@@ -56,7 +56,6 @@ def return_cost(costratio, tpr, fpr):
     #     tpr       - True positive rate to get the cost for.
     #     fpr       - False positive rate to get the cost for.
     # Returns: the cost function value.
-    # For compromise run.
     costratio1 = costratio[0]
     costratio2 = costratio[1]
     theta1 = np.arctan(costratio1)
