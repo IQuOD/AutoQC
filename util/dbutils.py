@@ -28,7 +28,7 @@ def parse(results):
 def summarize_truth(levels):
     'given an array of originator qc decisions, return true iff any of the levels are flagged, ignoring t=99 levels'
 
-    return numpy.sum( [not levels.mask[i] and x>=3 and x<99 for i, x in enumerate(levels)]) >= 1
+    return numpy.sum( [not levels.mask[i] and (x==3 or x==4) for i, x in enumerate(levels)]) >= 1
 
 def parse_truth(results):
 
@@ -134,8 +134,9 @@ def db_to_df(table,
         nlevels   = -1
         outcomes  = False
         qcresults = []
+        todrop    = []
         for testname in filter_on_tests[action]:
-            for i in range(len(df.index) - 1, -1, -1):
+            for i in range(0, len(df.index)):
                 if action == 'Remove above reject':
                     nlevels = get_reversed_n_levels_before_fail([df[testname][i]])[0]
                 elif action == 'Remove below reject':
@@ -152,7 +153,7 @@ def db_to_df(table,
                     (action == 'Remove rejected levels' and numpy.count_nonzero(qcresults == False) == 0)):
                     # Completely remove a profile if it has no valid levels or if it
                     # has a fail and the action is to remove.
-                    df.drop(df.index[i])
+                    todrop.append(i)
                 elif (action != 'Remove profile'):
                     for j in range(1, len(df.columns)):
                         # Retain only the levels that passed testname.
@@ -169,6 +170,9 @@ def db_to_df(table,
 
             del df[testname] # No need to keep this any longer.
 
+    if len(todrop) > 0:
+        df.drop(todrop, inplace=True)
+    df.reset_index(inplace=True, drop=True)
     testNames = df.columns[2:].values.tolist()
     df[['Truth']] = df[['Truth']].apply(parse_truth)
     df[testNames] = df[testNames].apply(parse)

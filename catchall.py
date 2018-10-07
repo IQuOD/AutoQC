@@ -7,6 +7,7 @@
 # 5. drop the remaining combination with the highest false positive rate (note at this step all remaining profiles are flagged by at least two combination, so this will not raise the false negative rate).
 # 6. go back to 4; loop until the list of accepted combinations flags all bad profiles not dropped in step 1.
 
+ar =  __import__('analyse-results')
 import util.main as main
 import util.dbutils as dbutils
 import itertools, sys, json
@@ -41,10 +42,15 @@ print '=============='
 print sys.argv[1]
 print '=============='
 
-# get tests names and dataframe
-testNames = main.importQC('qctests')
+# Read QC test specifications if required.
+groupdefinition = ar.read_qc_groups()
 
-df = dbutils.db_to_df(sys.argv[1], n_to_extract=sys.argv[2])
+# Read data from database into a pandas data frame.
+df = dbutils.db_to_df(sys.argv[1],
+                      filter_on_wire_break_test = False,
+                      filter_on_tests = groupdefinition,
+                      n_to_extract = sys.argv[2])
+testNames = df.columns[2:].values.tolist()
 
 # declare some downstream constructs
 accepted = []
