@@ -126,6 +126,7 @@ def db_to_df(table,
                     qc = qc[:nlevels[i]]
                 df.iat[i, j] = main.pack_array(qc)
 
+    todrop = set()
     for action in filter_on_tests:
         # Check if the action is relevant.
         if action == 'Optional' or action == 'At least one from group': continue
@@ -134,7 +135,6 @@ def db_to_df(table,
         nlevels   = -1
         outcomes  = False
         qcresults = []
-        todrop    = []
         for testname in filter_on_tests[action]:
             for i in range(0, len(df.index)):
                 if action == 'Remove above reject':
@@ -153,7 +153,7 @@ def db_to_df(table,
                     (action == 'Remove rejected levels' and numpy.count_nonzero(qcresults == False) == 0)):
                     # Completely remove a profile if it has no valid levels or if it
                     # has a fail and the action is to remove.
-                    todrop.append(i)
+                    todrop.add(i)
                 elif (action != 'Remove profile'):
                     for j in range(1, len(df.columns)):
                         # Retain only the levels that passed testname.
@@ -170,6 +170,7 @@ def db_to_df(table,
 
             del df[testname] # No need to keep this any longer.
 
+    todrop = list(todrop)
     if len(todrop) > 0:
         df.drop(todrop, inplace=True)
     df.reset_index(inplace=True, drop=True)
