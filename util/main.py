@@ -325,4 +325,16 @@ def unpack_row(row):
 
     return tuple(res)
 
+def find_depth(latitude, longitude):
+
+    nc = Dataset('data/ETOPO1_Bed_g_gmt4.grd')
+
+    long = nc.variables['x'][:]
+    lat = nc.variables['y'][:]
+    z = nc.variables['z'][:]
+
+    i_long = (np.abs(long - longitude)).argmin()
+    i_lat = (np.abs(lat - latitude)).argmin()
+
+    return z[i_lat, i_long]
 

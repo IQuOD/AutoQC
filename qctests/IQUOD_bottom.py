@@ -1,5 +1,5 @@
 import numpy
-import googlemaps
+import util.main as main
 
 def test(p, parameters):
 
@@ -8,8 +8,7 @@ def test(p, parameters):
     lon = p.longitude()
 
     # get ocean depth at this point
-    gmaps = googlemaps.Client(key='insert_api_key_here')
-    floor = -1.0*gmaps.elevation([(lat,lon)])[0]['elevation']
+    floor = -1.0*main.find_depth(lat, lon)
 
     # initialize qc as a bunch of falses;
     qc = numpy.zeros(p.n_levels(), dtype=bool)
