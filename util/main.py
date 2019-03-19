@@ -325,16 +325,15 @@ def unpack_row(row):
 
     return tuple(res)
 
-def find_depth(latitude, longitude):
+def find_depth(latitude, longitude, bathymetry):
+    # find ocean depth at lat/long based on a dictionary 'bathymetry':
+    # bathymetry['longitude']: list of longitudes
+    # bathymetry['latitude']: list of latitudes
+    # bathymetry['deptth']: 2d array of depths as function of lat/long, with indices matching previos two lists
 
-    nc = Dataset('data/ETOPO1_Bed_g_gmt4.grd')
+    i_long = (np.abs(bathymetry['longitude'] - longitude)).argmin()
+    i_lat = (np.abs(bathymetry['latitude'] - latitude)).argmin()
 
-    long = nc.variables['x'][:]
-    lat = nc.variables['y'][:]
-    z = nc.variables['z'][:]
+    return bathymetry['depth'][i_lat, i_long]
 
-    i_long = (np.abs(long - longitude)).argmin()
-    i_lat = (np.abs(lat - latitude)).argmin()
-
-    return z[i_lat, i_long]
 
