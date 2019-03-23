@@ -7,6 +7,7 @@ from netCDF4 import Dataset
 import testingProfile
 from numbers import Number
 import tempfile
+import oceansdb
 
 def importQC(dir):
   '''
@@ -325,15 +326,9 @@ def unpack_row(row):
 
     return tuple(res)
 
-def find_depth(latitude, longitude, bathymetry):
-    # find ocean depth at lat/long based on a dictionary 'bathymetry':
-    # bathymetry['longitude']: list of longitudes
-    # bathymetry['latitude']: list of latitudes
-    # bathymetry['deptth']: 2d array of depths as function of lat/long, with indices matching previos two lists
+def find_depth(latitude, longitude):
 
-    i_long = (np.abs(bathymetry['longitude'] - longitude)).argmin()
-    i_lat = (np.abs(bathymetry['latitude'] - latitude)).argmin()
-
-    return bathymetry['depth'][i_lat, i_long]
+    db = oceansdb.ETOPO()
+    return db.extract(lat=latitude, lon=longitude)['elevation'][0]
 
 
