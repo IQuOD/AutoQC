@@ -7,6 +7,7 @@ from netCDF4 import Dataset
 import testingProfile
 from numbers import Number
 import tempfile
+import oceansdb
 
 def importQC(dir):
   '''
@@ -324,5 +325,10 @@ def unpack_row(row):
             res.append(elt)
 
     return tuple(res)
+
+def find_depth(latitude, longitude):
+
+    db = oceansdb.ETOPO()
+    return db.extract(lat=latitude, lon=longitude)['elevation'][0]
 
 
