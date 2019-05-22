@@ -220,4 +220,5 @@ def loadParameters(parameterStore):
         datadict['depths_annual'] = nc.variables['deptha'][:]
         datadict['fill_value'] = nc.variables['tmin_monthly']._FillValue
         parameterStore['icdc10'] = datadict
+        nc.close()
 
