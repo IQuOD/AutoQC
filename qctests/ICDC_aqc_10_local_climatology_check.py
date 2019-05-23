@@ -222,3 +222,7 @@ def loadParameters(parameterStore):
         parameterStore['icdc10'] = datadict
         nc.close()
 
+if __name__ == "__main__":
+    # Generate the netCDF version of the data file.
+    params={}
+    loadParameters(params)
