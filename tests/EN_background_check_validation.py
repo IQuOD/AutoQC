@@ -6,7 +6,7 @@ import numpy
 
 ##### EN_background_check ---------------------------------------------------
 
-class TestClass():
+class TestClass:
 
     parameters = {
         "table": 'unit'

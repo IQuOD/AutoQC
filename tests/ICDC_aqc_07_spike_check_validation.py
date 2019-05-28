@@ -7,7 +7,7 @@ import numpy as np
 
 ##### ICDC spike check.
 ##### --------------------------------------------------
-class TestClass():
+class TestClass:
 
     parameters = {}
 

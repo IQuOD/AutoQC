@@ -8,7 +8,7 @@ import util.testingProfile
 import qctests.EN_track_check
 import util.geo
 
-class TestClass():
+class TestClass:
     distRes = 20000. #meters
     timeRes = 600.   #seconds
 
@@ -686,7 +686,7 @@ class TestClass():
 
     #     speeds, angles = qctests.EN_track_check.calculateTraj(ds.threadProfiles)
     #     flag = qctests.EN_track_check.condition_a(ds.threadProfiles, speeds, angles, 3, 15)[1]
-    #     print flag
+    #     print(flag)
     #     assert flag == 'f', 'Correct profile flagged, but not by the expected step.'
 
     # def condition_g_integration_test(self):

@@ -16,7 +16,7 @@ c/ PURPOSE:
 c    to check temperature profile for unrealistic vertical gradients
 '''
 
-import ICDC_aqc_01_level_order as ICDC
+from . import ICDC_aqc_01_level_order as ICDC
 import numpy as np
 
 def test(p, parameters):

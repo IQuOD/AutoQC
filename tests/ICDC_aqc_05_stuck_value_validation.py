@@ -8,7 +8,7 @@ import numpy as np
 ##### ICDC stuck value check.
 ##### --------------------------------------------------
 
-class TestClass():
+class TestClass:
 
     parameters = {}
 

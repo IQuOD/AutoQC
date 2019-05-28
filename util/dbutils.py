@@ -8,9 +8,9 @@ def unpack_qc(value):
     'unpack a qc result from the db'
 
     try:
-        qc = numpy.load(io.BytesIO(value))
+        qc = numpy.load(io.BytesIO(value), allow_pickle=True)
     except:
-        print 'failed to unpack qc data - check db for missing entries.'
+        print('failed to unpack qc data - check db for missing entries.')
         qc = numpy.zeros(1, dtype=bool)
 
     return qc
@@ -22,7 +22,7 @@ def summarize(levels):
 
 def parse(results):
     'parse the raw pickled text of a per-level qc result, and return True if any levels are flagged'
-    
+
     return results.apply(unpack_qc).apply(summarize)
 
 def summarize_truth(levels):

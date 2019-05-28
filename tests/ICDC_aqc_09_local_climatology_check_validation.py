@@ -8,7 +8,7 @@ from netCDF4 import Dataset
 
 ##### ICDC local climatology check.
 ##### --------------------------------------------------
-class TestClass():
+class TestClass:
 
     parameters = {}
     

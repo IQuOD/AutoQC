@@ -5,7 +5,7 @@ import numpy as np
 import util.main as main
 
 #### EN_increasing_depth_check -------------------------------------------
-class TestClass():
+class TestClass:
 
     parameters = {
         "table": 'unit'
@@ -57,7 +57,7 @@ class TestClass():
         qc = qctests.EN_increasing_depth_check.test(p, self.parameters)
         truth = np.zeros(10, dtype=bool)
         truth[3] = True
-        print qc
+        print(qc)
         assert np.array_equal(qc, truth), 'Failed to incorrect depth'
 
     def test_EN_increasing_depth_all_zero(self):
@@ -69,7 +69,7 @@ class TestClass():
         qc = qctests.EN_increasing_depth_check.test(p, self.parameters)
         truth = np.ones(1000, dtype=bool)
 
-        print qc, truth
+        print(qc, truth)
 
         assert np.array_equal(qc, truth), 'Failed to flag all levels in profile with all 0 depths'  
 

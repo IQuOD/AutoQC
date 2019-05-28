@@ -22,4 +22,4 @@ if len(sys.argv) == 4:
     conn.commit()
 else:
 
-    print "usage: python filter-db.py <full table name> <filtered table name> <number of good / bad profiles to pick>"
+    print("usage: python filter-db.py <full table name> <filtered table name> <number of good / bad profiles to pick>")

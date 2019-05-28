@@ -38,9 +38,9 @@ def amend(combo, df):
     name = '&'.join(combo)
     return df.assign(xx=decision).rename(index=str, columns={'xx': name})
 
-print '=============='
-print sys.argv[1]
-print '=============='
+print('==============')
+print(sys.argv[1])
+print('==============')
 
 # Read QC test specifications if required.
 groupdefinition = ar.read_qc_groups()
@@ -74,7 +74,7 @@ drop_tests = []
 for test in testNames:
     tpr, fpr, fnr, tnr = main.calcRates(df[test].tolist(), df['Truth'].tolist())
     if fpr > 0 and tpr / fpr < perf_thresh:
-        print 'dropping', test, '; tpr/fpr = ', tpr/fpr
+        print('dropping', test, '; tpr/fpr = ', tpr/fpr)
         df.drop([test], axis=1)
         bad.drop([test], axis=1)
         drop_tests.append(test)
@@ -95,16 +95,16 @@ for x in testNames:
     fprs.append([x, fpr, tpr])
 
 # accept tests that flag bad profiles with no false positives
-print 'number of bad profiles to consider:', len(bad)
+print('number of bad profiles to consider:', len(bad))
 for test in fprs:
     if test[1] == 0 and test[2] > 0:
         accepted.append(test[0])
-        print 'accepted', test[0], 0
+        print('accepted', test[0], 0)
         bad = bad[bad[test[0]]==False]
         bad = bad.drop([test[0]], axis=1)
         testNames.remove(test[0])
 fprs = [elt for elt in fprs if elt[0] not in accepted]
-print 'number of bad profiles remaining:', len(bad)
+print('number of bad profiles remaining:', len(bad))
 
 # algo. step 3
 # add a column to df for each combo, summarizing its decision for each profile
@@ -129,7 +129,7 @@ while len(bad) > 0:
             winner = x[x].keys()[0]
             accepted.append(winner)		# accept the combo as the only one flagging this bad profile
             ff = [x for x in fprs if x[0] == winner][0][1]
-            print 'accepted', winner, ff
+            print('accepted', winner, ff)
             bad = bad[bad[winner]==False]	# drop all bad profiles flagged by this combo
             bad = bad.drop([winner], axis=1)	# remove the combo from consideration
             testNames = [elt for elt in testNames if elt is not winner]
@@ -145,8 +145,8 @@ while len(bad) > 0:
         combonames = [x for x in combonames if x is not maxfpr]
         del fprs[-1]
 
-print 'profiles not caught by any test:'
-print unflagged
+print('profiles not caught by any test:')
+print(unflagged)
 
 f = open('catchall.json', 'w')
 r = {'tests': accepted}

@@ -21,15 +21,15 @@ def get_qc(p, config, test):
     global cotede_results
 
     # Disable logging messages from CoTeDe unless they are more
-    # severe than a warning. 
-    logging.disable('warn')
-    
+    # severe than a warning.
+    logging.disable(logging.WARNING)
+
     # Create a dummy results variable if this is the first call.
-    try: 
+    try:
         cotede_results
     except NameError:
         cotede_results = [-1, '', {}, None]
-    
+
     var = 'TEMP'
 
     # Check if we need to perform the quality control.
@@ -50,7 +50,7 @@ def get_qc(p, config, test):
 
                 if test == config:
                     # AutoQC runs only on TEMP, so clean the rest.
-                    for v in cfg.keys():
+                    for v in list(cfg):
                         if v not in ['main', var]:
                             del(cfg[v])
                 # If is a specific test,

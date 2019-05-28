@@ -8,7 +8,7 @@ import numpy as np
 ##### ICDC maximum observed depth check.
 ##### --------------------------------------------------
 
-class TestClass():
+class TestClass:
 
     parameters = {}
 

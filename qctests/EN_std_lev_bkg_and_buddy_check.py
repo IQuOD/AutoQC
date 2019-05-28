@@ -6,12 +6,7 @@ http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 
 from cotede.qctests.possible_speed import haversine
 import datetime
-import EN_background_check
-import EN_constant_value_check
-import EN_increasing_depth_check
-import EN_range_check
-import EN_spike_and_step_check
-import EN_stability_check
+from . import EN_background_check, EN_constant_value_check, EN_increasing_depth_check, EN_range_check, EN_spike_and_step_check, EN_stability_check
 import util.main as main
 import numpy as np
 
@@ -33,7 +28,7 @@ def test(p, parameters, allow_level_reinstating=True):
     result = stdLevelData(p, parameters)
     if result is None:
         return qc
-    
+
     # Unpack the results.
     levels, origLevels, assocLevels = result
     # Retrieve the background and observation error variances and
@@ -41,6 +36,7 @@ def test(p, parameters, allow_level_reinstating=True):
     query = 'SELECT bgstdlevels, bgevstdlevels FROM enbackground WHERE uid = ' + str(p.uid())
     enbackground_pars = main.dbinteract(query)
     enbackground_pars = main.unpack_row(enbackground_pars[0])
+
     bgsl = enbackground_pars[0]
     slev = parameters['enbackground']['depth']
     bgev = enbackground_pars[1]
@@ -380,6 +376,6 @@ def timeDiff(p1, p2):
 
 def get_profile_info(parameters):
     # Gets information about the profiles from the database.
-    
+
     query = 'SELECT uid,year,month,cruise,lat,long FROM ' + parameters['table']
     return main.dbinteract(query)

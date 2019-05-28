@@ -55,7 +55,7 @@ def test_CoTeDe_Morello2014():
     '''
     import qctests.CoTeDe_Morello2014
     qc = qctests.CoTeDe_Morello2014.test(p, None)
-    for i,j in enumerate(qc): print j, expected_qc_Morello2014[i]
+    for i,j in enumerate(qc): print(j, expected_qc_Morello2014[i])
     assert np.array_equal(qc, expected_qc_Morello2014), 'mismatch between qc results and expected values'
 
 def test_CoTeDe_gradient():

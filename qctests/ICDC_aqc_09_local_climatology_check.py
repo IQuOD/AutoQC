@@ -27,7 +27,7 @@ c     tminlocal(k)=tmedian(k) - rnumamd*tamd(k)
 c     tmaxlocal(k)=tmedian(k) + rnumamd*tamd(k)
 '''
 
-import ICDC_aqc_01_level_order as ICDC
+from . import ICDC_aqc_01_level_order as ICDC
 from netCDF4 import Dataset
 import numpy as np
 import os

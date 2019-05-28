@@ -86,7 +86,7 @@ def deltaTime(earlier, later):
         return None
 
     timeDiff = (late - early).total_seconds()
-    assert timeDiff >= 0, 'early date %s is after later date %s' % (early, late)
+    assert timeDiff >= 0, 'early date {} is after later date {}'.format(early, late)
 
     return timeDiff
 

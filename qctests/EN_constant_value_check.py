@@ -20,7 +20,7 @@ def test(p, parameters):
     qc_log = main.unpack_row(qc_log[0])
     if qc_log[0] is not None:
         return qc_log[0]
-        
+
     return run_qc(p, parameters)
 
 def run_qc(p, parameters):

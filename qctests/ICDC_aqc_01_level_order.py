@@ -20,7 +20,7 @@ c    if necessary to bring the original levels to increasing order
 
 import numpy as np
 import util.main as main
-import pickle, sqlite3, StringIO
+import pickle, sqlite3, io
 
 def test(p, parameters):
     '''Return a set of QC decisions. This corresponds to levels with
@@ -73,10 +73,10 @@ def level_order(p):
     precomputed = main.dbinteract(query)           
     if len(precomputed) > 0:
         nlevels = precomputed[0][0]
-        origlevels = pickle.load(StringIO.StringIO(precomputed[0][1]))
-        zr = pickle.load(StringIO.StringIO(precomputed[0][2]))
-        tr = pickle.load(StringIO.StringIO(precomputed[0][3]))
-        qc = pickle.load(StringIO.StringIO(precomputed[0][4]))
+        origlevels = pickle.load(io.BytesIO(precomputed[0][1]))
+        zr = pickle.load(io.BytesIO(precomputed[0][2]))
+        tr = pickle.load(io.BytesIO(precomputed[0][3]))
+        qc = pickle.load(io.BytesIO(precomputed[0][4]))
         return p.uid(), nlevels, origlevels, zr, tr, qc
 
     # Extract data and define the index for each level.

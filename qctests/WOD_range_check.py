@@ -1,4 +1,4 @@
-""" 
+"""
 Implements the WOD range check,
 pp 46 http://data.nodc.noaa.gov/woa/WOD/DOC/wodreadme.pdf
 """
@@ -37,7 +37,7 @@ def test(p, parameters):
     region = parameters['regionCodes'][cellCode]
     minima = parameters['WODtempRanges'][region]['min']
     maxima = parameters['WODtempRanges'][region]['max']
-    
+
     for i in range(1, p.n_levels()):
         if isData[i] == False: continue
 
@@ -51,7 +51,7 @@ def test(p, parameters):
 
         if t[i] < minTemp or t[i] > maxTemp:
             qc[i] = True
-    
+
     return qc
 
 
@@ -122,11 +122,11 @@ def readWOD_temperature_ranges(filename='data/WOD_ranges_Temperature.csv'):
   '''
 
   WODtemps = {}
-  file = open(filename,'rb')
+  file = open(filename,'r')
 
   #get headers
   reader = csv.reader(file)
-  headers = reader.next()
+  headers = next(reader)
   del reader
 
   #get real data as array
@@ -142,7 +142,6 @@ def readWOD_temperature_ranges(filename='data/WOD_ranges_Temperature.csv'):
       WODtemps[region]['max'] = data[:,i]
 
   # create depth key
-
   WODtemps['depths'] = data[:,0]
 
   return WODtemps

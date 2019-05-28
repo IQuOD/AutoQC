@@ -1,7 +1,7 @@
 import util.main as main
 import os
 
-class TestClass():
+class TestClass:
 
     def importQC_test(self):
         '''

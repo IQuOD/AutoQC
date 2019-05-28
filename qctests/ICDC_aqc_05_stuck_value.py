@@ -15,7 +15,7 @@ c/ PURPOSE:
 c    to check temperature profile for stuck value/unrealistically thick thermostad 
 '''
 
-import ICDC_aqc_01_level_order as ICDC
+from . import ICDC_aqc_01_level_order as ICDC
 import numpy as np
 from util.wod import wod_database
 

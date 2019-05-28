@@ -4,7 +4,7 @@ import qctests.EN_spike_and_step_check
 from cotede.qctests.possible_speed import haversine
 from util import main
 import util.testingProfile
-import numpy, pickle, StringIO
+import numpy, pickle, io
 
 # Dummy functions to turn off functions that do not
 # work on a testing profile.
@@ -31,7 +31,7 @@ def dummy_get_profile_from_db(uid):
 
 ##### EN_std_lev_bkg_and_buddy_check ---------------------------------------------------
 
-class TestClass():
+class TestClass:
 
     parameters = {
         "table": 'unit'
@@ -75,7 +75,7 @@ class TestClass():
         qctests.EN_background_check.test(p, self.parameters) #need to populate the enbackground db with profile specific info
         query = 'SELECT bgevstdlevels FROM enbackground WHERE uid = 8888'
         enbackground_pars = main.dbinteract(query) 
-        bgev = pickle.load(StringIO.StringIO(enbackground_pars[0][0]))
+        bgev = pickle.load(io.StringIO.StringIO(enbackground_pars[0][0]))
 
         obev = self.parameters['enbackground']['obev']
         expected = [1.0, 1.0, 1.0, 1.0]

@@ -29,6 +29,6 @@ def test_CSIRO_long_gradient():
     qc = qctests.CSIRO_long_gradient.test(p, None)
     truth = numpy.zeros(6, dtype=bool)
 
-    print truth, qc
+    print(truth, qc)
 
     assert numpy.array_equal(qc, truth), 'should not flag a long inversion that begins at < 5m' 
