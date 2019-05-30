@@ -45,7 +45,7 @@
   {
     "applies_to":["ICDC_aqc_09_local_climatology_check"],
     "data":["climatological_t_median_and_amd_for_aqc.nc"]
-  }
+  },
   {
     "applies_to":["ICDC_aqc_10_local_climatology_check"],
     "data":[["global_mean_median_quartiles_medcouple_smoothed.dat", "global_mean_median_quartiles_medcouple_smoothed.nc"]]
