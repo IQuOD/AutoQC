@@ -4,7 +4,6 @@ import qctests.ICDC_aqc_09_local_climatology_check as ICDC_lc
 import util.testingProfile
 import util.main as main
 import numpy as np
-from netCDF4 import Dataset
 
 ##### ICDC local climatology check.
 ##### --------------------------------------------------
@@ -15,6 +14,7 @@ class TestClass():
     def setUp(self):
         # refresh this table every test
         ICDC.loadParameters(self.parameters)
+        ICDC_lc.loadParameters(self.parameters)
 
     def tearDown(self):
         main.dbinteract('DROP TABLE icdclevelorder;')
@@ -25,7 +25,6 @@ class TestClass():
         '''
 
         lines = data.splitlines()
-        nc = Dataset('data/climatological_t_median_and_amd_for_aqc.nc', 'r')
         for i, line in enumerate(lines):
             if line[0:2] == 'HH':
                 header  = line.split()
@@ -64,7 +63,7 @@ class TestClass():
                                                               lat, 
                                                               lon,
                                                               p.month(), 
-                                                              nc)
+                                                              self.parameters['icdc09'])
 
                 assert np.max(np.abs(tmin - climmin)) < 0.001, 'TMIN failed for profile with header ' + line
                 assert np.max(np.abs(tmax - climmax)) < 0.001, 'TMAX failed for profile with header ' + line
