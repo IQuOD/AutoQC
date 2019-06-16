@@ -29,7 +29,8 @@ def assessProfile(p, check_originator_flag_type, months_to_use):
 
     # no valid originator flag type
     if check_originator_flag_type:
-        if int(p.originator_flag_type()) not in range(1,15):
+        o_flag = p.originator_flag_type()
+        if o_flag is not None and int(o_flag) not in range(1,15):
             return False
 
     # check month
