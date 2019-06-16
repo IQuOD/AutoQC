@@ -47,12 +47,12 @@ def assessProfile(p, check_originator_flag_type, months_to_use):
 
         # if temperature isn't masked:
         # it had better be a float
-        if not isinstance(temp.data[i], float):
+        if not isinstance(temp.data[i], np.float):
             return False
         # needs to have a valid QC decision:
         if tempqc.mask[i]:
             return False
-        if not isinstance(tempqc.data[i], int):
+        if not isinstance(tempqc.data[i], np.integer):
             return False
         if not tempqc.data[i] > 0:
             return False
