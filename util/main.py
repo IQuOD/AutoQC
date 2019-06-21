@@ -300,9 +300,7 @@ def pack_array(arr):
     # chew up a numpy array, masked array, or list for insertion into a sqlite column of type blob
     out = io.BytesIO()
 
-    if type(arr) is np.ndarray:
-        np.save(out, arr)
-    elif type(arr) is np.ma.core.MaskedArray:
+    if type(arr) is np.ndarray or type(arr) is np.ma.core.MaskedArray:
         arr.dump(out)
     elif type(arr) is list:
         pickle.dump(arr, out)

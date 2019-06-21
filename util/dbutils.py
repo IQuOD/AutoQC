@@ -111,8 +111,9 @@ def db_to_df(table,
 
     cur.execute(query)
     rawresults = cur.fetchall()
-    df = pandas.DataFrame(rawresults).astype('str')
+    df = pandas.DataFrame(rawresults).astype('bytes')
     df.columns = ['uid', 'Truth'] + testNames
+    df = df.astype({'uid': 'str'})
 
     if filter_on_wire_break_test:
         nlevels = get_n_levels_before_fail(df['CSIRO_wire_break'])
