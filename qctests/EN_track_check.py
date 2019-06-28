@@ -204,14 +204,14 @@ def calculateTraj(rows):
     by the time-ordered list of rows.
     '''
 
-    speeds = [None]
-    angles = [None]
+    speeds = [-99999]
+    angles = [-99999]
 
     # Find speed and angle for all profiles remaining in the list
     for i in range(1, len(rows)):
 
-        speeds.append(None)
-        angles.append(None)
+        speeds.append(-99999)
+        angles.append(-99999)
         speeds[i] = trackSpeed(rows[i-1], rows[i])
 
         if i < len(rows)-1: # can't do angle on last point 
