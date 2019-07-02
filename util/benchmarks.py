@@ -1,4 +1,4 @@
-import combineTests as combinatorics
+import util.combineTests as combinatorics
 import matplotlib.pyplot as plt
 import numpy as np
 

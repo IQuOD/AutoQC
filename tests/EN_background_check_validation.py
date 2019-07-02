@@ -28,7 +28,7 @@ class TestClass:
         Make sure EN_background_check is flagging temperature excursions
         '''
 
-        p = util.testingProfile.fakeProfile([1.8, 1.8, 1.8, 7.1], [0.0, 2.5, 5.0, 7.5], latitude=55.6, longitude=12.9, date=[1900, 01, 15, 0], probe_type=7, uid=8888) 
+        p = util.testingProfile.fakeProfile([1.8, 1.8, 1.8, 7.1], [0.0, 2.5, 5.0, 7.5], latitude=55.6, longitude=12.9, date=[1900, 1, 15, 0], probe_type=7, uid=8888) 
         qc = qctests.EN_background_check.test(p, self.parameters)
         expected = [False, False, False, True]
         assert numpy.array_equal(qc, expected), 'mismatch between qc results and expected values'

@@ -70,8 +70,8 @@ class TestClass:
         rows.append([0, 1999, 12, 31, 4, 4, 90, 0]) 
         rows.append([0, 1999, 12, 31, 5, 3, 90, 0]) 
 
-        trueSpeeds = [None]
-        trueAngles = [None, 0, 0, 0, math.pi, None]
+        trueSpeeds = [-99999]
+        trueAngles = [-99999, 0, 0, 0, math.pi, -99999]
 
         for i in range(len(rows)-1):
             trueDistance = util.geo.haversineDistance(rows[i][5], rows[i][6], rows[i+1][5], rows[i+1][6])
@@ -81,8 +81,8 @@ class TestClass:
         speeds, angles = qctests.EN_track_check.calculateTraj(rows)
 
         assert numpy.array_equal(speeds, trueSpeeds)
-        assert angles[0] is None
-        assert angles[5] is None
+        assert angles[0] == -99999
+        assert angles[5] == -99999
         for i in range(1, len(angles)-1):
             assert abs(angles[i] - trueAngles[i]) < 0.000001
         
