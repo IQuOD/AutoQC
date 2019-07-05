@@ -40,13 +40,13 @@ class TestClass:
         same idea at the beginning.
         '''
 
-        gridLat  = [10,20,30,40]
-        gridLong = [10,20,30,40]
-        p = util.testingProfile.fakeProfile([0], [0], latitude=9, longitude=51) 
+        gridLat  = [-90,-60,-30,0,30,60,90]
+        gridLong = [0,60,120,180,240,300]
+        p = util.testingProfile.fakeProfile([0], [0], latitude=121, longitude=421)
 
         ilon, ilat = qctests.EN_background_check.findGridCell(p, gridLong, gridLat)
-        assert ilon == 0
-        assert ilat == 3
+        assert ilon == 1
+        assert ilat == 5
 
     def test_EN_background_check_findGridCell_even_spacing(self):
         '''

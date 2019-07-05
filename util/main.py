@@ -1,6 +1,6 @@
 ## helper functions used in the top level AutoQC.py
 
-import json, os, glob, time, pandas, csv, sys, fnmatch, sqlite3, io, pickle
+import json, os, glob, time, pandas, csv, sys, fnmatch, sqlite3, io, pickle, math
 import numpy as np
 from wodpy import wod
 from netCDF4 import Dataset
@@ -331,3 +331,11 @@ def find_depth(latitude, longitude):
     db = oceansdb.ETOPO()
     return db['topography'].extract(lat=latitude, lon=longitude)['height'][0]
 
+
+def normalize_latitude(lat):
+    '''
+    map a latitude in degrees onto [-90, 90]
+    '''
+
+    latitude = lat*math.pi/180
+    return math.asin(math.sin(latitude))/(math.pi/180)

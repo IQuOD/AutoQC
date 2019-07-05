@@ -156,9 +156,10 @@ def findGridCell(p, gridLong, gridLat):
     for i in range(1, len(gridLat)):
         assert gridLat[i] - gridLat[i-1] == gridLat[1] - gridLat[0], 'latitude grid points must be evenly spaced'
     lat = p.latitude()
+    lat = main.normalize_latitude(lat)
     grid = gridLat
     nlat = len(grid)
-    ilat = int(np.mod(np.round((lat - grid[0]) / (grid[1] - grid[0])), nlat))
+    ilat = int( np.round((lat - grid[0]) / (grid[1] - grid[0])) )
     if ilat == nlat: ilat -= 1 # Checks for edge case where lat is ~90.
 
     assert ilon >=0 and ilon < nlon, 'Longitude is out of range: {} {}'.format(lon, ilon)
