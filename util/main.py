@@ -338,4 +338,4 @@ def normalize_latitude(lat):
     '''
 
     latitude = lat*math.pi/180
-    return math.asin(math.sin(latitude))/(math.pi/180)
+    return np.round(math.asin(math.sin(latitude))/(math.pi/180), decimals=6)
