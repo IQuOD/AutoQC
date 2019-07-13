@@ -340,10 +340,10 @@ def condition_d(rows, speeds, angles, index, maxSpeed):
     assess condition (d) from the text
     '''
 
-    if None not in [angles[index-1], angles[index]] and angles[index-1] > 45./180.*math.pi + angles[index]:
+    if -99999 not in [angles[index-1], angles[index]] and angles[index-1] > 45./180.*math.pi + angles[index]:
         return index-1, 'd'
 
-    if None not in [angles[index-1], angles[index]] and angles[index] > 45./180.*math.pi + angles[index-1]:
+    if -99999 not in [angles[index-1], angles[index]] and angles[index] > 45./180.*math.pi + angles[index-1]:
         return index, 'd'
 
     return condition_e(rows, speeds, angles, index, maxSpeed)
@@ -355,10 +355,10 @@ def condition_e(rows, speeds, angles, index, maxSpeed):
 
     if len(rows) > max(2, index+1):
 
-        if None not in [angles[index-2], angles[index+1]] and angles[index-2] > 45./180.*math.pi and angles[index-2] > angles[index+1]:
+        if -99999 not in [angles[index-2], angles[index+1]] and angles[index-2] > 45./180.*math.pi and angles[index-2] > angles[index+1]:
             return index-1, 'e'
 
-        if None not in [angles[index+1]] and angles[index+1] > 45./180.*math.pi:
+        if -99999 not in [angles[index+1]] and angles[index+1] > 45./180.*math.pi:
             return index, 'e'
 
     return condition_f(rows, speeds, angles, index, maxSpeed)
@@ -372,10 +372,10 @@ def condition_f(rows, speeds, angles, index, maxSpeed):
 
         ms = meanSpeed(speeds, rows, maxSpeed)
 
-        if None not in [speeds[index-1], speeds[index+1]] and speeds[index-1] < min([speeds[index+1], 0.5*ms]):
+        if -99999 not in [speeds[index-1], speeds[index+1]] and speeds[index-1] < min([speeds[index+1], 0.5*ms]):
             return index-1, 'f'
 
-        if None not in [speeds[index-1], speeds[index+1]] and speeds[index+1] < min([speeds[index-1], 0.5*ms]):
+        if -99999 not in [speeds[index-1], speeds[index+1]] and speeds[index+1] < min([speeds[index-1], 0.5*ms]):
             return index, 'f'
 
     return condition_g(rows, speeds, angles, index, maxSpeed)
