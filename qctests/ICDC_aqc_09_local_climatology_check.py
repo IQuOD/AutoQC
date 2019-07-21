@@ -51,26 +51,26 @@ def test(p, parameters):
         return defaultqc
     
     # parameters
-    nc = Dataset('data/climatological_t_median_and_amd_for_aqc.nc', 'r')
+    paramsicdc09 = parameters['icdc09']
     
     # Get range.
-    ranges = get_climatology_range(nlevels, z, lat, lon, p.month(), nc)
+    ranges = get_climatology_range(nlevels, z, lat, lon, p.month(), paramsicdc09)
     if ranges is None:
         return defaultqc
     
     # Perform the QC.
     tmin, tmax = ranges
-    qc = ((t < tmin) | (t > tmax)) & (tmin != nc.fillValue) & (tmax != nc.fillValue) 
+    qc = ((t < tmin) | (t > tmax)) & (tmin != paramsicdc09['fillValue']) & (tmax != paramsicdc09['fillValue']) 
 
     return ICDC.revert_qc_order(p, qc)
 
-def get_climatology_range(nlevels, z, lat, lon, month, nc):
+def get_climatology_range(nlevels, z, lat, lon, month, paramsicdc09):
 
     # Define arrays for the results.
     tmin = np.ndarray(nlevels)
     tmax = np.ndarray(nlevels)
-    tmin[:] = nc.fillValue
-    tmax[:] = nc.fillValue
+    tmin[:] = paramsicdc09['fillValue']
+    tmax[:] = paramsicdc09['fillValue']
 
     # Global ranges - data outside these bounds are assumed not valid.
     parminover = -2.3
@@ -85,7 +85,7 @@ def get_climatology_range(nlevels, z, lat, lon, month, nc):
     # Find the climatology range.
     for k in range(nlevels):
         # Find the corresponding climatology level.
-        arg = np.argwhere((z[k] >= nc.variables['zedqc'][:][:-1]) & (z[k] < nc.variables['zedqc'][:][1:]))
+        arg = np.argwhere((z[k] >= paramsicdc09['zedqc'][:][:-1]) & (z[k] < paramsicdc09['zedqc'][:][1:]))
         if len(arg) > 0:
             kisel = arg[0]
         else: 
@@ -98,19 +98,19 @@ def get_climatology_range(nlevels, z, lat, lon, month, nc):
         if month is None: useAnnual = True 
         # Extract the temperature.       
         if useAnnual == False:
-            amd = nc.variables['tamdM'][ix, iy, kisel, month - 1][0]
+            amd = paramsicdc09['tamdM'][ix, iy, kisel, month - 1][0]
             if amd < 0.0:
                 useAnnual = True
             else:
-                tmedian = nc.variables['tmedM'][ix, iy, kisel, month - 1][0]
+                tmedian = paramsicdc09['tmedM'][ix, iy, kisel, month - 1][0]
                 if tmedian < parminover:
                     useAnnual = True
         if useAnnual:
-            amd = nc.variables['tamdA'][ix, iy, kisel][0]
+            amd = paramsicdc09['tamdA'][ix, iy, kisel][0]
             if amd < 0.0:
                 continue
             else:
-                tmedian = nc.variables['tmedA'][ix, iy, kisel][0]
+                tmedian = paramsicdc09['tmedA'][ix, iy, kisel][0]
                 if tmedian < parminover:
                     continue
         if amd > 0.0 and amd < 0.05: amd = 0.05
@@ -126,4 +126,15 @@ def get_climatology_range(nlevels, z, lat, lon, month, nc):
 
     return tmin, tmax
 
+def loadParameters(parameterStore):
+    datadict = {}
+    nc = Dataset('data/climatological_t_median_and_amd_for_aqc.nc', 'r')
+    datadict['zedqc'] = nc.variables['zedqc'][:]    
+    datadict['tamdM'] = nc.variables['tamdM'][:]
+    datadict['tmedM'] = nc.variables['tmedM'][:]
+    datadict['tamdA'] = nc.variables['tamdA'][:]
+    datadict['tmedA'] = nc.variables['tmedA'][:]
+    datadict['fillValue'] = nc.fillValue
+    nc.close()
+    parameterStore['icdc09'] = datadict
 
