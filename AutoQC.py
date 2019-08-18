@@ -78,7 +78,7 @@ if len(sys.argv)>2:
       print('No parameters to load for', test)
 
   # connect to database & fetch list of all uids
-  query = 'SELECT uid FROM ' + sys.argv[1] + ' WHERE subset=1 ORDER BY uid LIMIT 10;'
+  query = 'SELECT uid FROM ' + sys.argv[1] + ' ORDER BY uid;'
   uids = main.dbinteract(query)
 
   # launch async processes
