@@ -6,7 +6,7 @@ import numpy
 
 ##### EN_background_check ---------------------------------------------------
 
-class TestClass():
+class TestClass:
 
     parameters = {
         "table": 'unit'
@@ -28,7 +28,7 @@ class TestClass():
         Make sure EN_background_check is flagging temperature excursions
         '''
 
-        p = util.testingProfile.fakeProfile([1.8, 1.8, 1.8, 7.1], [0.0, 2.5, 5.0, 7.5], latitude=55.6, longitude=12.9, date=[1900, 01, 15, 0], probe_type=7, uid=8888) 
+        p = util.testingProfile.fakeProfile([1.8, 1.8, 1.8, 7.1], [0.0, 2.5, 5.0, 7.5], latitude=55.6, longitude=12.9, date=[1900, 1, 15, 0], probe_type=7, uid=8888) 
         qc = qctests.EN_background_check.test(p, self.parameters)
         expected = [False, False, False, True]
         assert numpy.array_equal(qc, expected), 'mismatch between qc results and expected values'
@@ -40,13 +40,13 @@ class TestClass():
         same idea at the beginning.
         '''
 
-        gridLat  = [10,20,30,40]
-        gridLong = [10,20,30,40]
-        p = util.testingProfile.fakeProfile([0], [0], latitude=9, longitude=51) 
+        gridLat  = [-90,-60,-30,0,30,60,90]
+        gridLong = [0,60,120,180,240,300]
+        p = util.testingProfile.fakeProfile([0], [0], latitude=121, longitude=421)
 
         ilon, ilat = qctests.EN_background_check.findGridCell(p, gridLong, gridLat)
-        assert ilon == 0
-        assert ilat == 3
+        assert ilon == 1
+        assert ilat == 5
 
     def test_EN_background_check_findGridCell_even_spacing(self):
         '''

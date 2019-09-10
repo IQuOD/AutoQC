@@ -16,7 +16,7 @@ c/ PURPOSE:
 c    find profiles with unrealistically large number of temperature extrema
 '''
 
-import ICDC_aqc_01_level_order as ICDC
+from . import ICDC_aqc_01_level_order as ICDC
 import numpy as np
 
 def test(p, parameters):

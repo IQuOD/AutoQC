@@ -29,9 +29,10 @@ def assessProfile(p, check_originator_flag_type, months_to_use):
 
     # no valid originator flag type
     if check_originator_flag_type:
-        if int(p.originator_flag_type()) not in range(1,15):
+        o_flag = p.originator_flag_type()
+        if o_flag is not None and int(o_flag) not in range(1,15):
             return False
-            
+
     # check month
     if p.month() not in months_to_use:
         return False
@@ -46,12 +47,12 @@ def assessProfile(p, check_originator_flag_type, months_to_use):
 
         # if temperature isn't masked:
         # it had better be a float
-        if not isinstance(temp.data[i], float):
+        if not isinstance(temp.data[i], np.float):
             return False
         # needs to have a valid QC decision:
         if tempqc.mask[i]:
             return False
-        if not isinstance(tempqc.data[i], int):
+        if not isinstance(tempqc.data[i], np.integer):
             return False
         if not tempqc.data[i] > 0:
             return False
@@ -168,22 +169,22 @@ def builddb(check_originator_flag_type = True,
             break
 
     conn.commit()
-    print 'number of clean profiles written:', good
-    print 'number of flagged profiles written:', bad
-    print 'total number of profiles written:', good+bad
+    print('number of clean profiles written:', good)
+    print('number of flagged profiles written:', bad)
+    print('total number of profiles written:', good+bad)
 
 if len(sys.argv) == 3:
 
     builddb()
-    
+
 elif len(sys.argv) == 5:
 
     builddb(ast.literal_eval(sys.argv[3]), ast.literal_eval(sys.argv[4]))  
 
 else:
 
-    print 'Usage: python build-db.py <inputdatafile> <databasetable> <demand originator flags> <list of months to include (with no spaces or enclose in quotes)>' 
-    print 'Example: python build-db.py data.wod mytable False [1,2,3,10]'
+    print('Usage: python build-db.py <inputdatafile> <databasetable> <demand originator flags> <list of months to include (with no spaces or enclose in quotes)>')
+    print('Example: python build-db.py data.wod mytable False [1,2,3,10]')
 
 
 

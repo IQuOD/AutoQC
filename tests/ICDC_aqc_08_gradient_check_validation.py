@@ -7,7 +7,7 @@ import numpy as np
 
 ##### ICDC gradient check.
 ##### --------------------------------------------------
-class TestClass():
+class TestClass:
 
     parameters = {}
 

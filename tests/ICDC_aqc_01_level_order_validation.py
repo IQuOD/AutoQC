@@ -7,7 +7,7 @@ import numpy as np
 ##### ICDC level order check.
 ##### --------------------------------------------------
 
-class TestClass():
+class TestClass:
 
     parameters = {}
 
@@ -61,12 +61,12 @@ class TestClass():
 
             # Check the QC results are returned correctly.
             qc = ICDC.test(p, self.parameters)
-            assert np.array_equal(qc, qctruth), 'Example %i QC wrong' % (i + 1)
+            assert np.array_equal(qc, qctruth), 'Example {} QC wrong'.format(i + 1)
 
             # Check that the reordering is correct.
             nlevels, zr, tr = ICDC.reordered_data(p)
-            assert np.array_equal(zr, ztruth), 'Example %i zr wrong' % (i + 1)
-            assert np.array_equal(tr, ttruth), 'Example %i tr wrong' % (i + 1)
+            assert np.array_equal(zr, ztruth), 'Example {} zr wrong'.format(i + 1)
+            assert np.array_equal(tr, ttruth), 'Example {} tr wrong'.format(i + 1)
 
 # Data provided by Viktor Gouretski, ICDC, University of Hamburg.
 example1 = np.array([

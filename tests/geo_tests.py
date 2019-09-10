@@ -75,12 +75,12 @@ def test_haversineAngle():
     lon3 = 30
 
     angle = geo.haversineAngle(lat1, lon1, lat2, lon2, lat3, lon3) 
-    assert angle - math.pi < 0.000001, 'point on a circle had a non-zero angle between them: %f' % angle
+    assert angle - math.pi < 0.000001, 'point on a circle had a non-zero angle between them: {}'.format(angle)
 
     lat3 = 90
     lon3 = 20
     angle = geo.haversineAngle(lat1, lon1, lat2, lon2, lat3, lon3)
-    assert angle - math.pi/2 < 0.000001, 'orthogonal great circles had an angle of %f between them.' % angle
+    assert angle - math.pi/2 < 0.000001, 'orthogonal great circles had an angle of {} between them.'.format(angle)
 
 def test_archaversine_domain():
     '''

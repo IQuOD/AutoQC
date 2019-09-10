@@ -119,4 +119,4 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         plot_roc()
     else:
-        print 'Usage - python plot-roc.py tablename'
+        print('Usage - python plot-roc.py tablename')

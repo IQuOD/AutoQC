@@ -1,4 +1,4 @@
-import combineTests as combinatorics
+import util.combineTests as combinatorics
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -83,23 +83,23 @@ def plot_roc(bmResults):
         c = 'xk'
         if lFpr[num]:
             c = 'or'
-            print '*** Lowest false positive rate ***'
+            print('*** Lowest false positive rate ***')
             printout = True
         if lTpr[num]:
             c = 'ob'
-            print '*** Highest true positive rate ***'
+            print('*** Highest true positive rate ***')
             printout = True
         if lDist[num]:
             c = 'og'
-            print '*** Closest to FPR = 0 and TPR = 100 ***'
+            print('*** Closest to FPR = 0 and TPR = 100 ***')
             printout = True
 
         if printout:
-            print '  Combination ' + str(num+1) + ':'
-            print '    ' + combinatorics.combinationStr(bm[0], bm[2])
-            print '    False Positive Rate = {0:5.1f}%'.format(bm[1][0])
-            print '    True Positive Rate  = {0:5.1f}%'.format(bm[1][1])
-            print ''
+            print('  Combination ' + str(num+1) + ':')
+            print('    ' + combinatorics.combinationStr(bm[0], bm[2]))
+            print('    False Positive Rate = {0:5.1f}%'.format(bm[1][0]))
+            print('    True Positive Rate  = {0:5.1f}%'.format(bm[1][1]))
+            print('')
 
         plt.plot(bm[1][0], bm[1][1], c, label='Combo ' + str(num+1))
 

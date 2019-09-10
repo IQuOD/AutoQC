@@ -6,7 +6,7 @@ import util.main as main
 
 #### EN_constant_value_check -------------------------------------------
 
-class TestClass():
+class TestClass:
 
     parameters = {
         "table": 'unit'

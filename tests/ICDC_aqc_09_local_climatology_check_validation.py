@@ -7,7 +7,7 @@ import numpy as np
 
 ##### ICDC local climatology check.
 ##### --------------------------------------------------
-class TestClass():
+class TestClass:
 
     parameters = {}
     

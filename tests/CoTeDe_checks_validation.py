@@ -28,7 +28,7 @@ def test_CoTeDe_Argo_density_inversion():
                                            salinities = data[:, 2],
                                            latitude   = 4.10566666667,
                                            longitude  = -38.0133333333,
-                                           date       = [2008, 04, 17, 0.94361111],
+                                           date       = [2008, 4, 17, 0.94361111],
                                            uid        = 888) 
     qc = qctests.CoTeDe_Argo_density_inversion.test(padi, None)
     assert np.array_equal(qc, expected_qc_Argo_density_inversion), 'mismatch between qc results and expected values'
@@ -55,7 +55,7 @@ def test_CoTeDe_Morello2014():
     '''
     import qctests.CoTeDe_Morello2014
     qc = qctests.CoTeDe_Morello2014.test(p, None)
-    for i,j in enumerate(qc): print j, expected_qc_Morello2014[i]
+    for i,j in enumerate(qc): print(j, expected_qc_Morello2014[i])
     assert np.array_equal(qc, expected_qc_Morello2014), 'mismatch between qc results and expected values'
 
 def test_CoTeDe_gradient():
@@ -116,7 +116,7 @@ def test_CoTeDe_location_at_sea_test_land_point():
                                             salinities = data[:, 2],
                                             latitude   = -4.10566666667,
                                             longitude  = -38.5133333333,
-                                            date       = [2008, 04, 17, 0.94361111],
+                                            date       = [2008, 4, 17, 0.94361111],
                                             uid        = 999) 
     qc = qctests.CoTeDe_location_at_sea_test.test(pland, None)
     assert np.all(qc), 'mismatch between qc results and expected values'
@@ -1216,7 +1216,7 @@ p = util.testingProfile.fakeProfile(data[:, 1],
                                     salinities = data[:, 2],
                                     latitude   = 4.10566666667,
                                     longitude  = -38.0133333333,
-                                    date       = [2008, 04, 17, 0.94361111],
+                                    date       = [2008, 4, 17, 0.94361111],
                                     uid        = 0) 
 
 

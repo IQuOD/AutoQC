@@ -118,15 +118,15 @@ def find_roc(table,
     for c in cols:
         if len(pandas.unique(df[c])) == 1:
             nondiscrim.append(c)
-            if verbose: print c + ' is nondiscriminating and will be removed'
+            if verbose: print(c + ' is nondiscriminating and will be removed')
     cols = [t for t in cols if t not in nondiscrim]
     df = df[cols]
-    print list(df)
+    print(list(df))
     testNames = df.columns[2:].values.tolist()
 
     if verbose:
-        print 'Number of profiles is: ', len(df.index)
-        print 'Number of quality checks to process is: ', len(testNames)
+        print('Number of profiles is: ', len(df.index))
+        print('Number of quality checks to process is: ', len(testNames))
 
     # mark chosen profiles as part of the training set 
     all_uids = main.dbinteract('SELECT uid from ' + sys.argv[1] + ';')
@@ -161,7 +161,7 @@ def find_roc(table,
                 tprs.append(tpr)
                 fprs.append(fpr)
     del df # No further need for the data frame.
-    if verbose: print 'Number of quality checks after adding reverses and removing zero TPR was: ', len(names)
+    if verbose: print('Number of quality checks after adding reverses and removing zero TPR was: ', len(names))
 
     # Create storage to hold the roc curve.
     cumulative = truth.copy()
@@ -175,7 +175,7 @@ def find_roc(table,
 
     # Pre-select some tests if required.
     if enforce_types_of_check:
-        if verbose: print 'Enforcing types of checks'
+        if verbose: print('Enforcing types of checks')
         while len(groupdefinition['At least one from group']) > 0:
             bestchoice = ''
             bestgroup  = ''
@@ -191,22 +191,22 @@ def find_roc(table,
                                 cumulativenew = np.logical_or(cumulative, tests[itest])
                                 tpr, fpr, fnr, tnr = main.calcRates(cumulativenew, truth)
                                 newdist = return_cost(costratio, tpr, fpr)
-                                print '    ', tpr, fpr, newdist, bestdist, testname
+                                print('    ', tpr, fpr, newdist, bestdist, testname)
                                 if newdist == bestdist:
                                     if verbose:
-                                        print '  ' + bestchoice + ' and ' + testname + ' have the same results and the first is kept'
+                                        print('  ' + bestchoice + ' and ' + testname + ' have the same results and the first is kept')
                                 elif newdist < bestdist:
                                     bestchoice = testname
                                     bestdist   = newdist
                                     besti      = itest
                                     bestgroup  = key
                     else:
-                        if verbose: print '    ' + testname + ' not found and so was skipped'
+                        if verbose: print('    ' + testname + ' not found and so was skipped')
             #assert bestchoice != '', '    Error, did not make a choice in group ' + key
-            if verbose: print '  ' + bestchoice + ' was selected from group ' + bestgroup
+            if verbose: print('  ' + bestchoice + ' was selected from group ' + bestgroup)
             if fprs[besti] > 0:
                 if tprs[besti] / fprs[besti] < effectiveness_ratio:
-                    print 'WARNING - ' + bestchoice + ' TPR / FPR is below the effectiveness ratio limit: ', tprs[besti] / fprs[besti], effectiveness_ratio
+                    print('WARNING - ' + bestchoice + ' TPR / FPR is below the effectiveness ratio limit: ', tprs[besti] / fprs[besti], effectiveness_ratio)
             cumulative = np.logical_or(cumulative, tests[besti])
             currenttpr, currentfpr, fnr, tnr = main.calcRates(cumulative, truth)
             testcomb.append(names[besti])
@@ -219,15 +219,15 @@ def find_roc(table,
             del fprs[besti]
             del tprs[besti]
             del groupdefinition['At least one from group'][bestgroup]
-            print 'ROC point from enforced group: ', currenttpr, currentfpr, testcomb[-1], bestgroup
+            print('ROC point from enforced group: ', currenttpr, currentfpr, testcomb[-1], bestgroup)
 
     # Make combinations of the single checks and store.
     assert n_combination_iterations <= 2, 'Setting n_combination_iterations > 2 results in a very large number of combinations'
-    if verbose: print 'Starting construction of combinations with number of iterations: ', n_combination_iterations
+    if verbose: print('Starting construction of combinations with number of iterations: ', n_combination_iterations)
     for its in range(n_combination_iterations):
         ntests = len(names)
         for i in range(ntests - 1):
-            if verbose: print 'Processing iteration ', its + 1, ' out of ', n_combination_iterations, ' step ', i + 1, ' out of ', ntests - 1, ' with number of tests now ', len(names)
+            if verbose: print('Processing iteration ', its + 1, ' out of ', n_combination_iterations, ' step ', i + 1, ' out of ', ntests - 1, ' with number of tests now ', len(names))
             for j in range(i + 1, ntests):
                 # Create the name for this combination.
                 newname = ('&').join(sorted((names[i] + '&' + names[j]).split('&')))
@@ -240,7 +240,7 @@ def find_roc(table,
                     tprs.append(tpr)
                     fprs.append(fpr)
                     names.append(newname)
-    if verbose: print 'Completed generation of tests, now constructing roc from number of tests: ', len(names)         
+    if verbose: print('Completed generation of tests, now constructing roc from number of tests: ', len(names))
 
     # Create roc.
     used      = np.zeros(len(names), dtype=bool)
@@ -287,7 +287,7 @@ def find_roc(table,
             r_fprs.append(currentfpr)
             r_tprs.append(currenttpr)
             groupsel.append(False)
-            print 'ROC point: ', currenttpr, currentfpr, names[besti], overallbest
+            print('ROC point: ', currenttpr, currentfpr, names[besti], overallbest)
 
     if plot_roc:
         plt.plot(r_fprs, r_tprs, 'k')
@@ -323,5 +323,5 @@ if __name__ == '__main__':
     elif len(sys.argv) == 4:
         find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2], costratio=[10.0, 10.0])
     else:
-        print 'Usage - python analyse_results.py tablename <number of profiles to train ROC curve on> <optional character or number to indicate that we want a conservative set of QC tests i.e. with very low false positive rate>'
+        print('Usage - python analyse_results.py tablename <number of profiles to train ROC curve on> <optional character or number to indicate that we want a conservative set of QC tests i.e. with very low false positive rate>')
 
