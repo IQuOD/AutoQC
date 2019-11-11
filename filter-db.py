@@ -1,10 +1,10 @@
-# usage: python filter-db.py <full table name> <filtered table name> <number of good / bad profiles to pick>
+# usage: python filter-db.py <full table name> <filtered table name> <number of good / bad profiles to pick> <db filename>
 
 import sys, sqlite3
 
-if len(sys.argv) == 4:
+if len(sys.argv) == 5:
 
-    conn = sqlite3.connect('iquod.db', isolation_level=None)
+    conn = sqlite3.connect(sys.argv[4], isolation_level=None)
     cur = conn.cursor()
 
     query = "DROP TABLE IF EXISTS " + sys.argv[2]
