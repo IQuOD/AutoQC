@@ -16,7 +16,7 @@ def run(test, profiles, parameters):
 
   return verbose
 
-def process_row(uid, logdir, table='iquod', targetdb):
+def process_row(uid, logdir, table='iquod', targetdb='iquod.db'):
   '''run all tests on the indicated database row'''
 
   # reroute stdout, stderr to separate files for each profile to preserve logs
