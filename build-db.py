@@ -187,8 +187,8 @@ elif len(sys.argv) == 5:
 
 else:
 
-    print('Usage: python build-db.py <inputdatafile> <databasetable>', or)
-    print('Usage: python build-db.py <inputdatafile> <databasetable> <output filename>', or)
+    print('Usage: python build-db.py <inputdatafile> <databasetable>, or')
+    print('Usage: python build-db.py <inputdatafile> <databasetable> <output filename>, or')
     print('Usage: python build-db.py <inputdatafile> <databasetable> <demand originator flags> <list of months to include (with no spaces or enclose in quotes)>')
 
 
