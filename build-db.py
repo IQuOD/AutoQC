@@ -69,9 +69,9 @@ def encodeTruth(p):
     return truth
 
 def builddb(check_originator_flag_type = True,
-            months_to_use = range(1, 13)):
+            months_to_use = range(1, 13), outfile='iquod.db'):
 
-    conn = sqlite3.connect('iquod.db', isolation_level=None)
+    conn = sqlite3.connect(outfile, isolation_level=None)
     cur = conn.cursor()
 
     # Identify tests
@@ -177,14 +177,19 @@ if len(sys.argv) == 3:
 
     builddb()
 
+elif len(sys.argv) == 4:
+
+    builddb(outfile=sys.argv[3])
+
 elif len(sys.argv) == 5:
 
     builddb(ast.literal_eval(sys.argv[3]), ast.literal_eval(sys.argv[4]))  
 
 else:
 
+    print('Usage: python build-db.py <inputdatafile> <databasetable>', or)
+    print('Usage: python build-db.py <inputdatafile> <databasetable> <output filename>', or)
     print('Usage: python build-db.py <inputdatafile> <databasetable> <demand originator flags> <list of months to include (with no spaces or enclose in quotes)>')
-    print('Example: python build-db.py data.wod mytable False [1,2,3,10]')
 
 
 
