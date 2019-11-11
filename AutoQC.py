@@ -39,7 +39,7 @@ def process_row(uid, logdir, table='iquod', targetdb='iquod.db'):
 
     try:
       query = "UPDATE " + table + " SET " + test + "=? WHERE uid=" + str(profile.uid()) + ";"
-      main.dbinteract(query, [main.pack_array(result)], targetdb)
+      main.dbinteract(query, [main.pack_array(result)], targetdb=targetdb)
     except:
       print('db exception', sys.exc_info())
 
