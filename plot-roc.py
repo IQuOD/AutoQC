@@ -78,13 +78,13 @@ def plotRow(row):
     pylab.savefig(dir + str(p.uid()) + '.png', bbox_inches='tight')
     plt.close()
 
-def plot_roc(inputdb='iquod.db'):
+def plot_roc(targetdb='iquod.db'):
 
     # get qc tests
     testNames = main.importQC('qctests')
 
     # connect to database
-    conn = sqlite3.connect(inputdb, isolation_level=None)
+    conn = sqlite3.connect(targetdb, isolation_level=None)
     cur = conn.cursor()
 
     # extract matrix of test results and true flags into a dataframe

@@ -167,7 +167,7 @@ def dictify(rows, keys):
 
   return dicts
 
-def dbinteract(command, values=[], tries=0, inputdb='iquod.db'):
+def dbinteract(command, values=[], tries=0, targetdb='iquod.db'):
   '''
   execute the given SQL command;
   catch errors and retry a maximum number of times;
@@ -175,7 +175,7 @@ def dbinteract(command, values=[], tries=0, inputdb='iquod.db'):
   
   max_retry = 100
 
-  conn = sqlite3.connect(inputdb, isolation_level=None, timeout=60)
+  conn = sqlite3.connect(targetdb, isolation_level=None, timeout=60)
   cur = conn.cursor()
   
   try:
@@ -201,13 +201,13 @@ def dbinteract(command, values=[], tries=0, inputdb='iquod.db'):
       print('database interaction failed after', max_retry, 'retries')
       return -1  
 
-def interact_many(query, values, tries=0, inputdb='iquod.db'):
+def interact_many(query, values, tries=0, targetdb='iquod.db'):
   # similar to dbinteract, but does executemany
   # intended exclusively for writes
 
   max_retry = 100
 
-  conn = sqlite3.connect(inputdb, isolation_level=None, timeout=60)
+  conn = sqlite3.connect(targetdb, isolation_level=None, timeout=60)
   cur = conn.cursor()
 
   try:
