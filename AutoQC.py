@@ -16,7 +16,7 @@ def run(test, profiles, parameters):
 
   return verbose
 
-def process_row(uid, logdir, table='iquod'):
+def process_row(uid, logdir, table='iquod', targetdb):
   '''run all tests on the indicated database row'''
 
   # reroute stdout, stderr to separate files for each profile to preserve logs
@@ -39,7 +39,7 @@ def process_row(uid, logdir, table='iquod'):
 
     try:
       query = "UPDATE " + table + " SET " + test + "=? WHERE uid=" + str(profile.uid()) + ";"
-      main.dbinteract(query, [main.pack_array(result)])
+      main.dbinteract(query, [main.pack_array(result)], targetdb)
     except:
       print('db exception', sys.exc_info())
 
@@ -50,6 +50,7 @@ def process_row(uid, logdir, table='iquod'):
 
 # parse options
 options, remainder = getopt.getopt(sys.argv[1:], 't:d:b:n:h')
+cores=1
 targetdb = 'iquod.db'
 dbtable = 'iquod'
 batchnumber = None
@@ -103,7 +104,7 @@ for test in testNames:
 
 # connect to database & fetch list of all uids
 query = 'SELECT uid FROM ' + dbtable + ' ORDER BY uid;'
-uids = main.dbinteract(query)
+uids = main.dbinteract(query, targetdb=targetdb)
 
 # launch async processes
 if batchnumber is not None and nperbatch is not None:
@@ -116,7 +117,7 @@ else:
   endindex    = len(uids)
 pool = Pool(processes=int(cores))
 for i in range(startindex, endindex):
-  pool.apply_async(process_row, (uids[i][0], logdir, dbtable))
+  pool.apply_async(process_row, (uids[i][0], logdir, dbtable, targetdb))
 pool.close()
 pool.join()
 
