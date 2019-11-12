@@ -24,7 +24,7 @@ def process_row(uid, logdir, table='iquod', targetdb='iquod.db'):
   sys.stderr = open(logdir + "/" + str(uid) + ".stderr", "w")
 
   # extract profile
-  profile = main.get_profile_from_db(uid, table)
+  profile = main.get_profile_from_db(uid, table, targetdb)
 
   # mask out error codes in temperature data
   main.catchFlags(profile)
@@ -93,7 +93,8 @@ print('\nPlease wait while QC is performed\n')
 
 # set up global parmaeter store
 parameterStore = {
-  "table": dbtable
+  "table": dbtable,
+  "db": targetdb
 }
 for test in testNames:
   exec('from qctests import ' + test)

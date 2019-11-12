@@ -127,13 +127,13 @@ def calcRates(testResults, trueResults):
 
   return tpr, fpr, fnr, tnr 
 
-def get_profile_from_db(uid, table):
+def get_profile_from_db(uid, table, targetdb):
   '''
   Given a unique id found in the current database table, return the corresponding WodPy profile object.
   '''
 
   command = 'SELECT * FROM ' + table + ' WHERE uid = ' + str(uid)
-  row = dbinteract(command)
+  row = dbinteract(command, targetdb=targetdb)
   profile = text2wod(row[0][0][1:-1])
   return profile
 
@@ -196,7 +196,7 @@ def dbinteract(command, values=[], tries=0, targetdb='iquod.db'):
     cur.close()
     conn.close()
     if tries < max_retry:
-      dbinteract(command, values, tries+1)
+      dbinteract(command, values, tries+1, targetdb=targetdb)
     else:
       print('database interaction failed after', max_retry, 'retries')
       return -1  
