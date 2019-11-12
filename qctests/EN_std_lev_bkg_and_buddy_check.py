@@ -57,7 +57,7 @@ def test(p, parameters, allow_level_reinstating=True):
 
     # Check if we have found a buddy and process if so.
     if minDist <= 400000:
-        pBuddy = main.get_profile_from_db(profiles[iMinDist][0])
+        pBuddy = main.get_profile_from_db(profiles[iMinDist][0], parameters['table'])
 
         # buddy vetos
         Fail = False

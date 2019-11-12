@@ -127,12 +127,12 @@ def calcRates(testResults, trueResults):
 
   return tpr, fpr, fnr, tnr 
 
-def get_profile_from_db(uid):
+def get_profile_from_db(uid, table):
   '''
   Given a unique id found in the current database table, return the corresponding WodPy profile object.
   '''
 
-  command = 'SELECT * FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid)
+  command = 'SELECT * FROM ' + table + ' WHERE uid = ' + str(uid)
   row = dbinteract(command)
   profile = text2wod(row[0][0][1:-1])
   return profile

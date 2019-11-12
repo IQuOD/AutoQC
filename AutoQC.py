@@ -24,7 +24,7 @@ def process_row(uid, logdir, table='iquod', targetdb='iquod.db'):
   sys.stderr = open(logdir + "/" + str(uid) + ".stderr", "w")
 
   # extract profile
-  profile = main.get_profile_from_db(uid)
+  profile = main.get_profile_from_db(uid, table)
 
   # mask out error codes in temperature data
   main.catchFlags(profile)
