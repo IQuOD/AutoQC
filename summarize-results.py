@@ -23,7 +23,7 @@ for opt, arg in options:
         print('-t <name of db file>')
         print('-h print this help message and quit')
 
-df        = dbutils.db_to_df(sys.argv[1])
+df        = dbutils.db_to_df(table=dbtable, targetdb=targetdb)
 testNames = df.columns[1:].values.tolist()
 
 print('{0:>35s} {1:>7s} {2:>7s} {3:>7s} {4:>7s} {5:>7s}'.format('NAME OF TEST', 'FAILS', 'TPR', 'FPR', 'TNR', 'FNR'))
