@@ -69,7 +69,7 @@ def test(p, parameters):
     for i in range(len(track_rows)):
         result.append((main.pack_array(EN_track_results[track_rows[i][0]]), track_rows[i][0]))
 
-    query = "UPDATE " + sys.argv[1] + " SET en_track_check=? WHERE uid=?"
+    query = "UPDATE " + parameters['table'] + " SET en_track_check=? WHERE uid=?"
     main.interact_many(query, result)
     return EN_track_results[uid]
 
