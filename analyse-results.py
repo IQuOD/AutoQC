@@ -203,8 +203,8 @@ def find_roc(table,
                     else:
                         if verbose: print('    ' + testname + ' not found and so was skipped')
             if bestchoice == '':
-                print('WARNING no suitable tests in group ' + key + ', skipping')
-                del groupdefinition['At least one from group'][bestgroup]
+                print('WARNING no suitable tests in group "' + key + '", skipping')
+                del groupdefinition['At least one from group'][key]
             else:
                 if verbose: print('  ' + bestchoice + ' was selected from group ' + bestgroup)
                 if fprs[besti] > 0:
