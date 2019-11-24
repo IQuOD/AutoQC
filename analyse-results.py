@@ -129,11 +129,11 @@ def find_roc(table,
         print('Number of quality checks to process is: ', len(testNames))
 
     # mark chosen profiles as part of the training set 
-    all_uids = main.dbinteract('SELECT uid from ' + sys.argv[1] + ';', targetdb=targetdb)
+    all_uids = main.dbinteract('SELECT uid from ' + table + ';', targetdb=targetdb)
     for uid in all_uids:
         uid = uid[0]
         is_training = int(uid in df['uid'].astype(int).as_matrix())
-        query = "UPDATE " + sys.argv[1] + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
+        query = "UPDATE " + table + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
         main.dbinteract(query, targetdb=targetdb)
 
     # Convert to numpy structures and make inverse versions of tests if required.
