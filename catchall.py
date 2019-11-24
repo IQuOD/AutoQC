@@ -84,7 +84,7 @@ for uid in all_uids:
     uid = uid[0]
     is_training = int(uid in df['uid'].astype(int).as_matrix())
     query = "UPDATE " + dbtable + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
-    main.dbinteract(query)
+    main.dbinteract(query, targetdb=targetdb)
 
 # algo. step 0:
 # demand individual QC tests have TPR/FPR > some threshold
