@@ -10,7 +10,7 @@
 ar =  __import__('analyse-results')
 import util.main as main
 import util.dbutils as dbutils
-import itertools, sys, json
+import itertools, sys, json, getopt
 from operator import itemgetter
 
 def ntuples(names, n=2):
@@ -38,18 +38,37 @@ def amend(combo, df):
     name = '&'.join(combo)
     return df.assign(xx=decision).rename(index=str, columns={'xx': name})
 
-print('==============')
-print(sys.argv[1])
-print('==============')
+# parse command line options
+options, remainder = getopt.getopt(sys.argv[1:], 't:d:n:h')
+targetdb = 'iquod.db'
+dbtable = 'iquod'
+samplesize = None
+for opt, arg in options:
+    if opt == '-d':
+        dbtable = arg
+    if opt == '-t':
+        targetdb = arg
+    if opt == '-n':
+        samplesize = int(arg)
+    if opt == '-h':
+        print('usage:')
+        print('-d <db table name to read from>')
+        print('-t <name of db file>')
+        print('-n <number of profiles to consider>')
+        print('-h print this help message and quit')
+if samplesize is None:
+    print('please provide a sample size to consider with the -n flag')
+    print('-h to print usage')
 
 # Read QC test specifications if required.
 groupdefinition = ar.read_qc_groups()
 
 # Read data from database into a pandas data frame.
-df = dbutils.db_to_df(sys.argv[1],
+df = dbutils.db_to_df(table=dbtable, 
+                      targetdb=targetdb,
                       filter_on_wire_break_test = False,
                       filter_on_tests = groupdefinition,
-                      n_to_extract = sys.argv[2])
+                      n_to_extract = samplesize)
 testNames = df.columns[2:].values.tolist()
 
 # declare some downstream constructs
@@ -60,11 +79,11 @@ bad = df.loc[df['Truth']]
 bad.reset_index(inplace=True, drop=True)
 
 # mark chosen profiles as part of the training set
-all_uids = main.dbinteract('SELECT uid from ' + sys.argv[1] + ';')
+all_uids = main.dbinteract('SELECT uid from ' + dbtable + ';')
 for uid in all_uids:
     uid = uid[0]
     is_training = int(uid in df['uid'].astype(int).as_matrix())
-    query = "UPDATE " + sys.argv[1] + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
+    query = "UPDATE " + dbtable + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
     main.dbinteract(query)
 
 # algo. step 0:
