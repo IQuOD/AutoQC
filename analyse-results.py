@@ -202,24 +202,27 @@ def find_roc(table,
                                     bestgroup  = key
                     else:
                         if verbose: print('    ' + testname + ' not found and so was skipped')
-            #assert bestchoice != '', '    Error, did not make a choice in group ' + key
-            if verbose: print('  ' + bestchoice + ' was selected from group ' + bestgroup)
-            if fprs[besti] > 0:
-                if tprs[besti] / fprs[besti] < effectiveness_ratio:
-                    print('WARNING - ' + bestchoice + ' TPR / FPR is below the effectiveness ratio limit: ', tprs[besti] / fprs[besti], effectiveness_ratio)
-            cumulative = np.logical_or(cumulative, tests[besti])
-            currenttpr, currentfpr, fnr, tnr = main.calcRates(cumulative, truth)
-            testcomb.append(names[besti])
-            r_fprs.append(currentfpr)
-            r_tprs.append(currenttpr)
-            groupsel.append(True)
-            # Once a test has been added, it can be deleted so that it is not considered again.
-            del names[besti]
-            del tests[besti]
-            del fprs[besti]
-            del tprs[besti]
-            del groupdefinition['At least one from group'][bestgroup]
-            print('ROC point from enforced group: ', currenttpr, currentfpr, testcomb[-1], bestgroup)
+            if bestchoice == '':
+                print('WARNING no suitable tests in group ' + key + ', skipping')
+                del groupdefinition['At least one from group'][bestgroup]
+            else:
+                if verbose: print('  ' + bestchoice + ' was selected from group ' + bestgroup)
+                if fprs[besti] > 0:
+                    if tprs[besti] / fprs[besti] < effectiveness_ratio:
+                        print('WARNING - ' + bestchoice + ' TPR / FPR is below the effectiveness ratio limit: ', tprs[besti] / fprs[besti], effectiveness_ratio)
+                cumulative = np.logical_or(cumulative, tests[besti])
+                currenttpr, currentfpr, fnr, tnr = main.calcRates(cumulative, truth)
+                testcomb.append(names[besti])
+                r_fprs.append(currentfpr)
+                r_tprs.append(currenttpr)
+                groupsel.append(True)
+                # Once a test has been added, it can be deleted so that it is not considered again.
+                del names[besti]
+                del tests[besti]
+                del fprs[besti]
+                del tprs[besti]
+                del groupdefinition['At least one from group'][bestgroup]
+                print('ROC point from enforced group: ', currenttpr, currentfpr, testcomb[-1], bestgroup)
 
     # Make combinations of the single checks and store.
     assert n_combination_iterations <= 2, 'Setting n_combination_iterations > 2 results in a very large number of combinations'
