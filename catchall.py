@@ -42,7 +42,7 @@ def amend(combo, df):
 options, remainder = getopt.getopt(sys.argv[1:], 't:d:n:o:h')
 targetdb = 'iquod.db'
 dbtable = 'iquod'
-outfile = 'catchall.json'
+outfile = 'htp.json'
 samplesize = None
 for opt, arg in options:
     if opt == '-d':
