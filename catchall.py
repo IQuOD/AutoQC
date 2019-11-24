@@ -79,7 +79,7 @@ bad = df.loc[df['Truth']]
 bad.reset_index(inplace=True, drop=True)
 
 # mark chosen profiles as part of the training set
-all_uids = main.dbinteract('SELECT uid from ' + dbtable + ';')
+all_uids = main.dbinteract('SELECT uid from ' + dbtable + ';', targetdb=targetdb)
 for uid in all_uids:
     uid = uid[0]
     is_training = int(uid in df['uid'].astype(int).as_matrix())
