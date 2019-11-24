@@ -301,11 +301,11 @@ def find_roc(table,
         plt.ylim(0, 100)
         plt.xlabel('False positive rate (%)')
         plt.ylabel('True positive rate (%)')
-        plt.savefig('roc.png')
+        plt.savefig(plot_roc)
         plt.close()
 
     if write_roc:
-        f = open('roc.json', 'w')
+        f = open(write_roc, 'w')
         r = {}
         r['tpr'] = r_tprs
         r['fpr'] = r_fprs
@@ -317,9 +317,11 @@ def find_roc(table,
 if __name__ == '__main__':
 
     # parse options
-    options, remainder = getopt.getopt(sys.argv[1:], 't:d:n:c:h')
+    options, remainder = getopt.getopt(sys.argv[1:], 't:d:n:c:o:p:h')
     targetdb = 'iquod.db'
     dbtable = 'iquod'
+    outfile = False
+    plotfile = False
     samplesize = None
     costratio = [10.0, 10.0]
     for opt, arg in options:
@@ -331,17 +333,23 @@ if __name__ == '__main__':
             samplesize = int(arg)
         if opt == '-c':
             costratio = ast.literal_eval(arg)
+        if opt == '-o':
+            outfile = arg
+        if opt == '-p':
+            plotfile = arg
         if opt == '-h':
             print('usage:')
             print('-d <db table name to read from>')
             print('-t <name of db file>')
             print('-n <number of profiles to consider>')
             print('-c <cost ratio array>')
+            print('-o <filename to write json results out to>')
+            print('-p <filename to write roc plot out to>')
             print('-h print this help message and quit')
     if samplesize is None:
         print('please provide a sample size to consider with the -n flag')
         print('-h to print usage')
 
-    find_roc(table=dbtable, targetdb=targetdb, n_profiles_to_analyse=samplesize, costratio=costratio)
+    find_roc(table=dbtable, targetdb=targetdb, n_profiles_to_analyse=samplesize, costratio=costratio, plot_roc=plotfile, write_roc=outfile)
 
 
