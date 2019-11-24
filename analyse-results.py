@@ -1,10 +1,8 @@
-import csv
-import json, pandas
+import csv, getopt, json, pandas, sys, ast
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
-import sys
 from util import dbutils, main
 
 def read_qc_groups(filename='qctest_groups.csv'):
@@ -65,7 +63,8 @@ def return_cost(costratio, tpr, fpr):
     cost  = (100.0 - tpr) / 100.0 * cost1 + tpr / 100.0 * cost2
     return cost
 
-def find_roc(table, 
+def find_roc(table,
+             targetdb,
              costratio=[2.5, 1.0],
              filter_on_wire_break_test=False,
              filter_from_file_spec=True,
@@ -107,7 +106,8 @@ def find_roc(table,
         groupdefinition = read_qc_groups()
 
     # Read data from database into a pandas data frame.
-    df = dbutils.db_to_df(sys.argv[1],
+    df = dbutils.db_to_df(table = table,
+                          targetdb = targetdb,
                           filter_on_wire_break_test = filter_on_wire_break_test,
                           filter_on_tests = groupdefinition,
                           n_to_extract = n_profiles_to_analyse)
@@ -129,12 +129,12 @@ def find_roc(table,
         print('Number of quality checks to process is: ', len(testNames))
 
     # mark chosen profiles as part of the training set 
-    all_uids = main.dbinteract('SELECT uid from ' + sys.argv[1] + ';')
+    all_uids = main.dbinteract('SELECT uid from ' + sys.argv[1] + ';', targetdb=targetdb)
     for uid in all_uids:
         uid = uid[0]
         is_training = int(uid in df['uid'].astype(int).as_matrix())
         query = "UPDATE " + sys.argv[1] + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
-        main.dbinteract(query)
+        main.dbinteract(query, targetdb=targetdb)
 
     # Convert to numpy structures and make inverse versions of tests if required.
     # Any test with true positive rate of zero is discarded.
@@ -316,12 +316,32 @@ def find_roc(table,
 
 if __name__ == '__main__':
 
-    # python analyse-results.py <database table name> <number of profiles to extract> <flag to generate a conservative set of QC tests - can be any value>
+    # parse options
+    options, remainder = getopt.getopt(sys.argv[1:], 't:d:n:c:h')
+    targetdb = 'iquod.db'
+    dbtable = 'iquod'
+    samplesize = None
+    costratio = [10.0, 10.0]
+    for opt, arg in options:
+        if opt == '-d':
+            dbtable = arg
+        if opt == '-t':
+            targetdb = arg
+        if opt == '-n':
+            samplesize = int(arg)
+        if opt == '-c':
+            costratio = ast.literal_eval(arg)
+        if opt == '-h':
+            print('usage:')
+            print('-d <db table name to read from>')
+            print('-t <name of db file>')
+            print('-n <number of profiles to consider>')
+            print('-c <cost ratio array>')
+            print('-h print this help message and quit')
+    if samplesize is None:
+        print('please provide a sample size to consider with the -n flag')
+        print('-h to print usage')
 
-    if len(sys.argv) == 3:
-        find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2])
-    elif len(sys.argv) == 4:
-        find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2], costratio=[10.0, 10.0])
-    else:
-        print('Usage - python analyse_results.py tablename <number of profiles to train ROC curve on> <optional character or number to indicate that we want a conservative set of QC tests i.e. with very low false positive rate>')
+    find_roc(table=dbtable, targetdb=targetdb, n_profiles_to_analyse=samplesize, costratio=costratio)
+
 
