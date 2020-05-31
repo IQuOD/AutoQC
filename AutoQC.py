@@ -49,10 +49,11 @@ def process_row(uid, logdir, table='iquod', targetdb='iquod.db'):
 ########################################
 
 # parse options
-options, remainder = getopt.getopt(sys.argv[1:], 't:d:b:n:h')
+options, remainder = getopt.getopt(sys.argv[1:], 't:d:b:n:p:l:h')
 cores=1
 targetdb = 'iquod.db'
 dbtable = 'iquod'
+logdir = '/AutoQClogs'
 batchnumber = None
 nperbatch = None
 for opt, arg in options:
@@ -60,6 +61,8 @@ for opt, arg in options:
         batchnumber = ast.literal_eval(arg)
     if opt == '-d':
         dbtable = arg
+    if opt == '-l':
+        logdir = arg
     if opt == '-n':
         cores = ast.literal_eval(arg)
     if opt == '-p':
@@ -70,6 +73,7 @@ for opt, arg in options:
         print('usage:')
         print('-b <batch number to process>')
         print('-d <db table name to create and write to>')
+        print('-l <directory to write logfiles to>')
         print('-n <number of cores to use>')
         print('-p <how many profiles to process per batch>')
         print('-t <name of db file>')
@@ -85,7 +89,7 @@ for testName in testNames:
   print('  {}'.format(testName))
 
 # set up a directory for logging
-logdir = "autoqc-logs-" + str(calendar.timegm(time.gmtime()))
+logdir = logdir + "/autoqc-logs-" + str(calendar.timegm(time.gmtime()))
 os.makedirs(logdir)
 
 # Parallel processing.
