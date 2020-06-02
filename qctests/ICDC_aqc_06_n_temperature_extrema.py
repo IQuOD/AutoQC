@@ -32,7 +32,7 @@ def test(p, parameters):
     maxextre   = 4
 
     # Check that we have the levels we need.
-    nlevels, z, t = ICDC.reordered_data(p)
+    nlevels, z, t = ICDC.reordered_data(p, parameters)
     if nlevels <= levminext: return qc
 
     # Exclude data outside allowed range.

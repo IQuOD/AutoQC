@@ -172,12 +172,11 @@ def dbinteract(command, values=[], tries=0, targetdb='iquod.db'):
   execute the given SQL command;
   catch errors and retry a maximum number of times;
   '''
-  
-  max_retry = 100
 
+  max_retry = 100
   conn = sqlite3.connect(targetdb, isolation_level=None, timeout=60)
   cur = conn.cursor()
-  
+
   try:
     cur.execute(command, values)
     try:
@@ -224,7 +223,7 @@ def interact_many(query, values, tries=0, targetdb='iquod.db'):
     cur.close()
     conn.close()
     if tries < max_retry:
-      interact_many(query, values, tries+1)
+      interact_many(query, values, tries+1, targetdb=targetdb)
     else:
       print('excecutemany failed after', max_retry, 'retries')
       return -1

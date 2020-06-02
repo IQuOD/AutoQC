@@ -60,7 +60,7 @@ for opt, arg in options:
     if opt == '-b':
         batchnumber = ast.literal_eval(arg)
     if opt == '-d':
-        dbtable = arg
+        dbtable = str(arg)
     if opt == '-l':
         logdir = arg
     if opt == '-n':
