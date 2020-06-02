@@ -10,7 +10,11 @@ def test_WOD_range_check_spotcheck():
     spot check the WOD_range_test
     '''
 
-    parameters = {}
+    parameters = {
+        'db': 'iquod.db',
+        'table': 'unit'
+    }
+
     qctests.WOD_range_check.loadParameters(parameters)
 
     # should just barely pass; temperatures at threshold for these depths

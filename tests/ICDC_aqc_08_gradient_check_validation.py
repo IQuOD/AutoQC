@@ -9,7 +9,10 @@ import numpy as np
 ##### --------------------------------------------------
 class TestClass:
 
-    parameters = {}
+    parameters = {
+        'db': 'iquod.db',
+        'table': 'unit'
+    }
 
     def setUp(self):
         # refresh this table every test

@@ -9,6 +9,7 @@ import numpy
 class TestClass:
 
     parameters = {
+        'db': 'iquod.db',
         "table": 'unit'
     }
     qctests.EN_background_check.loadParameters(parameters)

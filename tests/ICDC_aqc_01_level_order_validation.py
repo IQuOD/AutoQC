@@ -9,7 +9,10 @@ import numpy as np
 
 class TestClass:
 
-    parameters = {}
+    parameters = {
+        'db': 'iquod.db',
+        'table': 'unit'
+    }
 
     def setUp(self):
         # refresh this table every test
@@ -25,18 +28,18 @@ class TestClass:
                                             [2.0, -1.0, 1.0],
                                             uid=8888)
         qc              = ICDC.test(p, self.parameters)
-        nlevels, zr, tr = ICDC.reordered_data(p)
-        zreverted       = ICDC.revert_order(p, zr)    
-        zreverted_truth = np.ma.array([2.0, -1.0, 1.0], 
+        nlevels, zr, tr = ICDC.reordered_data(p, self.parameters)
+        zreverted       = ICDC.revert_order(p, zr, self.parameters)
+        zreverted_truth = np.ma.array([2.0, -1.0, 1.0],
                                       mask = [False, True, False])
-        
+
         assert np.array_equal(qc, [False, True, False]), 'QC error'
         assert nlevels == 2, 'Subsetting of levels incorrect'
         assert np.array_equal(zr, [1.0, 2.0]), 'Depth reorder failed'
         assert np.array_equal(tr, [3.0, 1.0]), 'Temperature reorder failed'
-        assert np.array_equal(zreverted.data[zreverted.mask == False],                       
+        assert np.array_equal(zreverted.data[zreverted.mask == False],
                               zreverted_truth.data[zreverted_truth.mask == False]),           'Revert data failed'
-        assert np.array_equal(zreverted.mask,                       
+        assert np.array_equal(zreverted.mask,
                               zreverted_truth.mask), 'Revert data failed'
 
     def test_ICDC_level_order(self):
@@ -64,7 +67,7 @@ class TestClass:
             assert np.array_equal(qc, qctruth), 'Example {} QC wrong'.format(i + 1)
 
             # Check that the reordering is correct.
-            nlevels, zr, tr = ICDC.reordered_data(p)
+            nlevels, zr, tr = ICDC.reordered_data(p, self.parameters)
             assert np.array_equal(zr, ztruth), 'Example {} zr wrong'.format(i + 1)
             assert np.array_equal(tr, ttruth), 'Example {} tr wrong'.format(i + 1)
 
