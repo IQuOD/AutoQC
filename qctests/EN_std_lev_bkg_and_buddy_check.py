@@ -34,7 +34,7 @@ def test(p, parameters, allow_level_reinstating=True):
     # Retrieve the background and observation error variances and
     # the background values.
     query = 'SELECT bgstdlevels, bgevstdlevels FROM enbackground WHERE uid = ' + str(p.uid())
-    enbackground_pars = main.dbinteract(query)
+    enbackground_pars = main.dbinteract(query, targetdb=parameters["db"])
     enbackground_pars = main.unpack_row(enbackground_pars[0])
 
     bgsl = enbackground_pars[0]
@@ -57,7 +57,7 @@ def test(p, parameters, allow_level_reinstating=True):
 
     # Check if we have found a buddy and process if so.
     if minDist <= 400000:
-        pBuddy = main.get_profile_from_db(profiles[iMinDist][0])
+        pBuddy = main.get_profile_from_db(profiles[iMinDist][0], parameters['table'], parameters['db'])
 
         # buddy vetos
         Fail = False
@@ -73,7 +73,7 @@ def test(p, parameters, allow_level_reinstating=True):
           result = stdLevelData(pBuddy, parameters)
 
           query = 'SELECT bgevstdlevels FROM enbackground WHERE uid = ' + str(pBuddy.uid())
-          buddy_pars = main.dbinteract(query)
+          buddy_pars = main.dbinteract(query, targetdb=parameters["db"])
 
           buddy_pars = main.unpack_row(buddy_pars[0])
 
@@ -239,7 +239,7 @@ def stdLevelData(p, parameters):
     # Get the data stored by the EN background check.
     # As it was run above we know that the data is available in the db.
     query = 'SELECT origlevels, ptlevels, bglevels FROM enbackground WHERE uid = ' + str(p.uid())
-    enbackground_pars = main.dbinteract(query)
+    enbackground_pars = main.dbinteract(query, targetdb=parameters["db"])
     enbackground_pars = main.unpack_row(enbackground_pars[0])
     origlevels = enbackground_pars[0]
     ptlevels = enbackground_pars[1]
@@ -378,4 +378,4 @@ def get_profile_info(parameters):
     # Gets information about the profiles from the database.
 
     query = 'SELECT uid,year,month,cruise,lat,long FROM ' + parameters['table']
-    return main.dbinteract(query)
+    return main.dbinteract(query, targetdb=parameters["db"])

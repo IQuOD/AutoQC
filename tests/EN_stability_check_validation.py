@@ -9,6 +9,7 @@ import util.main as main
 class TestClass:
 
     parameters = {
+        'db': 'iquod.db',
         "table": 'unit'
     }
 

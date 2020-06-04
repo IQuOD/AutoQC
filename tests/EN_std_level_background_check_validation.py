@@ -19,7 +19,7 @@ def profile_to_info_list(p):
     '''
     return (p.uid(),p.year(),p.month(),p.cruise(),p.latitude(),p.longitude())
 
-def dummy_get_profile_from_db(uid):
+def dummy_get_profile_from_db(uid, table, targetdb):
     if uid == 1:
         return realProfile1
     elif uid == 2:
@@ -34,7 +34,8 @@ def dummy_get_profile_from_db(uid):
 class TestClass:
 
     parameters = {
-        "table": 'unit'
+        "table": 'unit',
+        "db": 'iquod.db'
     }
     qctests.EN_background_check.loadParameters(parameters)
 

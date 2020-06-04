@@ -27,25 +27,25 @@ def test(p, parameters):
        negative depths.
     '''
     
-    uid, nlevels, origlevels, zr, tr, qc = level_order(p)
+    uid, nlevels, origlevels, zr, tr, qc = level_order(p, parameters)
 
     return qc
 
-def reordered_data(p):
+def reordered_data(p, parameters):
     '''Return number levels and depth, temperature in depth order.
        Only non-rejected levels are returned.
     '''
 
-    uid, nlevels, origlevels, zr, tr, qc = level_order(p)
+    uid, nlevels, origlevels, zr, tr, qc = level_order(p, parameters)
 
     return nlevels, zr, tr
 
-def revert_order(p, data):
+def revert_order(p, data, parameters):
     '''Return data in the original profile order. Data rejected in
        the level_order function are returned as missing data.
     '''
 
-    uid, nlevels, origlevels, zr, tr, qc = level_order(p)
+    uid, nlevels, origlevels, zr, tr, qc = level_order(p, parameters)
 
     datar      = np.ma.array(np.ndarray(p.n_levels()), 
                              dtype = data.dtype)
@@ -56,21 +56,21 @@ def revert_order(p, data):
 
     return datar
 
-def revert_qc_order(p, qc):
+def revert_qc_order(p, qc, parameters):
     '''Return QC array. Missing data values are set to False.'''
     
-    qcr = revert_order(p, qc)
+    qcr = revert_order(p, qc, parameters)
     qcr[qcr.mask] = False
     return qcr
 
-def level_order(p):
+def level_order(p, parameters):
     '''Reorders data into depth order and rejects levels with 
        negative depth.
     '''
     
     # check if the relevant info is already in the db
     query = 'SELECT nlevels, origlevels, zr, tr, qc FROM icdclevelorder WHERE uid = ' + str(p.uid())
-    precomputed = main.dbinteract(query)           
+    precomputed = main.dbinteract(query, targetdb=parameters["db"])
     if len(precomputed) > 0:
         nlevels = precomputed[0][0]
         origlevels = pickle.load(io.BytesIO(precomputed[0][1]))
@@ -112,11 +112,11 @@ def level_order(p):
     qc_p = pickle.dumps(qc, -1)
     
     query = "REPLACE INTO icdclevelorder VALUES(?,?,?,?,?,?)"
-    main.dbinteract(query, [p.uid(), nlevels, sqlite3.Binary(origlevels_p), sqlite3.Binary(zr_p), sqlite3.Binary(tr_p), sqlite3.Binary(qc_p)])
+    main.dbinteract(query, [p.uid(), nlevels, sqlite3.Binary(origlevels_p), sqlite3.Binary(zr_p), sqlite3.Binary(tr_p), sqlite3.Binary(qc_p)], targetdb=parameters["db"])
 
     return p.uid(), nlevels, origlevels, zr, tr, qc
 
 def loadParameters(parameterStore):
 
-    main.dbinteract("DROP TABLE IF EXISTS icdclevelorder")
-    main.dbinteract("CREATE TABLE IF NOT EXISTS icdclevelorder (uid INTEGER PRIMARY KEY, nlevels INTEGER, origlevels BLOB, zr BLOB, tr BLOB, qc BLOB)")
+    main.dbinteract("DROP TABLE IF EXISTS icdclevelorder", targetdb=parameterStore["db"])
+    main.dbinteract("CREATE TABLE IF NOT EXISTS icdclevelorder (uid INTEGER PRIMARY KEY, nlevels INTEGER, origlevels BLOB, zr BLOB, tr BLOB, qc BLOB)", targetdb=parameterStore["db"])

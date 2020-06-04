@@ -127,13 +127,13 @@ def calcRates(testResults, trueResults):
 
   return tpr, fpr, fnr, tnr 
 
-def get_profile_from_db(uid):
+def get_profile_from_db(uid, table, targetdb):
   '''
   Given a unique id found in the current database table, return the corresponding WodPy profile object.
   '''
 
-  command = 'SELECT * FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid)
-  row = dbinteract(command)
+  command = 'SELECT * FROM ' + table + ' WHERE uid = ' + str(uid)
+  row = dbinteract(command, targetdb=targetdb)
   profile = text2wod(row[0][0][1:-1])
   return profile
 
@@ -167,17 +167,16 @@ def dictify(rows, keys):
 
   return dicts
 
-def dbinteract(command, values=[], tries=0):
+def dbinteract(command, values=[], tries=0, targetdb='iquod.db'):
   '''
   execute the given SQL command;
   catch errors and retry a maximum number of times;
   '''
-  
-  max_retry = 100
 
-  conn = sqlite3.connect('iquod.db', isolation_level=None, timeout=60)
+  max_retry = 100
+  conn = sqlite3.connect(targetdb, isolation_level=None, timeout=60)
   cur = conn.cursor()
-  
+
   try:
     cur.execute(command, values)
     try:
@@ -196,18 +195,18 @@ def dbinteract(command, values=[], tries=0):
     cur.close()
     conn.close()
     if tries < max_retry:
-      dbinteract(command, values, tries+1)
+      dbinteract(command, values, tries+1, targetdb=targetdb)
     else:
       print('database interaction failed after', max_retry, 'retries')
       return -1  
 
-def interact_many(query, values, tries=0):
+def interact_many(query, values, tries=0, targetdb='iquod.db'):
   # similar to dbinteract, but does executemany
   # intended exclusively for writes
 
   max_retry = 100
 
-  conn = sqlite3.connect('iquod.db', isolation_level=None, timeout=60)
+  conn = sqlite3.connect(targetdb, isolation_level=None, timeout=60)
   cur = conn.cursor()
 
   try:
@@ -224,7 +223,7 @@ def interact_many(query, values, tries=0):
     cur.close()
     conn.close()
     if tries < max_retry:
-      interact_many(query, values, tries+1)
+      interact_many(query, values, tries+1, targetdb=targetdb)
     else:
       print('excecutemany failed after', max_retry, 'retries')
       return -1

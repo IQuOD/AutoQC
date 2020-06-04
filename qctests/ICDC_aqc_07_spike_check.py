@@ -25,7 +25,7 @@ def test(p, parameters):
     '''
     
     # The test is run on re-ordered data.
-    nlevels, z, t = ICDC.reordered_data(p)
+    nlevels, z, t = ICDC.reordered_data(p, parameters)
     qc = np.zeros(nlevels, dtype=bool) # Reordered data may be a subset of available levels.
     defaultqc = np.zeros(p.n_levels(), dtype=bool) # Default QC flags for full set of levels.
     if nlevels < 3: return defaultqc # Not enough levels to check.
@@ -70,7 +70,7 @@ def test(p, parameters):
     # Set QC flags.
     qc[ol[spike > spikemax]] = True
 
-    return ICDC.revert_qc_order(p, qc)
+    return ICDC.revert_qc_order(p, qc, parameters)
 
 
 

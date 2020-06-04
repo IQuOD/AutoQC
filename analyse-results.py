@@ -1,10 +1,8 @@
-import csv
-import json, pandas
+import csv, getopt, json, pandas, sys, ast
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
-import sys
 from util import dbutils, main
 
 def read_qc_groups(filename='qctest_groups.csv'):
@@ -65,7 +63,8 @@ def return_cost(costratio, tpr, fpr):
     cost  = (100.0 - tpr) / 100.0 * cost1 + tpr / 100.0 * cost2
     return cost
 
-def find_roc(table, 
+def find_roc(table,
+             targetdb,
              costratio=[2.5, 1.0],
              filter_on_wire_break_test=False,
              filter_from_file_spec=True,
@@ -107,7 +106,8 @@ def find_roc(table,
         groupdefinition = read_qc_groups()
 
     # Read data from database into a pandas data frame.
-    df = dbutils.db_to_df(sys.argv[1],
+    df = dbutils.db_to_df(table = table,
+                          targetdb = targetdb,
                           filter_on_wire_break_test = filter_on_wire_break_test,
                           filter_on_tests = groupdefinition,
                           n_to_extract = n_profiles_to_analyse)
@@ -129,12 +129,12 @@ def find_roc(table,
         print('Number of quality checks to process is: ', len(testNames))
 
     # mark chosen profiles as part of the training set 
-    all_uids = main.dbinteract('SELECT uid from ' + sys.argv[1] + ';')
+    all_uids = main.dbinteract('SELECT uid from ' + table + ';', targetdb=targetdb)
     for uid in all_uids:
         uid = uid[0]
         is_training = int(uid in df['uid'].astype(int).as_matrix())
-        query = "UPDATE " + sys.argv[1] + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
-        main.dbinteract(query)
+        query = "UPDATE " + table + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
+        main.dbinteract(query, targetdb=targetdb)
 
     # Convert to numpy structures and make inverse versions of tests if required.
     # Any test with true positive rate of zero is discarded.
@@ -202,24 +202,27 @@ def find_roc(table,
                                     bestgroup  = key
                     else:
                         if verbose: print('    ' + testname + ' not found and so was skipped')
-            #assert bestchoice != '', '    Error, did not make a choice in group ' + key
-            if verbose: print('  ' + bestchoice + ' was selected from group ' + bestgroup)
-            if fprs[besti] > 0:
-                if tprs[besti] / fprs[besti] < effectiveness_ratio:
-                    print('WARNING - ' + bestchoice + ' TPR / FPR is below the effectiveness ratio limit: ', tprs[besti] / fprs[besti], effectiveness_ratio)
-            cumulative = np.logical_or(cumulative, tests[besti])
-            currenttpr, currentfpr, fnr, tnr = main.calcRates(cumulative, truth)
-            testcomb.append(names[besti])
-            r_fprs.append(currentfpr)
-            r_tprs.append(currenttpr)
-            groupsel.append(True)
-            # Once a test has been added, it can be deleted so that it is not considered again.
-            del names[besti]
-            del tests[besti]
-            del fprs[besti]
-            del tprs[besti]
-            del groupdefinition['At least one from group'][bestgroup]
-            print('ROC point from enforced group: ', currenttpr, currentfpr, testcomb[-1], bestgroup)
+            if bestchoice == '':
+                print('WARNING no suitable tests in group "' + key + '", skipping')
+                del groupdefinition['At least one from group'][key]
+            else:
+                if verbose: print('  ' + bestchoice + ' was selected from group ' + bestgroup)
+                if fprs[besti] > 0:
+                    if tprs[besti] / fprs[besti] < effectiveness_ratio:
+                        print('WARNING - ' + bestchoice + ' TPR / FPR is below the effectiveness ratio limit: ', tprs[besti] / fprs[besti], effectiveness_ratio)
+                cumulative = np.logical_or(cumulative, tests[besti])
+                currenttpr, currentfpr, fnr, tnr = main.calcRates(cumulative, truth)
+                testcomb.append(names[besti])
+                r_fprs.append(currentfpr)
+                r_tprs.append(currenttpr)
+                groupsel.append(True)
+                # Once a test has been added, it can be deleted so that it is not considered again.
+                del names[besti]
+                del tests[besti]
+                del fprs[besti]
+                del tprs[besti]
+                del groupdefinition['At least one from group'][bestgroup]
+                print('ROC point from enforced group: ', currenttpr, currentfpr, testcomb[-1], bestgroup)
 
     # Make combinations of the single checks and store.
     assert n_combination_iterations <= 2, 'Setting n_combination_iterations > 2 results in a very large number of combinations'
@@ -301,11 +304,11 @@ def find_roc(table,
         plt.ylim(0, 100)
         plt.xlabel('False positive rate (%)')
         plt.ylabel('True positive rate (%)')
-        plt.savefig('roc.png')
+        plt.savefig(plot_roc)
         plt.close()
 
     if write_roc:
-        f = open('roc.json', 'w')
+        f = open(write_roc, 'w')
         r = {}
         r['tpr'] = r_tprs
         r['fpr'] = r_fprs
@@ -316,12 +319,40 @@ def find_roc(table,
 
 if __name__ == '__main__':
 
-    # python analyse-results.py <database table name> <number of profiles to extract> <flag to generate a conservative set of QC tests - can be any value>
+    # parse options
+    options, remainder = getopt.getopt(sys.argv[1:], 't:d:n:c:o:p:h')
+    targetdb = 'iquod.db'
+    dbtable = 'iquod'
+    outfile = False
+    plotfile = False
+    samplesize = None
+    costratio = [10.0, 10.0]
+    for opt, arg in options:
+        if opt == '-d':
+            dbtable = arg
+        if opt == '-t':
+            targetdb = arg
+        if opt == '-n':
+            samplesize = int(arg)
+        if opt == '-c':
+            costratio = ast.literal_eval(arg)
+        if opt == '-o':
+            outfile = arg
+        if opt == '-p':
+            plotfile = arg
+        if opt == '-h':
+            print('usage:')
+            print('-d <db table name to read from>')
+            print('-t <name of db file>')
+            print('-n <number of profiles to consider>')
+            print('-c <cost ratio array>')
+            print('-o <filename to write json results out to>')
+            print('-p <filename to write roc plot out to>')
+            print('-h print this help message and quit')
+    if samplesize is None:
+        print('please provide a sample size to consider with the -n flag')
+        print('-h to print usage')
 
-    if len(sys.argv) == 3:
-        find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2])
-    elif len(sys.argv) == 4:
-        find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2], costratio=[10.0, 10.0])
-    else:
-        print('Usage - python analyse_results.py tablename <number of profiles to train ROC curve on> <optional character or number to indicate that we want a conservative set of QC tests i.e. with very low false positive rate>')
+    find_roc(table=dbtable, targetdb=targetdb, n_profiles_to_analyse=samplesize, costratio=costratio, plot_roc=plotfile, write_roc=outfile)
+
 

@@ -57,7 +57,7 @@ def run_qc(p, parameters):
     # Remove missing data points.
     iOK = (clim.mask == False) & (bgev.mask == False)
     if np.count_nonzero(iOK) == 0: 
-        record_parameters(p, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels)
+        record_parameters(p, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels, parameters)
         return qc
     clim = clim[iOK]
     bgev = bgev[iOK]
@@ -125,11 +125,11 @@ def run_qc(p, parameters):
             origLevels.append(iLevel)
             ptLevels.append(potm)
             bgLevels.append(climLevel)
-    record_parameters(p, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels)
+    record_parameters(p, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels, parameters)
 
     return qc
 
-def record_parameters(profile, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels):
+def record_parameters(profile, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels, parameters):
     # pack the parameter arrays into the enbackground table
     # for consumption by the buddy check
 
@@ -139,7 +139,7 @@ def record_parameters(profile, bgStdLevels, bgevStdLevels, origLevels, ptLevels,
     ptlevels = main.pack_array(ptLevels)
     bglevels = main.pack_array(bgLevels)
     query = "REPLACE INTO enbackground VALUES(?,?,?,?,?,?);"
-    main.dbinteract(query, [profile.uid(), bgstdlevels, bgevstdlevels, origlevels, ptlevels, bglevels])
+    main.dbinteract(query, [profile.uid(), bgstdlevels, bgevstdlevels, origlevels, ptlevels, bglevels], targetdb=parameters["db"])
 
 
 def findGridCell(p, gridLong, gridLat):
@@ -203,8 +203,8 @@ def readENBackgroundCheckAux():
 
 def loadParameters(parameterStore):
 
-    main.dbinteract("DROP TABLE IF EXISTS enbackground")
-    main.dbinteract("CREATE TABLE IF NOT EXISTS enbackground (uid INTEGER PRIMARY KEY, bgstdlevels BLOB, bgevstdlevels BLOB, origlevels BLOB, ptlevels BLOB, bglevels BLOB)")
+    main.dbinteract("DROP TABLE IF EXISTS enbackground", targetdb=parameterStore["db"])
+    main.dbinteract("CREATE TABLE IF NOT EXISTS enbackground (uid INTEGER PRIMARY KEY, bgstdlevels BLOB, bgevstdlevels BLOB, origlevels BLOB, ptlevels BLOB, bglevels BLOB)", targetdb=parameterStore["db"])
     parameterStore['enbackground'] = readENBackgroundCheckAux()
 
 

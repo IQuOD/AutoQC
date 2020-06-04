@@ -83,10 +83,11 @@ def unpack_qc_results(results):
 def db_to_df(table,
              filter_on_wire_break_test=False, 
              filter_on_tests={},
-             n_to_extract=numpy.iinfo(numpy.int32).max):
+             n_to_extract=numpy.iinfo(numpy.int32).max,
+             targetdb='iquod.db'):
 
     '''
-    Reads the table from iquod.db into a pandas dataframe.
+    Reads the table from targetdb into a pandas dataframe.
     If filter_on_wire_break_test is True, the results from that test are used to exclude
          levels below a wire break from the test results and the wire break test is not returned.
     filter_on_tests is a generalised form of filter_on_wire_break and is used to exclude results; it takes a list of
@@ -99,7 +100,7 @@ def db_to_df(table,
     testNames.sort()
 
     # connect to database
-    conn = sqlite3.connect('iquod.db', isolation_level=None)
+    conn = sqlite3.connect(targetdb, isolation_level=None)
     cur = conn.cursor()
 
     # extract matrix of test results and true flags into a dataframe
