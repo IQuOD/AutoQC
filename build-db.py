@@ -1,7 +1,7 @@
-# usage: python build-db.py <wod ascii file name> <table name to append to>
+# usage help: python build-db.py -h
 
 from wodpy import wod
-import sys, sqlite3
+import sys, sqlite3, getopt
 import util.main as main
 import util.dbutils as dbutils
 import numpy as np
@@ -29,9 +29,10 @@ def assessProfile(p, check_originator_flag_type, months_to_use):
 
     # no valid originator flag type
     if check_originator_flag_type:
-        if int(p.originator_flag_type()) not in range(1,15):
+        o_flag = p.originator_flag_type()
+        if o_flag is not None and int(o_flag) not in range(1,15):
             return False
-            
+
     # check month
     if p.month() not in months_to_use:
         return False
@@ -46,12 +47,12 @@ def assessProfile(p, check_originator_flag_type, months_to_use):
 
         # if temperature isn't masked:
         # it had better be a float
-        if not isinstance(temp.data[i], float):
+        if not isinstance(temp.data[i], np.float):
             return False
         # needs to have a valid QC decision:
         if tempqc.mask[i]:
             return False
-        if not isinstance(tempqc.data[i], int):
+        if not isinstance(tempqc.data[i], np.integer):
             return False
         if not tempqc.data[i] > 0:
             return False
@@ -67,10 +68,10 @@ def encodeTruth(p):
             truth[i] = 99
     return truth
 
-def builddb(check_originator_flag_type = True,
-            months_to_use = range(1, 13)):
+def builddb(infile, check_originator_flag_type = True,
+            months_to_use = range(1, 13), outfile='iquod.db', dbtable='iquod'):
 
-    conn = sqlite3.connect('iquod.db', isolation_level=None)
+    conn = sqlite3.connect(outfile, isolation_level=None)
     cur = conn.cursor()
 
     # Identify tests
@@ -78,7 +79,7 @@ def builddb(check_originator_flag_type = True,
     testNames.sort()
 
     # set up our table
-    query = "CREATE TABLE IF NOT EXISTS " + sys.argv[2] + """(
+    query = "CREATE TABLE IF NOT EXISTS " + dbtable + """(
                 raw text,
                 truth BLOB,
                 uid integer PRIMARY KEY,
@@ -105,7 +106,7 @@ def builddb(check_originator_flag_type = True,
     cur.execute(query)
 
     # populate table from wod-ascii data
-    fid = open(sys.argv[1])
+    fid = open(infile)
     uids = []
     good = 0
     bad = 0
@@ -161,29 +162,45 @@ def builddb(check_originator_flag_type = True,
         else:
             good += 1
 
-        query = "INSERT INTO " + sys.argv[2] + " (raw, truth, uid, year, month, day, time, lat, long, country, cruise, ocruise, probe, flagged) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?);"
+        query = "INSERT INTO " + dbtable + " (raw, truth, uid, year, month, day, time, lat, long, country, cruise, ocruise, probe, flagged) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?);"
         values = (p['raw'], p['truth'], p['uid'], p['year'], p['month'], p['day'], p['time'], p['latitude'], p['longitude'], country, p['cruise'], orig_cruise, p['probe_type'], int(flagged))
-        main.dbinteract(query, values)
+        main.dbinteract(query, values, targetdb=outfile)
         if profile.is_last_profile_in_file(fid) == True:
             break
 
     conn.commit()
-    print 'number of clean profiles written:', good
-    print 'number of flagged profiles written:', bad
-    print 'total number of profiles written:', good+bad
+    print('number of clean profiles written:', good)
+    print('number of flagged profiles written:', bad)
+    print('total number of profiles written:', good+bad)
 
-if len(sys.argv) == 3:
+# parse options
+options, remainder = getopt.getopt(sys.argv[1:], 'o:i:d:fm:h')
+inputdata = None
+dbtable = 'iquod'
+outfile = 'iquod.db'
+origflags = True
+months = range(1, 13)
+for opt, arg in options:
+    if opt == '-o':
+        outfile = arg
+    if opt == '-i':
+        inputdata = arg
+    if opt == '-d':
+        dbtable = arg
+    if opt == '-f':
+        origflags = False
+    if opt == '-m':
+        months = ast.literal_eval(arg)
+    if opt == '-h':
+        print('usage:')
+        print('-d <db table name to create and write to>')
+        print('-f dont check originator flags')
+        print('-h print this help message and quit')
+        print('-i <filename of raw WOD ascii data> (mandatory)')
+        print('-o <output file name>')
+        print('-m <list of months to include>')
+if inputdata is None:
+    print('Must provide raw ascii input data file with the flag `-i`')
 
-    builddb()
-    
-elif len(sys.argv) == 5:
-
-    builddb(ast.literal_eval(sys.argv[3]), ast.literal_eval(sys.argv[4]))  
-
-else:
-
-    print 'Usage: python build-db.py <inputdatafile> <databasetable> <demand originator flags> <list of months to include (with no spaces or enclose in quotes)>' 
-    print 'Example: python build-db.py data.wod mytable False [1,2,3,10]'
-
-
+builddb(inputdata, check_originator_flag_type = origflags, months_to_use = months, outfile = outfile, dbtable = dbtable)
 

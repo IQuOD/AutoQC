@@ -26,7 +26,7 @@ def test(p, parameters):
 
     # don't bother if this has already been analyzed
     command = 'SELECT en_track_check FROM ' + parameters["table"] + ' WHERE uid = ' + str(uid) + ';'
-    en_track_result = main.dbinteract(command)
+    en_track_result = main.dbinteract(command, targetdb=parameters["db"])
     if en_track_result[0][0] is not None:
         en_track_result = main.unpack_row(en_track_result[0])[0]
         result = np.zeros(1, dtype=bool)
@@ -39,7 +39,7 @@ def test(p, parameters):
 
     # fetch all profiles on track, sorted chronologically, earliest first (None sorted as highest), then by uid
     command = 'SELECT uid, year, month, day, time, lat, long, probe, raw FROM ' + parameters["table"] + ' WHERE cruise = ' + str(cruise) + ' and country = "' + str(country) + '" and ocruise = "' + str(originator_cruise) + '" and year is not null and month is not null and day is not null and time is not null ORDER BY year, month, day, time, uid ASC;'
-    track_rows = main.dbinteract(command)
+    track_rows = main.dbinteract(command, targetdb=parameters["db"])
 
     # avoid inappropriate profiles
     track_rows = [tr for tr in track_rows if assess_usability_raw(tr[8][1:-1])]
@@ -69,8 +69,8 @@ def test(p, parameters):
     for i in range(len(track_rows)):
         result.append((main.pack_array(EN_track_results[track_rows[i][0]]), track_rows[i][0]))
 
-    query = "UPDATE " + sys.argv[1] + " SET en_track_check=? WHERE uid=?"
-    main.interact_many(query, result)
+    query = "UPDATE " + parameters['table'] + " SET en_track_check=? WHERE uid=?"
+    main.interact_many(query, result, targetdb=parameters['db'])
     return EN_track_results[uid]
 
 #def sliceTrack(p, rows, margin=7):
@@ -204,14 +204,14 @@ def calculateTraj(rows):
     by the time-ordered list of rows.
     '''
 
-    speeds = [None]
-    angles = [None]
+    speeds = [-99999]
+    angles = [-99999]
 
     # Find speed and angle for all profiles remaining in the list
     for i in range(1, len(rows)):
 
-        speeds.append(None)
-        angles.append(None)
+        speeds.append(-99999)
+        angles.append(-99999)
         speeds[i] = trackSpeed(rows[i-1], rows[i])
 
         if i < len(rows)-1: # can't do angle on last point 
@@ -340,10 +340,10 @@ def condition_d(rows, speeds, angles, index, maxSpeed):
     assess condition (d) from the text
     '''
 
-    if None not in [angles[index-1], angles[index]] and angles[index-1] > 45./180.*math.pi + angles[index]:
+    if -99999 not in [angles[index-1], angles[index]] and angles[index-1] > 45./180.*math.pi + angles[index]:
         return index-1, 'd'
 
-    if None not in [angles[index-1], angles[index]] and angles[index] > 45./180.*math.pi + angles[index-1]:
+    if -99999 not in [angles[index-1], angles[index]] and angles[index] > 45./180.*math.pi + angles[index-1]:
         return index, 'd'
 
     return condition_e(rows, speeds, angles, index, maxSpeed)
@@ -355,10 +355,10 @@ def condition_e(rows, speeds, angles, index, maxSpeed):
 
     if len(rows) > max(2, index+1):
 
-        if None not in [angles[index-2], angles[index+1]] and angles[index-2] > 45./180.*math.pi and angles[index-2] > angles[index+1]:
+        if -99999 not in [angles[index-2], angles[index+1]] and angles[index-2] > 45./180.*math.pi and angles[index-2] > angles[index+1]:
             return index-1, 'e'
 
-        if None not in [angles[index+1]] and angles[index+1] > 45./180.*math.pi:
+        if -99999 not in [angles[index+1]] and angles[index+1] > 45./180.*math.pi:
             return index, 'e'
 
     return condition_f(rows, speeds, angles, index, maxSpeed)
@@ -372,10 +372,10 @@ def condition_f(rows, speeds, angles, index, maxSpeed):
 
         ms = meanSpeed(speeds, rows, maxSpeed)
 
-        if None not in [speeds[index-1], speeds[index+1]] and speeds[index-1] < min([speeds[index+1], 0.5*ms]):
+        if -99999 not in [speeds[index-1], speeds[index+1]] and speeds[index-1] < min([speeds[index+1], 0.5*ms]):
             return index-1, 'f'
 
-        if None not in [speeds[index-1], speeds[index+1]] and speeds[index+1] < min([speeds[index-1], 0.5*ms]):
+        if -99999 not in [speeds[index-1], speeds[index+1]] and speeds[index+1] < min([speeds[index-1], 0.5*ms]):
             return index, 'f'
 
     return condition_g(rows, speeds, angles, index, maxSpeed)

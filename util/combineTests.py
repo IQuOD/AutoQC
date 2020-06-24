@@ -160,11 +160,11 @@ def combineTests(logicTable):
 
     for each_partition in partitions:
         combo = combineLogic(logicTable, each_partition)
-        #print combo, each_partition
+        #print(combo, each_partition)
         results.append([each_partition, combo, True])
         if not unitRows(each_partition):
             combo = combineLogic(logicTable, each_partition, False)
-            #print combo, each_partition, 'Logic Switched'
+            #print(combo, each_partition, 'Logic Switched')
             results.append([each_partition, combo, False])
 
     return results

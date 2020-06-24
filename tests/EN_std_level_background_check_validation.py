@@ -4,7 +4,7 @@ import qctests.EN_spike_and_step_check
 from cotede.qctests.possible_speed import haversine
 from util import main
 import util.testingProfile
-import numpy, pickle, StringIO
+import numpy, pickle, io
 
 # Dummy functions to turn off functions that do not
 # work on a testing profile.
@@ -19,7 +19,7 @@ def profile_to_info_list(p):
     '''
     return (p.uid(),p.year(),p.month(),p.cruise(),p.latitude(),p.longitude())
 
-def dummy_get_profile_from_db(uid):
+def dummy_get_profile_from_db(uid, table, targetdb):
     if uid == 1:
         return realProfile1
     elif uid == 2:
@@ -31,10 +31,11 @@ def dummy_get_profile_from_db(uid):
 
 ##### EN_std_lev_bkg_and_buddy_check ---------------------------------------------------
 
-class TestClass():
+class TestClass:
 
     parameters = {
-        "table": 'unit'
+        "table": 'unit',
+        "db": 'iquod.db'
     }
     qctests.EN_background_check.loadParameters(parameters)
 
@@ -57,7 +58,7 @@ class TestClass():
         Make sure EN_std_level_background_check is flagging temperature excursions
         '''
 
-        p = util.testingProfile.fakeProfile([1.8, 1.8, 1.8, 7.1], [0.0, 2.5, 5.0, 7.5], latitude=55.6, longitude=12.9, date=[1900, 01, 15, 0], probe_type=7, uid=8888) 
+        p = util.testingProfile.fakeProfile([1.8, 1.8, 1.8, 7.1], [0.0, 2.5, 5.0, 7.5], latitude=55.6, longitude=12.9, date=[1900, 1, 15, 0], probe_type=7, uid=8888) 
         qc = qctests.EN_std_lev_bkg_and_buddy_check.test(p, self.parameters)
         expected = [False, False, False, False]
         assert numpy.array_equal(qc, expected), 'mismatch between qc results and expected values'
@@ -67,7 +68,7 @@ class TestClass():
         totally ridiculous differences between observation and background should give pge == 1
         '''
 
-        p = util.testingProfile.fakeProfile([1.8, 1.8, 1.8, 7.1], [0.0, 2.5, 5.0, 7.5], latitude=55.6, longitude=12.9, date=[1900, 01, 15, 0], probe_type=7, uid=8888) 
+        p = util.testingProfile.fakeProfile([1.8, 1.8, 1.8, 7.1], [0.0, 2.5, 5.0, 7.5], latitude=55.6, longitude=12.9, date=[1900, 1, 15, 0], probe_type=7, uid=8888) 
         levels = numpy.ma.array([1000,1000,1000,1000])
         levels.mask = False
 
@@ -75,7 +76,7 @@ class TestClass():
         qctests.EN_background_check.test(p, self.parameters) #need to populate the enbackground db with profile specific info
         query = 'SELECT bgevstdlevels FROM enbackground WHERE uid = 8888'
         enbackground_pars = main.dbinteract(query) 
-        bgev = pickle.load(StringIO.StringIO(enbackground_pars[0][0]))
+        bgev = numpy.load(io.BytesIO(enbackground_pars[0][0]),allow_pickle=True)
 
         obev = self.parameters['enbackground']['obev']
         expected = [1.0, 1.0, 1.0, 1.0]

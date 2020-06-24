@@ -6,7 +6,7 @@ def test(p, parameters):
 
     config   = 'argo'
     testname = 'density_inversion'
-    
+
     qc = get_qc(p, config, testname)
 
     return qc

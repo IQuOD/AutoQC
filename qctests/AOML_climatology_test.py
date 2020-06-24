@@ -6,7 +6,6 @@ import util.AOMLinterpolation as interp_helper
 import util.AOMLnetcdf as read_netcdf
 
 def test(p, parameters):
-
     qc = numpy.zeros(p.n_levels(), dtype=bool)
 
     # check for gaps in data
@@ -26,7 +25,7 @@ def test(p, parameters):
         interpTemp = interp_helper.temperature_interpolation_process(p.longitude(), p.latitude(), p.z()[i], depthColumns1, latLonsList1, lonlatWithTempsList1, False, "climaInterpTemperature")
         if interpTemp == 99999.99:
             continue
-    
+
         interpTempSD = interp_helper.temperature_interpolation_process(p.longitude(), p.latitude(), p.z()[i], depthColumns2, latLonsList2, lonlatWithTempsList2, False, "climaInterpStandardDev")
         if interpTempSD == 99999.99:
             continue
@@ -34,7 +33,7 @@ def test(p, parameters):
         # check if temperature at this depth is sufficiently close to the climatological expectation
         qc[i] = climatology_check(p.t()[i], interpTemp, interpTempSD) >= 4
 
-    return qc 
+    return qc
 
 def climatology_check(temperature, interpMNTemp, interpSDTemp, sigmaFactor=5.0):
   """

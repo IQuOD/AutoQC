@@ -15,7 +15,7 @@ c/ PURPOSE:
 c    to check temperature profile for stuck value/unrealistically thick thermostad 
 '''
 
-import ICDC_aqc_01_level_order as ICDC
+from . import ICDC_aqc_01_level_order as ICDC
 import numpy as np
 from util.wod import wod_database
 
@@ -44,7 +44,7 @@ def test(p, parameters):
         return qc # Do not have the information to QC other types.
     
     # Check that we have the levels we need.
-    nlevels, z, t = ICDC.reordered_data(p)
+    nlevels, z, t = ICDC.reordered_data(p, parameters)
     if nlevels <= minlevs: return qc
     
     # Count stuck values.
@@ -63,7 +63,7 @@ def test(p, parameters):
         # If setting the QC flags we need to be careful about level order.
         qclo = qc[0:nlevels]
         qclo[i:i+n[i]] = True
-        qc = ICDC.revert_qc_order(p, qclo)
+        qc = ICDC.revert_qc_order(p, qclo, parameters)
 
     return qc
 

@@ -7,9 +7,12 @@ import numpy as np
 
 ##### ICDC number of temperature extrema.
 ##### --------------------------------------------------
-class TestClass():
+class TestClass:
 
-    parameters = {}
+    parameters = {
+        'db': 'iquod.db',
+        'table': 'unit'
+    }
 
     def setUp(self):
         # refresh this table every test

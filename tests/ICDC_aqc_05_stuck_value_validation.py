@@ -8,9 +8,12 @@ import numpy as np
 ##### ICDC stuck value check.
 ##### --------------------------------------------------
 
-class TestClass():
+class TestClass:
 
-    parameters = {}
+    parameters = {
+        'db': 'iquod.db',
+        'table': 'unit'
+    }
 
     def setUp(self):
         # refresh this table every test

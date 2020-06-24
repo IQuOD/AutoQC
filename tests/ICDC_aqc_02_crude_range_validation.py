@@ -8,9 +8,12 @@ import numpy as np
 ##### ICDC crude range check.
 ##### --------------------------------------------------
 
-class TestClass():
+class TestClass:
 
-    parameters = {}
+    parameters = {
+        'db': 'iquod.db',
+        'table': 'unit'
+    }
 
     def setUp(self):
         # refresh this table every test
@@ -36,7 +39,7 @@ class TestClass():
             p = util.testingProfile.fakeProfile(t, z, uid=i)
             qc = ICDC_crude_range.test(p, self.parameters)
 
-            assert np.array_equal(qc, qctruth), 'Example %i failed' % (i + 1)
+            assert np.array_equal(qc, qctruth), 'Example {} failed'.format(i + 1)
 
 # Data provided by Viktor Gouretski, ICDC, University of Hamburg.
 example1 = np.array([

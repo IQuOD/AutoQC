@@ -1,40 +1,41 @@
-""" 
-Implements the background check on reported levels from the EN quality control 
+"""
+Implements the background check on reported levels from the EN quality control
 system, http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 """
 
-import EN_spike_and_step_check, gsw
+from . import EN_spike_and_step_check
+import gsw
 import numpy as np
 import util.obs_utils as outils
 from netCDF4 import Dataset
 import util.main as main
 
 def test(p, parameters):
-    """ 
-    Runs the quality control check on profile p and returns a numpy array 
-    of quality control decisions with False where the data value has 
-    passed the check and True where it failed. 
     """
-    
+    Runs the quality control check on profile p and returns a numpy array
+    of quality control decisions with False where the data value has
+    passed the check and True where it failed.
+    """
+
     # Check if the QC of this profile was already done and if not
     # run the QC.
-    query = 'SELECT en_background_check FROM ' + parameters["table"] + ' WHERE uid = ' + str(p.uid()) + ';'
-    qc_log = main.dbinteract(query)
-    qc_log = main.unpack_row(qc_log[0])
+    #query = 'SELECT en_background_check FROM {} WHERE uid = {};'.format(parameters["table"], p.uid())
+    #qc_log = main.dbinteract(query)
+    #qc_log = main.unpack_row(qc_log[0])
 
-    if qc_log[0] is not None:
-        return qc_log[0]
-        
+    #if qc_log[0] is not None:
+    #    return qc_log[0]
+
     return run_qc(p, parameters)
 
 def run_qc(p, parameters):
     """
     Performs the QC check.
     """
-    
+
     # Define an array to hold results.
     qc = np.zeros(p.n_levels(), dtype=bool)
-    
+
     # Create a record of the processing for use by the background
     # and buddy checks on standard levels.
     origLevels = []
@@ -43,7 +44,7 @@ def run_qc(p, parameters):
 
     # Find grid cell nearest to the observation.
     ilon, ilat = findGridCell(p, parameters['enbackground']['lon'], parameters['enbackground']['lat'])
-        
+
     # Extract the relevant auxiliary data.
     imonth = p.month() - 1
     clim = parameters['enbackground']['clim'][:, ilat, ilon, imonth]
@@ -56,13 +57,13 @@ def run_qc(p, parameters):
     # Remove missing data points.
     iOK = (clim.mask == False) & (bgev.mask == False)
     if np.count_nonzero(iOK) == 0: 
-        record_parameters(p, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels)
+        record_parameters(p, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels, parameters)
         return qc
     clim = clim[iOK]
     bgev = bgev[iOK]
     obev = obev[iOK]
     depths = depths[iOK]
-    
+
     # Find which levels have data.
     t = p.t()
     s = p.s()
@@ -82,7 +83,7 @@ def run_qc(p, parameters):
     # Loop over levels.
     for iLevel in range(p.n_levels()):
         if isData[iLevel] == False: continue
-        
+
         # Get the climatology and error variance values at this level.
         climLevel = np.interp(z[iLevel], depths, clim, right=99999)
         bgevLevel = np.interp(z[iLevel], depths, bgev, right=99999)
@@ -124,11 +125,11 @@ def run_qc(p, parameters):
             origLevels.append(iLevel)
             ptLevels.append(potm)
             bgLevels.append(climLevel)
-    record_parameters(p, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels)
+    record_parameters(p, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels, parameters)
 
     return qc
 
-def record_parameters(profile, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels):
+def record_parameters(profile, bgStdLevels, bgevStdLevels, origLevels, ptLevels, bgLevels, parameters):
     # pack the parameter arrays into the enbackground table
     # for consumption by the buddy check
 
@@ -138,7 +139,7 @@ def record_parameters(profile, bgStdLevels, bgevStdLevels, origLevels, ptLevels,
     ptlevels = main.pack_array(ptLevels)
     bglevels = main.pack_array(bgLevels)
     query = "REPLACE INTO enbackground VALUES(?,?,?,?,?,?);"
-    main.dbinteract(query, [profile.uid(), bgstdlevels, bgevstdlevels, origlevels, ptlevels, bglevels])
+    main.dbinteract(query, [profile.uid(), bgstdlevels, bgevstdlevels, origlevels, ptlevels, bglevels], targetdb=parameters["db"])
 
 
 def findGridCell(p, gridLong, gridLat):
@@ -155,13 +156,14 @@ def findGridCell(p, gridLong, gridLat):
     for i in range(1, len(gridLat)):
         assert gridLat[i] - gridLat[i-1] == gridLat[1] - gridLat[0], 'latitude grid points must be evenly spaced'
     lat = p.latitude()
+    lat = main.normalize_latitude(lat)
     grid = gridLat
     nlat = len(grid)
-    ilat = int(np.mod(np.round((lat - grid[0]) / (grid[1] - grid[0])), nlat))
+    ilat = int( np.round((lat - grid[0]) / (grid[1] - grid[0])) )
     if ilat == nlat: ilat -= 1 # Checks for edge case where lat is ~90.
-    
-    assert ilon >=0 and ilon < nlon, 'Longitude is out of range: %f %i' % (lon, ilon)
-    assert ilat >=0 and ilat < nlat, 'Latitude is out of range: %f %i' % (lat, ilat)
+
+    assert ilon >=0 and ilon < nlon, 'Longitude is out of range: {} {}'.format(lon, ilon)
+    assert ilat >=0 and ilat < nlat, 'Latitude is out of range: {} {}'.format(lat, ilat)
 
     return ilon, ilat
 
@@ -201,8 +203,8 @@ def readENBackgroundCheckAux():
 
 def loadParameters(parameterStore):
 
-    main.dbinteract("DROP TABLE IF EXISTS enbackground")
-    main.dbinteract("CREATE TABLE IF NOT EXISTS enbackground (uid INTEGER PRIMARY KEY, bgstdlevels BLOB, bgevstdlevels BLOB, origlevels BLOB, ptlevels BLOB, bglevels BLOB)")
+    main.dbinteract("DROP TABLE IF EXISTS enbackground", targetdb=parameterStore["db"])
+    main.dbinteract("CREATE TABLE IF NOT EXISTS enbackground (uid INTEGER PRIMARY KEY, bgstdlevels BLOB, bgevstdlevels BLOB, origlevels BLOB, ptlevels BLOB, bglevels BLOB)", targetdb=parameterStore["db"])
     parameterStore['enbackground'] = readENBackgroundCheckAux()
 
 

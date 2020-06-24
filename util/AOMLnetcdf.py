@@ -3,7 +3,7 @@
 # Author: Patrick Halsall
 
 import sys
-import AOMLinterpolation as interp_helper
+from . import AOMLinterpolation as interp_helper
 import numpy as np
 from netCDF4 import Dataset
 

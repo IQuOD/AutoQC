@@ -1,10 +1,10 @@
 ## helper functions used in the top level AutoQC.py
 
-import json, os, glob, time, pandas, csv, sys, fnmatch, sqlite3, io, pickle, StringIO
+import json, os, glob, time, pandas, csv, sys, fnmatch, sqlite3, io, pickle, math
 import numpy as np
 from wodpy import wod
 from netCDF4 import Dataset
-import testingProfile
+from . import testingProfile
 from numbers import Number
 import tempfile
 import oceansdb
@@ -25,7 +25,7 @@ def catchFlags(profile):
   sent to the quality control programs for testing.
   '''
   index = profile.var_index()
-  assert index is not None, 'No temperatures in profile %s' % profile.uid()
+  assert index is not None, 'No temperatures in profile {}'.format(profile.uid())
   for i in range(profile.n_levels()):
       if profile.profile_data[i]['variables'][index]['Missing']:
           continue
@@ -67,14 +67,14 @@ def checkQCTestRequirements(checks):
         for applycheck in req['applies_to']:
           if fnmatch.fnmatch(check, applycheck): applies = True # Needs wildcard functionality.
         if applies:
-          if req.has_key('modules'):
+          if 'modules' in req:
             for module in req['modules']:
               try:
                 exec('import ' + module)
               except:
                 use = False
                 print('  ' + check + ' not available without module ' + module)
-          if req.has_key('data'):
+          if 'data' in req:
             for datafile in req['data']:
               if not isinstance(datafile, list):
                 datafile = [datafile]
@@ -88,7 +88,7 @@ def checkQCTestRequirements(checks):
                     if ifileitem > 0: comment += ' or'
                     comment += ' data/' + datafileitem
                 print(comment)
-          if req.has_key('qctests'):
+          if 'qctests' in req:
             for qctest in req['qctests']:
               if qctest not in checks:
                 use = False
@@ -127,13 +127,13 @@ def calcRates(testResults, trueResults):
 
   return tpr, fpr, fnr, tnr 
 
-def get_profile_from_db(uid):
+def get_profile_from_db(uid, table, targetdb):
   '''
   Given a unique id found in the current database table, return the corresponding WodPy profile object.
   '''
- 
-  command = 'SELECT * FROM ' + sys.argv[1] + ' WHERE uid = ' + str(uid)
-  row = dbinteract(command)
+
+  command = 'SELECT * FROM ' + table + ' WHERE uid = ' + str(uid)
+  row = dbinteract(command, targetdb=targetdb)
   profile = text2wod(row[0][0][1:-1])
   return profile
 
@@ -141,13 +141,13 @@ def text2wod(raw):
   '''
   given the raw text of a wod ascii profile, return a wodpy object representing the same.
   '''
-  
-  fProfile = tempfile.TemporaryFile()
+
+  fProfile = tempfile.TemporaryFile(mode='w+', encoding='utf-8')
   fProfile.write(raw) # a file-like object containing only the profile from the queried row
   fProfile.seek(0)
   profile = wod.WodProfile(fProfile)
   fProfile.close()
- 
+
   return profile
 
 def dictify(rows, keys):
@@ -167,17 +167,16 @@ def dictify(rows, keys):
 
   return dicts
 
-def dbinteract(command, values=[], tries=0):
+def dbinteract(command, values=[], tries=0, targetdb='iquod.db'):
   '''
   execute the given SQL command;
   catch errors and retry a maximum number of times;
   '''
-  
-  max_retry = 100
 
-  conn = sqlite3.connect('iquod.db', isolation_level=None, timeout=60)
+  max_retry = 100
+  conn = sqlite3.connect(targetdb, isolation_level=None, timeout=60)
   cur = conn.cursor()
-  
+
   try:
     cur.execute(command, values)
     try:
@@ -188,26 +187,26 @@ def dbinteract(command, values=[], tries=0):
     conn.close()
     return result
   except:
-    print 'bad db request'
-    print command
-    print values
-    print sys.exc_info()
+    print('bad db request')
+    print(command)
+    print(values)
+    print(sys.exc_info())
     conn.rollback()
     cur.close()
     conn.close()
     if tries < max_retry:
-      dbinteract(command, values, tries+1)
+      dbinteract(command, values, tries+1, targetdb=targetdb)
     else:
-      print 'database interaction failed after', max_retry, 'retries'
+      print('database interaction failed after', max_retry, 'retries')
       return -1  
 
-def interact_many(query, values, tries=0):
+def interact_many(query, values, tries=0, targetdb='iquod.db'):
   # similar to dbinteract, but does executemany
   # intended exclusively for writes
 
   max_retry = 100
 
-  conn = sqlite3.connect('iquod.db', isolation_level=None, timeout=60)
+  conn = sqlite3.connect(targetdb, isolation_level=None, timeout=60)
   cur = conn.cursor()
 
   try:
@@ -216,19 +215,19 @@ def interact_many(query, values, tries=0):
     conn.close()
     return 0
   except:
-    print 'executemany failed'
-    print query
-    print values
-    print sys.exc_info()
+    print('executemany failed')
+    print(query)
+    print(values)
+    print(sys.exc_info())
     conn.rollback()
     cur.close()
     conn.close()
     if tries < max_retry:
-      interact_many(query, values, tries+1)
+      interact_many(query, values, tries+1, targetdb=targetdb)
     else:
-      print 'excecutemany failed after', max_retry, 'retries'
+      print('excecutemany failed after', max_retry, 'retries')
       return -1
-      
+
 def faketable(name):
   '''
   generate a table <name> in root/root with the same structure as the main data table
@@ -293,34 +292,34 @@ def fakerow(tablename, raw='x', truth=0, uid=8888, year=1999, month=12, day=31, 
               {p[cruise]},
               {p[probe_type]}
              );""".format(p=wodDict)
-  
+
   dbinteract(query)
 
 def pack_array(arr):
     # chew up a numpy array, masked array, or list for insertion into a sqlite column of type blob
     out = io.BytesIO()
 
-    if type(arr) is np.ndarray:
-        np.save(out, arr)
-    elif type(arr) is np.ma.core.MaskedArray:
+    if type(arr) is np.ndarray or type(arr) is np.ma.core.MaskedArray:
         arr.dump(out)
     elif type(arr) is list:
         pickle.dump(arr, out)
     out.seek(0)
-    return sqlite3.Binary(out.read())  
+    return sqlite3.Binary(out.read())
 
 def unpack_row(row):
-    # given a tuple row from sqlite, return a tuple with 
+    # given a tuple row from sqlite, return a tuple with
     # typical datatypes
 
     res = []
     for elt in row:
-        if type(elt) is unicode:
+        if type(elt) is str:
             # unicode -> str
             res.append(str(elt))
-        elif type(elt) is buffer:
+        elif type(elt) is memoryview:
             # buffer -> numpy array
-            res.append(np.load(io.BytesIO(elt)))
+            res.append(np.load(io.BytesIO(elt),allow_pickle=True))
+        elif type(elt) is bytes:
+            res.append(np.load(io.BytesIO(memoryview(elt)),allow_pickle=True))
         else:
             res.append(elt)
 
@@ -329,6 +328,13 @@ def unpack_row(row):
 def find_depth(latitude, longitude):
 
     db = oceansdb.ETOPO()
-    return db.extract(lat=latitude, lon=longitude)['elevation'][0]
+    return db['topography'].extract(lat=latitude, lon=longitude)['height'][0]
 
 
+def normalize_latitude(lat):
+    '''
+    map a latitude in degrees onto [-90, 90]
+    '''
+
+    latitude = lat*math.pi/180
+    return np.round(math.asin(math.sin(latitude))/(math.pi/180), decimals=6)

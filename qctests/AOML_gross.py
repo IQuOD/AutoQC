@@ -12,7 +12,7 @@ def test(p, parameters):
     isDepth = (z.mask==False)
 
     for i in range(p.n_levels()):
-    	if isTemperature[i] and not (-2.5 <= t[i] <= 40):
+        if isTemperature[i] and not (-2.5 <= t[i] <= 40):
             qc[i] = True
         if isDepth[i] and not (0 <= z[i] <= 2000):
             qc[i] = True

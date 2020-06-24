@@ -16,7 +16,7 @@ c/ PURPOSE:
 c    to check temperature profile for unrealistic vertical gradients
 '''
 
-import ICDC_aqc_01_level_order as ICDC
+from . import ICDC_aqc_01_level_order as ICDC
 import numpy as np
 
 def test(p, parameters):
@@ -28,7 +28,7 @@ def test(p, parameters):
     parmaxover = 33.0
 
     # The test is run on re-ordered data.
-    nlevels, z, t = ICDC.reordered_data(p)
+    nlevels, z, t = ICDC.reordered_data(p, parameters)
     qc = np.zeros(nlevels, dtype=bool)
 
     # Calculate gradients and thresholds.
@@ -57,7 +57,7 @@ def test(p, parameters):
         qc[result] = True
         qc[result + 1] = True
 
-    return ICDC.revert_qc_order(p, qc)
+    return ICDC.revert_qc_order(p, qc, parameters)
 
 
 

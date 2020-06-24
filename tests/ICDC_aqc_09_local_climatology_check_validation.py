@@ -7,10 +7,13 @@ import numpy as np
 
 ##### ICDC local climatology check.
 ##### --------------------------------------------------
-class TestClass():
+class TestClass:
 
-    parameters = {}
-    
+    parameters = {
+        'db': 'iquod.db',
+        'table': 'unit'
+    }
+
     def setUp(self):
         # refresh this table every test
         ICDC.loadParameters(self.parameters)
@@ -55,7 +58,7 @@ class TestClass():
                                                      date=[year,month,day,0],
                                                      uid=i)
 
-                nlevels, z, t = ICDC.reordered_data(p)
+                nlevels, z, t = ICDC.reordered_data(p, self.parameters)
                 lat           = p.latitude()
                 lon           = p.longitude()
                 tmin, tmax    = ICDC_lc.get_climatology_range(nlevels, 

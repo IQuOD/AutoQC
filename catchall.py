@@ -10,7 +10,7 @@
 ar =  __import__('analyse-results')
 import util.main as main
 import util.dbutils as dbutils
-import itertools, sys, json
+import itertools, sys, json, getopt
 from operator import itemgetter
 
 def ntuples(names, n=2):
@@ -38,18 +38,41 @@ def amend(combo, df):
     name = '&'.join(combo)
     return df.assign(xx=decision).rename(index=str, columns={'xx': name})
 
-print '=============='
-print sys.argv[1]
-print '=============='
+# parse command line options
+options, remainder = getopt.getopt(sys.argv[1:], 't:d:n:o:h')
+targetdb = 'iquod.db'
+dbtable = 'iquod'
+outfile = 'htp.json'
+samplesize = None
+for opt, arg in options:
+    if opt == '-d':
+        dbtable = arg
+    if opt == '-t':
+        targetdb = arg
+    if opt == '-n':
+        samplesize = int(arg)
+    if opt == '-o':
+        outfile = arg
+    if opt == '-h':
+        print('usage:')
+        print('-d <db table name to read from>')
+        print('-t <name of db file>')
+        print('-n <number of profiles to consider>')
+        print('-o <filename to write json results out to>')
+        print('-h print this help message and quit')
+if samplesize is None:
+    print('please provide a sample size to consider with the -n flag')
+    print('-h to print usage')
 
 # Read QC test specifications if required.
 groupdefinition = ar.read_qc_groups()
 
 # Read data from database into a pandas data frame.
-df = dbutils.db_to_df(sys.argv[1],
+df = dbutils.db_to_df(table=dbtable, 
+                      targetdb=targetdb,
                       filter_on_wire_break_test = False,
                       filter_on_tests = groupdefinition,
-                      n_to_extract = sys.argv[2])
+                      n_to_extract = samplesize)
 testNames = df.columns[2:].values.tolist()
 
 # declare some downstream constructs
@@ -60,12 +83,12 @@ bad = df.loc[df['Truth']]
 bad.reset_index(inplace=True, drop=True)
 
 # mark chosen profiles as part of the training set
-all_uids = main.dbinteract('SELECT uid from ' + sys.argv[1] + ';')
+all_uids = main.dbinteract('SELECT uid from ' + dbtable + ';', targetdb=targetdb)
 for uid in all_uids:
     uid = uid[0]
     is_training = int(uid in df['uid'].astype(int).as_matrix())
-    query = "UPDATE " + sys.argv[1] + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
-    main.dbinteract(query)
+    query = "UPDATE " + dbtable + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
+    main.dbinteract(query, targetdb=targetdb)
 
 # algo. step 0:
 # demand individual QC tests have TPR/FPR > some threshold
@@ -74,7 +97,7 @@ drop_tests = []
 for test in testNames:
     tpr, fpr, fnr, tnr = main.calcRates(df[test].tolist(), df['Truth'].tolist())
     if fpr > 0 and tpr / fpr < perf_thresh:
-        print 'dropping', test, '; tpr/fpr = ', tpr/fpr
+        print('dropping', test, '; tpr/fpr = ', tpr/fpr)
         df.drop([test], axis=1)
         bad.drop([test], axis=1)
         drop_tests.append(test)
@@ -95,16 +118,17 @@ for x in testNames:
     fprs.append([x, fpr, tpr])
 
 # accept tests that flag bad profiles with no false positives
-print 'number of bad profiles to consider:', len(bad)
+print('number of bad profiles to consider:', len(bad))
+print('these tests accepted for having no false poitives and more than zero true positives:')
 for test in fprs:
     if test[1] == 0 and test[2] > 0:
         accepted.append(test[0])
-        print 'accepted', test[0], 0
+        print(test[0])
         bad = bad[bad[test[0]]==False]
         bad = bad.drop([test[0]], axis=1)
         testNames.remove(test[0])
 fprs = [elt for elt in fprs if elt[0] not in accepted]
-print 'number of bad profiles remaining:', len(bad)
+print('number of bad profiles remaining:', len(bad))
 
 # algo. step 3
 # add a column to df for each combo, summarizing its decision for each profile
@@ -129,7 +153,8 @@ while len(bad) > 0:
             winner = x[x].keys()[0]
             accepted.append(winner)		# accept the combo as the only one flagging this bad profile
             ff = [x for x in fprs if x[0] == winner][0][1]
-            print 'accepted', winner, ff
+            tf = [x for x in fprs if x[0] == winner][0][2]
+            print('accepted', winner, 'tpr=', tf, '; fpr=', ff)
             bad = bad[bad[winner]==False]	# drop all bad profiles flagged by this combo
             bad = bad.drop([winner], axis=1)	# remove the combo from consideration
             testNames = [elt for elt in testNames if elt is not winner]
@@ -145,10 +170,10 @@ while len(bad) > 0:
         combonames = [x for x in combonames if x is not maxfpr]
         del fprs[-1]
 
-print 'profiles not caught by any test:'
-print unflagged
+print('profiles not caught by any test:')
+print(unflagged)
 
-f = open('catchall.json', 'w')
+f = open(outfile, 'w')
 r = {'tests': accepted}
 json.dump(r, f)
 f.close()

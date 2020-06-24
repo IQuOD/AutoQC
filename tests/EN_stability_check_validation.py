@@ -6,9 +6,10 @@ import util.main as main
 
 ##### EN_stability_check ----------------------------------------------
 
-class TestClass():
+class TestClass:
 
     parameters = {
+        'db': 'iquod.db',
         "table": 'unit'
     }
 
@@ -26,11 +27,11 @@ class TestClass():
         '''
 
         eos = round(qctests.EN_stability_check.mcdougallEOS(35,25,2000), 6)
-        assert  eos == 1031.654229, 'mcdougallEOS(35,25,2000) should be 1031.654229, instead got %f' % eos
+        assert  eos == 1031.654229, 'mcdougallEOS(35,25,2000) should be 1031.654229, instead got {}'.format(eos)
         eos = round(qctests.EN_stability_check.mcdougallEOS(20,20,1000), 6)
-        assert  eos == 1017.726743, 'mcdougallEOS(20,20,1000) should be 1017.726743, instead got %f' % eos
+        assert  eos == 1017.726743, 'mcdougallEOS(20,20,1000) should be 1017.726743, instead got {}'.format(eos)
         eos = round(qctests.EN_stability_check.mcdougallEOS(40,12,8000), 6)
-        assert  eos == 1062.928258, 'mcdougallEOS(40,12,8000) should be 1062.928258, instead got %f' % eos
+        assert  eos == 1062.928258, 'mcdougallEOS(40,12,8000) should be 1062.928258, instead got {}'.format(eos)
 
     def test_mcdougall_potential_temperature(self):
         '''
@@ -38,7 +39,7 @@ class TestClass():
         '''
 
         pt = round(qctests.EN_stability_check.potentialTemperature(35, 20, 2000), 6)
-        assert pt == 19.621967, 'potential temperarure for S = 35 psu, T = 20C, p = 2000 db should be 19621967, instead got %f' % pt
+        assert pt == 19.621967, 'potential temperarure for S = 35 psu, T = 20C, p = 2000 db should be 19621967, instead got {}'.format(pt)
 
     def test_EN_stability_check_padded(self):
         '''

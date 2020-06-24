@@ -21,14 +21,14 @@ def test(p, parameters, suspect=False):
     set to True the test instead returns suspect levels.
     """
     
-    return run_qc(p, suspect)
+    return run_qc(p, suspect, parameters)
 
-def run_qc(p, suspect):
+def run_qc(p, suspect, parameters):
 
     # check for pre-registered suspect tabulation, if that's what we want:
     if suspect:
         query = 'SELECT suspect FROM enspikeandstep WHERE uid = ' + str(p.uid()) + ';'
-        susp = main.dbinteract(query)
+        susp = main.dbinteract(query, targetdb=parameters["db"])
         if len(susp) > 0:
             return main.unpack_row(susp[0])[0]
             
@@ -103,7 +103,7 @@ def run_qc(p, suspect):
     # register suspects, if computed, to db
     if suspect:
         query = "REPLACE INTO enspikeandstep VALUES(?,?);"
-        main.dbinteract(query, [p.uid(), main.pack_array(qc)] )
+        main.dbinteract(query, [p.uid(), main.pack_array(qc)], targetdb=parameters["db"] )
 
     return qc
 
@@ -202,5 +202,5 @@ def interpolate(depth, shallow, deep, shallowVal, deepVal):
 
 def loadParameters(parameterStore):
 
-    main.dbinteract("DROP TABLE IF EXISTS enspikeandstep")
-    main.dbinteract("CREATE TABLE IF NOT EXISTS enspikeandstep (uid INTEGER PRIMARY KEY, suspect BLOB)")
+    main.dbinteract("DROP TABLE IF EXISTS enspikeandstep", targetdb=parameterStore["db"])
+    main.dbinteract("CREATE TABLE IF NOT EXISTS enspikeandstep (uid INTEGER PRIMARY KEY, suspect BLOB)", targetdb=parameterStore["db"])

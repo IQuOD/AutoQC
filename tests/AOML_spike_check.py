@@ -30,6 +30,6 @@ def test_AOML_spike_slice():
     truth = numpy.zeros(7, dtype=bool)
     truth[1] = True
     truth[5] = True
-    print qc
-    print truth
+    print(qc)
+    print(truth)
     assert numpy.array_equal(qc, truth), 'failed to flag spikes near edges of profile'    

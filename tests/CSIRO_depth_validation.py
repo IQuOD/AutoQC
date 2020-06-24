@@ -28,5 +28,5 @@ def test_CSIRO_depth():
     qc = qctests.CSIRO_depth.test(p, None)
     truth = numpy.zeros(3, dtype=bool)
     truth[0] = True
-    print qc
+    print(qc)
     assert numpy.array_equal(qc, truth), "shouldn't flag measurements at threshold"   

@@ -27,8 +27,8 @@ def test_CSIRO_wire_break():
     p = util.testingProfile.fakeProfile([-2.399,-2.399,-2.4], [10,20,30], probe_type=2) 
     qc = qctests.CSIRO_wire_break.test(p, None)
     truth = numpy.zeros(3, dtype=bool)
-    print qc
-    print truth
+    print(qc)
+    print(truth)
     assert numpy.array_equal(qc, truth), 'flagged marginally cold temperature at bottom of profile'
 
     p = util.testingProfile.fakeProfile([31.99,31.99,32], [10,20,30], probe_type=2) 

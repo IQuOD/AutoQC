@@ -27,7 +27,7 @@ c     tminlocal(k)=tmedian(k) - rnumamd*tamd(k)
 c     tmaxlocal(k)=tmedian(k) + rnumamd*tamd(k)
 '''
 
-import ICDC_aqc_01_level_order as ICDC
+from . import ICDC_aqc_01_level_order as ICDC
 from netCDF4 import Dataset
 import numpy as np
 import os
@@ -38,7 +38,7 @@ def test(p, parameters):
     '''
     
     # The test is run on re-ordered data.
-    nlevels, z, t = ICDC.reordered_data(p)
+    nlevels, z, t = ICDC.reordered_data(p, parameters)
     
     # Define default QC.
     defaultqc = np.zeros(p.n_levels(), dtype=bool)
@@ -62,7 +62,7 @@ def test(p, parameters):
     tmin, tmax = ranges
     qc = ((t < tmin) | (t > tmax)) & (tmin != paramsicdc09['fillValue']) & (tmax != paramsicdc09['fillValue']) 
 
-    return ICDC.revert_qc_order(p, qc)
+    return ICDC.revert_qc_order(p, qc, parameters)
 
 def get_climatology_range(nlevels, z, lat, lon, month, paramsicdc09):
 

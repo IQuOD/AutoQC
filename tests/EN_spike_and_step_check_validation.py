@@ -5,9 +5,10 @@ import numpy
 import util.main as main
 
 ##### EN_spike_and_step_check ----------------------------------------------
-class TestClass():
+class TestClass:
 
     parameters = {
+        'db': 'iquod.db',
         "table": 'unit'
     }
 
