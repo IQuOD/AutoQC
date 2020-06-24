@@ -71,7 +71,7 @@ def find_roc(table,
              filter_from_file_spec=True,
              enforce_types_of_check=True,
              n_profiles_to_analyse=np.iinfo(np.int32).max,
-             n_combination_iterations=1, 
+             n_combination_iterations=0, 
              with_reverses=False,
              effectiveness_ratio=2.0,
              improve_threshold=1.0, 
@@ -319,9 +319,9 @@ if __name__ == '__main__':
     # python analyse-results.py <database table name> <number of profiles to extract> <flag to generate a conservative set of QC tests - can be any value>
 
     if len(sys.argv) == 3:
-        find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2])
+        find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2], costratio=[2.0, 2.0])
     elif len(sys.argv) == 4:
-        find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2], costratio=[10.0, 10.0])
+        find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2], costratio=[5.0, 5.0])
     else:
         print 'Usage - python analyse_results.py tablename <number of profiles to train ROC curve on> <optional character or number to indicate that we want a conservative set of QC tests i.e. with very low false positive rate>'
 

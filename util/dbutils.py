@@ -83,7 +83,8 @@ def unpack_qc_results(results):
 def db_to_df(table,
              filter_on_wire_break_test=False, 
              filter_on_tests={},
-             n_to_extract=numpy.iinfo(numpy.int32).max):
+             n_to_extract=numpy.iinfo(numpy.int32).max,
+             applyparse=True):
 
     '''
     Reads the table from iquod.db into a pandas dataframe.
@@ -169,13 +170,15 @@ def db_to_df(table,
                             df.iat[i, j] = main.pack_array(qc)
 
             del df[testname] # No need to keep this any longer.
+            df.reset_index(inplace=True, drop=True)
 
     todrop = list(todrop)
     if len(todrop) > 0:
         df.drop(todrop, inplace=True)
     df.reset_index(inplace=True, drop=True)
     testNames = df.columns[2:].values.tolist()
-    df[['Truth']] = df[['Truth']].apply(parse_truth)
-    df[testNames] = df[testNames].apply(parse)
+    if applyparse:
+        df[['Truth']] = df[['Truth']].apply(parse_truth)
+        df[testNames] = df[testNames].apply(parse)
 
     return df
