@@ -326,7 +326,7 @@ if __name__ == '__main__':
     outfile = False
     plotfile = False
     samplesize = None
-    costratio = [10.0, 10.0]
+    costratio = [5.0, 5.0]
     for opt, arg in options:
         if opt == '-d':
             dbtable = arg
@@ -354,14 +354,4 @@ if __name__ == '__main__':
         print('-h to print usage')
 
     find_roc(table=dbtable, targetdb=targetdb, n_profiles_to_analyse=samplesize, costratio=costratio, plot_roc=plotfile, write_roc=outfile)
-
-<<<<<<< HEAD
-    if len(sys.argv) == 3:
-        find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2], costratio=[2.0, 2.0])
-    elif len(sys.argv) == 4:
-        find_roc(sys.argv[1], n_profiles_to_analyse=sys.argv[2], costratio=[5.0, 5.0])
-    else:
-        print 'Usage - python analyse_results.py tablename <number of profiles to train ROC curve on> <optional character or number to indicate that we want a conservative set of QC tests i.e. with very low false positive rate>'
-=======
->>>>>>> a80da33800bd6e3c777d81dd59ad92586aaba998
 
