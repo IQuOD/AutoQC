@@ -35,6 +35,9 @@ def test(p, parameters):
         qc = numpy.append(numpy.zeros(last_good + 1, dtype=bool), numpy.ones(len(t) - last_good - 1, dtype=bool))
     else:
         qc = numpy.ones(len(t.data), dtype=bool)
+        
+    if numpy.all(qc):
+        qc[:] = False
 
     return qc
 

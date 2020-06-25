@@ -70,7 +70,7 @@ def find_roc(table,
              filter_from_file_spec=True,
              enforce_types_of_check=True,
              n_profiles_to_analyse=np.iinfo(np.int32).max,
-             n_combination_iterations=1, 
+             n_combination_iterations=0, 
              with_reverses=False,
              effectiveness_ratio=2.0,
              improve_threshold=1.0, 
@@ -326,7 +326,7 @@ if __name__ == '__main__':
     outfile = False
     plotfile = False
     samplesize = None
-    costratio = [10.0, 10.0]
+    costratio = [5.0, 5.0]
     for opt, arg in options:
         if opt == '-d':
             dbtable = arg
@@ -354,5 +354,4 @@ if __name__ == '__main__':
         print('-h to print usage')
 
     find_roc(table=dbtable, targetdb=targetdb, n_profiles_to_analyse=samplesize, costratio=costratio, plot_roc=plotfile, write_roc=outfile)
-
 
