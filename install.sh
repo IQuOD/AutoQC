@@ -24,7 +24,7 @@ pip3 install Shapely==1.6.4.post2 \
 pip3 install seabird==0.11.0 \
             gsw==3.0.3 \
             scikit-fuzzy==0.4.1 \
-            oceansdb==0.8.6 \
+            oceansdb==0.8.11 \
             cotede==0.19.2 \
             wodpy==1.6.2 \
             numpy==1.19.1
