@@ -25,7 +25,7 @@ pip3 install seabird==0.11.0 \
             gsw==3.0.3 \
             scikit-fuzzy==0.4.1 \
             oceansdb==0.8.6 \
-            cotede==0.19.2 \
+            cotede==0.22.1 \
             wodpy==1.6.1 \
             numpy==1.11.3
 
