@@ -12,6 +12,7 @@ Range,At least one from group,CoTeDe_GTSPP_profile_envelop,
 Range,At least one from group,EN_range_check,
 Range,At least one from group,ICDC_aqc_02_crude_range,
 Range,Optional,ICDC_aqc_06_n_temperature_extrema,
+Range,Remove rejected levels,IQuOD_gross_range_check,Remove extreme outliers from further consideration
 Range,At least one from group,WOD_range_check,
 Gradient,At least one from group,AOML_gradient,
 Gradient,At least one from group,Argo_gradient_test,
