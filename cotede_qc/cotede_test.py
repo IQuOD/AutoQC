@@ -57,12 +57,13 @@ def get_qc(p, config, test):
                 elif test != config:
                     # Load from TEMP,
                     try:
-                        cfg = {'variables': {'sea_water_temperature': {test: cfg['variables']['sea_water_temperature'][test]}}}
+                        cfg = {'TEMP': {test: dict(cfg['variables']['sea_water_temperature'][test])}}
+
                     # otherwise load it from main.
                     except:
                         # The dummy configuration ensures that the results from
                         # 'main' is copied into the results for var.
-                        cfg = {'common': {test: cfg['common'][test]}, var: {'dummy': None}}
+                        cfg = {'common': {test: dict(cfg['common'][test])}, var: {'dummy': None}}
             except:
                 with open('cotede_qc/qc_cfg/' + config + '.json') as f:
                     cfg = json.load(f)
@@ -72,7 +73,11 @@ def get_qc(p, config, test):
         cotede_results = [p.uid(), config, pqc.flags[var].keys(), pqc]
 
     # Get the QC results, which use the IOC conventions.
-    qc_returned = cotede_results[3].flags[var][test]
+    # cfg was previously reduced to a single test. By using the overall flag
+    # is the same for single test but allow to work with composite criterion
+    # such as gtspp at once. Ex. if test = 'gtspp', overall is the combination
+    # of all GTSPP tests together.
+    qc_returned = cotede_results[3].flags[var]['overall']
 
     # It looks like CoTeDe never returns a QC decision
     # of 2. If it ever does, we need to decide whether 
