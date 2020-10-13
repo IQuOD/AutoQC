@@ -1,0 +1,10 @@
+{
+    "inherit": "cotede",
+    "variables": {
+        "sea_water_temperature": {
+            "anomaly_detection": {
+                "threshold": -20
+	    }
+	}
+    }
+}
