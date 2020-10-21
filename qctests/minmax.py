@@ -16,7 +16,6 @@ def test(p, parameters):
 def extract_minmax(pres, longitude, latitude):
 
     ## unpack minmax parameters
-    minmax_psal = xarray.open_dataset('data/PSAL_MIN_MAX.nc')
     minmax_temp = xarray.open_dataset('data/TEMP_MIN_MAX.nc')
     minmax_grid = xarray.open_dataset('data/GRID_MIN_MAX.nc')
     info_DGG = scipy.io.loadmat('data/info_DGG4H6.mat')
@@ -32,7 +31,7 @@ def extract_minmax(pres, longitude, latitude):
     temp_max[:] = numpy.NaN
 
     ## determine minmax range
-    layer_id = val2index(pres, minmax_psal.depth.data)
+    layer_id = val2index(pres, minmax_temp.depth.data)
     nonan = ~numpy.isnan(layer_id)
     temp_min[numpy.where(nonan)[0]] = minmax_temp.temp_min.data[hgrid_id,layer_id[nonan].astype(int)]
     temp_max[numpy.where(nonan)[0]] = minmax_temp.temp_max.data[hgrid_id,layer_id[nonan].astype(int)]
