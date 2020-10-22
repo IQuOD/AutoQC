@@ -5,8 +5,7 @@ def test(p, parameters):
 
     ## unpack profile data
     temp = p.t()
-
-    temp_min, temp_max = extract_minmax(obs_utils.depth_to_pressure(p.z(), p.latitude()), p.longitude(), p.latitude())
+    temp_min, temp_max = extract_minmax(-obs_utils.depth_to_pressure(p.z(), p.latitude()), p.longitude(), p.latitude())
 
     # true flag if temp is out of range
     qc = numpy.asarray([k<temp_min[i] or k>temp_max[i] for i,k in enumerate(temp)])
@@ -14,7 +13,6 @@ def test(p, parameters):
     return qc
 
 def extract_minmax(pres, longitude, latitude):
-
     ## unpack minmax parameters
     minmax_temp = xarray.open_dataset('data/TEMP_MIN_MAX.nc')
     minmax_grid = xarray.open_dataset('data/GRID_MIN_MAX.nc')
@@ -35,7 +33,6 @@ def extract_minmax(pres, longitude, latitude):
     nonan = ~numpy.isnan(layer_id)
     temp_min[numpy.where(nonan)[0]] = minmax_temp.temp_min.data[hgrid_id,layer_id[nonan].astype(int)]
     temp_max[numpy.where(nonan)[0]] = minmax_temp.temp_max.data[hgrid_id,layer_id[nonan].astype(int)]
-
     return temp_min, temp_max
 
 def lon_lat_to_min_max_index(longitude, latitude, info_file, isea_type):
