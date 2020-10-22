@@ -1,6 +1,7 @@
 import qctests.minmax
 import util.testingProfile
-import numpy, gsw
+import numpy, gsw, unittest
+from operator import itemgetter
 
 def test_extract_minmax():
     '''
@@ -17,6 +18,91 @@ def test_minmax():
     p = util.testingProfile.fakeProfile(temp, gsw.z_from_p(pres, latitude), latitude=latitude, longitude=longitude)
     qc = qctests.minmax.test(p, None)
     assert True not in qc, "author's first example profile shouldn't have any levels flagged"
+
+class TestFilterLatLon(unittest.TestCase):
+    """ Test that latitudes and longitudes outsides a given threshold are
+    correctly made missing."""
+
+    def setUp(self):
+        # Set up the arrays that will be used for all three tests, need to
+        # specify dtype as float as otherwise elements can't be replaced by nan.
+        self.latitude = numpy.array([1, 2, 3, 4], dtype=float)
+        self.longitude = numpy.array([5, 4, 2, 1], dtype=float)
+
+    def test_filter_lat_lon_all_present(self):
+        lat, lon = qctests.minmax.filter_lat_lon(self.latitude, self.longitude,
+                                  filter_threshold=9)
+        numpy.testing.assert_array_equal(self.latitude, lat,
+                                      err_msg='Latitudes have been incorrectly'
+                                              'made missing.')
+        numpy.testing.assert_array_equal(self.longitude, lon,
+                                      err_msg='Longitudes have been incorrectly'
+                                              ' made missing')
+
+    def test_filter_lat_lon_one_missing(self):
+        lat, lon = qctests.minmax.filter_lat_lon(self.latitude, self.longitude,
+                                  filter_threshold=4)
+        self.assertTrue(numpy.isnan(lat[0]), 'First latitude element should be '
+                                          'nan.')
+        self.assertTrue(numpy.isnan(lon[0]), 'First longitude element should be'
+                                          'nan.')
+        numpy.testing.assert_array_equal(self.latitude[1:], lat[1:],
+                                      err_msg='All these latitudes should '
+                                              'match.')
+        numpy.testing.assert_array_equal(self.longitude[1:], lon[1:],
+                                      err_msg='All these longitudes should '
+                                              'match.')
+
+    def test_filter_lat_lon_multi_missing(self):
+        lat, lon = qctests.minmax.filter_lat_lon(self.latitude, self.longitude,
+                                  filter_threshold=3)
+        self.assertTrue(numpy.isnan(itemgetter(0, 1, 3)(lat)).all(),
+                        'Only one latitude should not be nan.')
+        self.assertTrue(numpy.isnan(itemgetter(0, 1, 3)(lon)).all(),
+                        'Only one longitude should not be nan.')
+        self.assertEqual(self.latitude[2], lat[2], 'This latitude should not'
+                                                   'be masked.')
+        self.assertEqual(self.longitude[2], lon[2], 'This longitude should not '
+                                                    'be masked.')
+
+class TestGetLowResMinMaxGridIndices(unittest.TestCase):
+    """Test that latitudes and longitudes are categorised into the correct
+    low resolution grid box."""
+
+    @staticmethod
+    def test_get_low_res_min_max_grid_indices():
+        lon = numpy.array([-179, -79, 0, 45.1])
+        lat = numpy.array([-67, -9, 0.4, 31])
+        lon_index, lat_index = qctests.minmax.get_low_res_min_max_grid_indices(lon, lat, 10)
+        numpy.testing.assert_array_equal(lon_index, numpy.array([1, 11, 19, 23]),
+                                      err_msg='Longitudes assigned to incorrect'
+                                              'grid box.')
+        numpy.testing.assert_array_equal(lat_index, numpy.array([3, 9, 10, 13]),
+                                      err_msg='Latitudes assigned to incorrect'
+                                              'grid box.')
+
+class TestDistance(unittest.TestCase):
+    """Calculate the distance (in degrees) between two sets of lon-lat
+    points. This is the angle between them from the centre of the earth."""
+
+    def test_distance_0(self):
+        angle = qctests.minmax.distance(numpy.array([30]), numpy.array([10]),
+                         numpy.array([30]), numpy.array([10]))
+        self.assertEqual(angle[0], 0, 'Angle between points not correctly '
+                                      'calculated')
+
+    def test_distance_90(self):
+        angle = qctests.minmax.distance(numpy.array([30]), numpy.array([0]),
+                         numpy.array([0]), numpy.array([90]))
+        self.assertEqual(angle[0], 90, 'Angle between points not correctly '
+                                       'calculated')
+
+    @staticmethod
+    def test_distance_45():
+        angle = qctests.minmax.distance(numpy.array([90]), numpy.array([0]),
+                         numpy.array([45]), numpy.array([90]))
+        numpy.testing.assert_almost_equal(angle[0], 45,
+                                       err_msg='Angle of 45 degrees expected.')
 
 # very first profile in the example provided to us by the minmax authors
 longitude = 51.19742
