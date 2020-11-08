@@ -13,7 +13,6 @@ def test_CoTeDe_anomaly_detection():
     '''
     import qctests.CoTeDe_anomaly_detection
     qc = qctests.CoTeDe_anomaly_detection.test(p, None)
-    for i,j in enumerate(qc): print(j)
     assert np.array_equal(qc, expected_qc_anomaly_detection), 'mismatch between qc results and expected values'
 
 def test_CoTeDe_Argo_density_inversion():
