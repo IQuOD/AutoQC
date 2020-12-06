@@ -18,7 +18,7 @@ pip3 install Shapely==1.6.4.post2 \
             netCDF4==1.5.1.2 \
             matplotlib==3.1.0 \
             pyproj==2.1.3 \
-            pandas==0.21.1 \
+            pandas==1.1.4 \
             scipy==0.18.1 \
             mkl==2019.0
 pip3 install seabird==0.11.0 \
@@ -28,6 +28,7 @@ pip3 install seabird==0.11.0 \
             cotede==0.19.2 \
             wodpy==1.6.1 \
             numpy==1.11.3
+            xarray==0.16.1
 
 # Add AutoQC parameter files
 # note many of these links are broken; we leave them here until replacements are found,
