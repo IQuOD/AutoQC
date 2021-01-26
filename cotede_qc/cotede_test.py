@@ -43,26 +43,27 @@ def get_qc(p, config, test):
            inputs.attributes['datetime'] = dt.replace(year=1900)
 
         # If config is a dictionary, use it.
-        if type(config) is not dict:
+        if not isinstance(config, dict):
             try:
                 # Load config from CoTeDe
                 cfg = load_cfg(config)
 
                 if test == config:
                     # AutoQC runs only on TEMP, so clean the rest.
-                    for v in list(cfg):
-                        if v not in ['main', var]:
-                            del(cfg[v])
+                    for v in cfg['variables'].keys():
+                        if v != 'sea_water_temperature':
+                            del(cfg['variables'][v])
                 # If is a specific test,
                 elif test != config:
                     # Load from TEMP,
                     try:
-                        cfg = {var: {test: cfg[var][test]}}
+                        cfg = {'TEMP': {test: dict(cfg['variables']['sea_water_temperature'][test])}}
+
                     # otherwise load it from main.
                     except:
                         # The dummy configuration ensures that the results from
                         # 'main' is copied into the results for var.
-                        cfg = {'main': {test: cfg['main'][test]}, var: {'dummy': None}}
+                        cfg = {'common': {test: dict(cfg['common'][test])}, var: {'dummy': None}}
             except:
                 with open('cotede_qc/qc_cfg/' + config + '.json') as f:
                     cfg = json.load(f)
@@ -72,7 +73,11 @@ def get_qc(p, config, test):
         cotede_results = [p.uid(), config, pqc.flags[var].keys(), pqc]
 
     # Get the QC results, which use the IOC conventions.
-    qc_returned = cotede_results[3].flags[var][test]
+    # cfg was previously reduced to a single test. By using the overall flag
+    # is the same for single test but allow to work with composite criterion
+    # such as gtspp at once. Ex. if test = 'gtspp', overall is the combination
+    # of all GTSPP tests together.
+    qc_returned = cotede_results[3].flags[var]['overall']
 
     # It looks like CoTeDe never returns a QC decision
     # of 2. If it ever does, we need to decide whether 

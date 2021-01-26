@@ -19,15 +19,14 @@ pip3 install Shapely==1.6.4.post2 \
             matplotlib==3.1.0 \
             pyproj==2.1.3 \
             pandas==1.1.4 \
-            scipy==0.18.1 \
+            scipy==1.5.2 \
             mkl==2019.0
-pip3 install seabird==0.11.0 \
-            gsw==3.0.3 \
+pip3 install gsw==3.0.3 \
             scikit-fuzzy==0.4.1 \
-            oceansdb==0.8.6 \
-            cotede==0.19.2 \
-            wodpy==1.6.1 \
-            numpy==1.11.3
+            oceansdb==0.8.13 \
+            cotede==0.23.6 \
+            wodpy==1.6.2 \
+            numpy==1.19.1 \
             xarray==0.16.1
 
 # Add AutoQC parameter files
