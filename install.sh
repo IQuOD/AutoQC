@@ -26,7 +26,8 @@ pip3 install gsw==3.0.3 \
             oceansdb==0.8.13 \
             cotede==0.23.6 \
             wodpy==1.6.2 \
-            numpy==1.19.1
+            numpy==1.19.1 \
+            xarray==0.16.1
 
 # Add AutoQC parameter files
 # note many of these links are broken; we leave them here until replacements are found,
