@@ -105,9 +105,3 @@ See [wodpy package](https://github.com/IQuOD/wodpy) for more information on the 
 ##Contributing
 Quality control checks waiting to be implemented are listed in the Issues. If you would like to work on coding up a check, please assign yourself to the issue to avoid others duplicating the effort.
 If you have an idea for a new QC check, please open an issue and let us know, so we can help get you started on the right track.
-
-## References
-
-AutoQC contains work from the following sources, among others:
-
-Gourrion J, Dobler D, Gallian M, Szekely T, Beaulieu N (2020). Reference files and python code to run Min/Max QC test. SEANOE. https://doi.org/10.17882/77199
