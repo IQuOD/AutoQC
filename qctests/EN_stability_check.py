@@ -17,9 +17,10 @@ def test(p, parameters):
     # run the QC.
     query = 'SELECT en_stability_check FROM ' + parameters["table"] + ' WHERE uid = ' + str(p.uid()) + ';'
     qc_log = main.dbinteract(query, targetdb=parameters["db"])
-    if qc_log[0] is not None:
+    if len(qc_log) > 0:
         qc_log = main.unpack_row(qc_log[0])
-        return qc_log[0]
+        if qc_log[0] is not None:
+            return qc_log[0]
         
     return run_qc(p, parameters)
 
