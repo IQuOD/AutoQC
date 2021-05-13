@@ -18,8 +18,8 @@ def test(p, parameters):
     # run the QC.
     query = 'SELECT en_increasing_depth_check FROM ' + parameters["table"] + ' WHERE uid = ' + str(p.uid()) + ';'
     qc_log = main.dbinteract(query, targetdb=parameters["db"])
-    qc_log = main.unpack_row(qc_log[0])
     if qc_log[0] is not None:
+        qc_log = main.unpack_row(qc_log[0])
         return qc_log[0]
 
     return run_qc(p, parameters)

@@ -21,9 +21,8 @@ def test(p, parameters):
     # run the QC.
     #query = 'SELECT en_background_check FROM {} WHERE uid = {};'.format(parameters["table"], p.uid())
     #qc_log = main.dbinteract(query)
-    #qc_log = main.unpack_row(qc_log[0])
-
     #if qc_log[0] is not None:
+    #    qc_log = main.unpack_row(qc_log[0])
     #    return qc_log[0]
 
     return run_qc(p, parameters)

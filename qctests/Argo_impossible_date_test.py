@@ -20,15 +20,15 @@ def test(p, parameters):
     time = p.time()
 
     # initialize qc as false:
-    qc = numpy.zeros(1, dtype=bool)
+    qc = numpy.zeros(p.n_levels(), dtype=bool)
 
     if year < 1700:
-        qc[0] = True
+        qc[:] = True
     elif month not in range(1,13):
-        qc[0] = True
+        qc[:] = True
     elif day not in range(1, calendar.monthrange(year, month)[1] + 1):
-        qc[0] = True
+        qc[:] = True
     elif time is not None and (time < 0 or time >= 24):
-        qc[0] = True
+        qc[:] = True
 
     return qc

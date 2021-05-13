@@ -16,11 +16,11 @@ def test(p, parameters):
     longitude = p.longitude()
 
     # initialize qc as false:
-    qc = numpy.zeros(1, dtype=bool)
+    qc = numpy.zeros(p.n_levels(), dtype=bool)
 
     if isinstance(latitude, float) and latitude < -90 or latitude > 90:
-        qc[0] = True
+        qc[:] = True
     elif isinstance(longitude, float) and longitude < -180 or longitude > 180:
-        qc[0] = True
+        qc[:] = True
 
     return qc
