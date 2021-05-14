@@ -207,19 +207,19 @@ def retrieve_existing_qc_result(test, uid, table='iquod', db='iquod.db'):
     try:
         if len(qc_log) > 0:
             qc_log = main.unpack_row(qc_log[0])
-            if qc_log[0] is not None:
-                return qc_log[0]
-        else:
-            print('Profile does not seem to exist in the database'
+            print('QC results extracted from database:')
             print(query)
             print(qc_log)
-            raise
+            return qc_log[0]
     except:
-        print('Test name does not seem to exist in the database')
+        print('***** Test name does not seem to exist in the database')
         print(query)
         print(qc_log)
-        
-    # If this point is reached, we just return None.
-    return None
+
+    # If this point has been reached it means that the profile does not exist.
+    print('***** Profile does not seem to exist in the database')
+    print(query)
+    print(qc_log)
+    raise
     
 
