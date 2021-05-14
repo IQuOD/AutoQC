@@ -9,6 +9,7 @@ import numpy as np
 import util.obs_utils as outils
 from netCDF4 import Dataset
 import util.main as main
+from util.dbutils import retrieve_existing_qc_result
 
 def test(p, parameters):
     """
@@ -19,12 +20,12 @@ def test(p, parameters):
 
     # Check if the QC of this profile was already done and if not
     # run the QC.
-    #query = 'SELECT en_background_check FROM {} WHERE uid = {};'.format(parameters["table"], p.uid())
-    #qc_log = main.dbinteract(query)
-    #if len(qc_log) > 0:
-    #    qc_log = main.unpack_row(qc_log[0])
-    #    if qc_log[0] is not None:
-    #        return qc_log[0]
+    qc_log = retrieve_existing_qc_result('en_background_check', 
+                                         p.uid(),
+                                         parameters['table'], 
+                                         parameters['db'])
+    if qc_log is not None:
+        return qc_log
 
     return run_qc(p, parameters)
 

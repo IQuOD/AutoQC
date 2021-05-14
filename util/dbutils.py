@@ -192,3 +192,34 @@ def db_to_df(table,
             df_final = pandas.concat([df_final, df])
 
     return df_final.reset_index(drop=True)
+    
+def retrieve_existing_qc_result(test, uid, table='iquod', db='iquod.db'):
+    '''
+    Extracts QC results from the d:
+    test  - the QC check to get results for.
+    uid   - the profile unique ID to get results for.
+    table - the database table for the profile.
+    db    - the name of the database file.
+    '''
+    
+    query = 'SELECT {} FROM {} WHERE uid = {};'.format(test, table, uid)
+    qc_log = main.dbinteract(query, targetdb=db)
+    try:
+        if len(qc_log) > 0:
+            qc_log = main.unpack_row(qc_log[0])
+            if qc_log[0] is not None:
+                return qc_log[0]
+        else:
+            print('Profile does not seem to exist in the database'
+            print(query)
+            print(qc_log)
+            raise
+    except:
+        print('Test name does not seem to exist in the database')
+        print(query)
+        print(qc_log)
+        
+    # If this point is reached, we just return None.
+    return None
+    
+
