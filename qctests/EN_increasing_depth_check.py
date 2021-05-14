@@ -6,6 +6,7 @@ from . import EN_spike_and_step_check
 import numpy as np
 from collections import Counter
 import util.main as main
+from util.dbutils import retrieve_existing_qc_result
 
 def test(p, parameters):
     """
@@ -16,12 +17,13 @@ def test(p, parameters):
 
     # Check if the QC of this profile was already done and if not
     # run the QC.
-    query = 'SELECT en_increasing_depth_check FROM ' + parameters["table"] + ' WHERE uid = ' + str(p.uid()) + ';'
-    qc_log = main.dbinteract(query, targetdb=parameters["db"])
-    qc_log = main.unpack_row(qc_log[0])
-    if qc_log[0] is not None:
-        return qc_log[0]
-
+    qc_log = retrieve_existing_qc_result('en_increasing_depth_check', 
+                                         p.uid(),
+                                         parameters['table'], 
+                                         parameters['db'])
+    if qc_log is not None:
+        return qc_log
+        
     return run_qc(p, parameters)
 
 def mask_index(mat, index):

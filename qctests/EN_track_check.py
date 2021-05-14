@@ -29,13 +29,13 @@ def test(p, parameters):
     en_track_result = main.dbinteract(command, targetdb=parameters["db"])
     if en_track_result[0][0] is not None:
         en_track_result = main.unpack_row(en_track_result[0])[0]
-        result = np.zeros(1, dtype=bool)
-        result[0] = np.any(en_track_result)
+        result = np.zeros(p.n_levels(), dtype=bool)
+        result[:] = np.any(en_track_result)
         return result
 
     # make sure this profile makes sense in the track check
     if not assess_usability(p):
-        return np.zeros(1, dtype=bool)
+        return np.zeros(p.n_levels(), dtype=bool)
 
     # fetch all profiles on track, sorted chronologically, earliest first (None sorted as highest), then by uid
     command = 'SELECT uid, year, month, day, time, lat, long, probe, raw FROM ' + parameters["table"] + ' WHERE cruise = ' + str(cruise) + ' and country = "' + str(country) + '" and ocruise = "' + str(originator_cruise) + '" and year is not null and month is not null and day is not null and time is not null ORDER BY year, month, day, time, uid ASC;'
@@ -47,7 +47,7 @@ def test(p, parameters):
     # start all as passing by default
     EN_track_results = {}
     for i in range(len(track_rows)):
-        EN_track_results[track_rows[i][0]] = np.zeros(1, dtype=bool)
+        EN_track_results[track_rows[i][0]] = np.zeros(p.n_levels(), dtype=bool)
 
     # copy the list of headers;
     # remove entries as they are flagged.
@@ -62,7 +62,7 @@ def test(p, parameters):
     # if more than half got rejected, reject everyone
     if len(passed_rows) < len(track_rows) / 2:
         for i in range(len(track_rows)):
-            EN_track_results[track_rows[i][0]][0] = True
+            EN_track_results[track_rows[i][0]][:] = True
 
     # write all to db
     result = []
@@ -164,7 +164,7 @@ def findOutlier(rows, results):
     if flag:
         rejects = chooseReject(rows, speeds, angles, iMax, maxSpeed)
         for reject in rejects:
-            results[rows[reject][0]][0] = True
+            results[rows[reject][0]][:] = True
         return rejects
     else:
         return []

@@ -29,11 +29,11 @@ def spike(t):
     	return False
 
     centralTemp = t[int(len(t)/2)]
-    medianDiff = numpy.round( abs(centralTemp - numpy.median(t)),2)
+    medianDiff = numpy.round( abs(centralTemp - numpy.ma.median(t)),2)
 
     if medianDiff != 0:
         t = numpy.delete(t, int(len(t)/2))
-        spikeCheck = numpy.round(abs(centralTemp-numpy.mean(t)), 2)
+        spikeCheck = numpy.round(abs(centralTemp-numpy.ma.mean(t)), 2)
         if spikeCheck > 0.3:
             return True
 

@@ -8,7 +8,12 @@ def test(p, parameters):
     temp_min, temp_max = extract_minmax(-obs_utils.depth_to_pressure(p.z(), p.latitude()), p.longitude(), p.latitude())
 
     # true flag if temp is out of range
-    qc = numpy.asarray([k<temp_min[i] or k>temp_max[i] for i,k in enumerate(temp)])
+    qc = numpy.zeros(p.n_levels(), dtype=bool)
+    for i, k in enumerate(temp):
+        # Only define a QC flag if all parameters are available.
+        if numpy.ma.is_masked(k) or numpy.isnan(temp_min[i]) or numpy.isnan(temp_max[i]): 
+            continue
+        qc[i] = (k<temp_min[i]) or (k>temp_max[i])
 
     return qc
 

@@ -35,10 +35,10 @@ def process_row(uid, logdir, table='iquod', targetdb='iquod.db'):
       result = run(test, [profile], parameterStore)[0]
     except:
       print(test, 'exception', sys.exc_info())
-      result = np.zeros(1, dtype=bool)
+      result = np.zeros(profile.n_levels(), dtype=bool)
 
     try:
-      query = "UPDATE " + table + " SET " + test + "=? WHERE uid=" + str(profile.uid()) + ";"
+      query = "UPDATE " + table + " SET " + test.lower() + "=? WHERE uid=" + str(profile.uid()) + ";"
       main.dbinteract(query, [main.pack_array(result)], targetdb=targetdb)
     except:
       print('db exception', sys.exc_info())
