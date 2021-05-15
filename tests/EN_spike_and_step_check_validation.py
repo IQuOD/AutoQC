@@ -68,7 +68,7 @@ class TestClass:
         '''
         test preliminary tropical rejection
         '''
-        p = util.testingProfile.fakeProfile([0, 0, 0, 0], [0, 10, 20, 30], latitude=0.0, uid=8888)
+        p = util.testingProfile.fakeProfile([0, 0, 0, 0], [0, 10, 20, 30], latitude=0.0, uid=2222)
         qc = qctests.EN_spike_and_step_check.test(p, self.parameters, True)
         truth = numpy.zeros(4, dtype=bool)
         truth[:] = True
@@ -188,7 +188,7 @@ class TestClass:
         test condition C step check in context
         suspect == True since condition C is a suspected reject
         '''
-        p = util.testingProfile.fakeProfile([24, 24, 2, 1], [10, 20, 30, 40], latitude=20.0, uid=8888)
+        p = util.testingProfile.fakeProfile([24, 24, 2, 1], [10, 20, 30, 40], latitude=20.0, uid=1111)
         qc = qctests.EN_spike_and_step_check.test(p, self.parameters, True)
         truth = numpy.zeros(4, dtype=bool)
         truth[1] = True
