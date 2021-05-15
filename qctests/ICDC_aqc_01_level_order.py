@@ -118,5 +118,4 @@ def level_order(p, parameters):
 
 def loadParameters(parameterStore):
 
-    main.dbinteract("DROP TABLE IF EXISTS icdclevelorder", targetdb=parameterStore["db"])
     main.dbinteract("CREATE TABLE IF NOT EXISTS icdclevelorder (uid INTEGER PRIMARY KEY, nlevels INTEGER, origlevels BLOB, zr BLOB, tr BLOB, qc BLOB)", targetdb=parameterStore["db"])

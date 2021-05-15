@@ -204,7 +204,6 @@ def readENBackgroundCheckAux():
 
 def loadParameters(parameterStore):
 
-    main.dbinteract("DROP TABLE IF EXISTS enbackground", targetdb=parameterStore["db"])
     main.dbinteract("CREATE TABLE IF NOT EXISTS enbackground (uid INTEGER PRIMARY KEY, bgstdlevels BLOB, bgevstdlevels BLOB, origlevels BLOB, ptlevels BLOB, bglevels BLOB)", targetdb=parameterStore["db"])
     parameterStore['enbackground'] = readENBackgroundCheckAux()
 
