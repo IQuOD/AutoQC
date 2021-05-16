@@ -202,5 +202,4 @@ def interpolate(depth, shallow, deep, shallowVal, deepVal):
 
 def loadParameters(parameterStore):
 
-    main.dbinteract("DROP TABLE IF EXISTS enspikeandstep", targetdb=parameterStore["db"])
     main.dbinteract("CREATE TABLE IF NOT EXISTS enspikeandstep (uid INTEGER PRIMARY KEY, suspect BLOB)", targetdb=parameterStore["db"])

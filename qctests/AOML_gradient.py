@@ -17,7 +17,9 @@ def test(p, parameters):
 
     for i in range(p.n_levels()-1):
         if isData[i] and isData[i+1]:
-            gradTest = (t[i+1]-t[i]) / (z[i+1]-z[i])
+            dz = z[i+1]-z[i]
+            if dz == 0.0: continue
+            gradTest = (t[i+1]-t[i]) / dz
             if t[i+1]-t[i] < 0:
                 if abs(gradTest) > 1.0:
                     qc[i] = True
