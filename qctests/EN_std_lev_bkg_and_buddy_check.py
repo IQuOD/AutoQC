@@ -355,6 +355,8 @@ def timeDiff(p1, p2):
         year  = prof.year()
         month = prof.month()
         day   = prof.day()
+        if (year is None) or (month is None) or (day is None):
+            return None
         if not (year > 0) or not (1 <= month <= 12) or not (1 <= day <= 31):
             return None 
         time  = prof.time()
