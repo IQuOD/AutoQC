@@ -72,7 +72,10 @@ df = dbutils.db_to_df(table=dbtable,
                       targetdb=targetdb,
                       filter_on_wire_break_test = False,
                       filter_on_tests = groupdefinition,
-                      n_to_extract = samplesize)
+                      n_to_extract = samplesize,
+                      pad=2, 
+                      XBTbelow=True,
+                      mark_training=False)
 testNames = df.columns[2:].values.tolist()
 
 # declare some downstream constructs
@@ -84,11 +87,12 @@ bad.reset_index(inplace=True, drop=True)
 
 # mark chosen profiles as part of the training set
 all_uids = main.dbinteract('SELECT uid from ' + dbtable + ';', targetdb=targetdb)
-for uid in all_uids:
-    uid = uid[0]
-    is_training = int(uid in df['uid'].astype(int).as_matrix())
-    query = "UPDATE " + dbtable + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
-    main.dbinteract(query, targetdb=targetdb)
+if mark_training:
+    for uid in all_uids:
+        uid = uid[0]
+        is_training = int(uid in df['uid'].astype(int).to_numpy())
+        query = "UPDATE " + dbtable + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
+        main.dbinteract(query, targetdb=targetdb)
 
 # algo. step 0:
 # demand individual QC tests have TPR/FPR > some threshold
@@ -106,15 +110,15 @@ testNames = [x for x in testNames if x not in drop_tests]
 # algo. step 1:
 # note profiles that weren't flagged by any test
 for i in range(len(bad)):
-    if not any(bad.ix[i][testNames]):
-        unflagged.append(bad.ix[i]['uid'])
+    if not any(bad.iloc[i][testNames]):
+        unflagged.append(bad.iloc[i]['uid'])
 # drop these from consideration
 bad = bad[~bad['uid'].isin(unflagged)]
 
 # algo. step 2:
 # assess fprs for individual tests
 for x in testNames:
-    tpr, fpr, fnr, tnr = main.calcRates(df[x].as_matrix(), df['Truth'].as_matrix())
+    tpr, fpr, fnr, tnr = main.calcRates(df[x].to_numpy(), df['Truth'].to_numpy())
     fprs.append([x, fpr, tpr])
 
 # accept tests that flag bad profiles with no false positives
@@ -140,7 +144,7 @@ for combo in combos:
 
 # assess tpr, fpr for each test and combo:
 for x in combonames:
-    tpr, fpr, fnr, tnr = main.calcRates(df[x].as_matrix(), df['Truth'].as_matrix())
+    tpr, fpr, fnr, tnr = main.calcRates(df[x].to_numpy(), df['Truth'].to_numpy())
     fprs.append([x, fpr, tpr])
 fprs.sort(key=lambda tup: tup[1])
 
@@ -148,7 +152,7 @@ fprs.sort(key=lambda tup: tup[1])
 while len(bad) > 0:
     nosingleflags = True
     for i in range(len(bad)):
-        x = bad.ix[i][testNames+combonames]
+        x = bad.iloc[i][testNames+combonames]
         if sum(x) == 1:
             winner = x[x].keys()[0]
             accepted.append(winner)		# accept the combo as the only one flagging this bad profile
