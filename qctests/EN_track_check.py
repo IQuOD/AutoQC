@@ -47,7 +47,7 @@ def test(p, parameters):
     # start all as passing by default
     EN_track_results = {}
     for i in range(len(track_rows)):
-        EN_track_results[track_rows[i][0]] = np.zeros(p.n_levels(), dtype=bool)
+        EN_track_results[track_rows[i][0]] = np.zeros(n_levels_raw(track_rows[i][8][1:-1]), dtype=bool)
 
     # copy the list of headers;
     # remove entries as they are flagged.
@@ -121,6 +121,10 @@ def assess_usability(p):
 def assess_usability_raw(raw):
     p = main.text2wod(raw)
     return assess_usability(p)
+
+def n_levels_raw(raw):
+    p = main.text2wod(raw)
+    return p.n_levels()
 
 def isAircraft(profile):
     '''
