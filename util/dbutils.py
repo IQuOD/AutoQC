@@ -85,7 +85,9 @@ def db_to_df(table,
              filter_on_tests={},
              n_to_extract=numpy.iinfo(numpy.int32).max,
              applyparse=True,
-             targetdb='iquod.db'):
+             targetdb='iquod.db',
+             pad=0, 
+             XBTbelow=False):
 
     '''
     Reads the table from targetdb into a pandas dataframe.
@@ -94,6 +96,8 @@ def db_to_df(table,
     filter_on_tests is a generalised form of filter_on_wire_break and is used to exclude results; it takes a list of
          [testname, action], where levels failing <testname> are excluded towards the surface (if action is 'up'), towards depth (if action is 'down') and the whole profile deleted (if action is 'remove').
     Set n_to_extract to limit the number of rows extracted to the specified number.
+    Set pad to remove extra levels around a fail to make sure that it is got rid of.
+    Set XBTbelow to remove levels below an XBT fail.
     '''
 
     # what tests are available
@@ -108,7 +112,7 @@ def db_to_df(table,
     query = 'SELECT uid, truth'
     for test in testNames:
         query += ', ' + test.lower()
-    query += ' FROM ' + table   
+    query += ', probe FROM ' + table   
     query += ' WHERE uid IN (SELECT uid FROM ' + table + ' ORDER BY RANDOM() LIMIT ' + str(n_to_extract) + ')' 
 
     cur.execute(query)
@@ -116,20 +120,20 @@ def db_to_df(table,
 
     sub = 1000
     df_final = None
+    testNamesSave = testNames
     for i in range(math.ceil(len(rawresults)/sub)):
         df = pandas.DataFrame(rawresults[i*sub:(i+1)*sub]).astype('bytes')
-        df.columns = ['uid', 'Truth'] + testNames
+        df.columns = ['uid', 'Truth'] + testNamesSave + ['probe']
         df = df.astype({'uid': 'int'})
+        df = df.astype({'probe': 'float'})
         if filter_on_wire_break_test:
             nlevels = get_n_levels_before_fail(df['CSIRO_wire_break'])
             del df['CSIRO_wire_break'] # No use for this now.
-            testNames = df.columns[2:].values.tolist()
+            df.reset_index(inplace=True, drop=True)
+            testNames = df.columns[2:-1].values.tolist()
             for i in range(len(df.index)):
-                for j in range(1, len(df.columns)):
+                for j in range(1, len(df.columns) - 1):
                     qc = unpack_qc(df.iloc[i, j])
-                    # Some QC tests may return only one value so check for this.
-                    if len(qc) > 1:
-                        qc = qc[:nlevels[i]]
                     df.iat[i, j] = main.pack_array(qc)
 
         todrop = set()
@@ -145,12 +149,28 @@ def db_to_df(table,
                 for i in range(0, len(df.index)):
                     if action == 'Remove above reject':
                         nlevels = get_reversed_n_levels_before_fail([df[testname][i]])[0]
+                        if pad > 0:
+                            nlevels += pad
+                            if nlevels > 0: nlevels = 0
                     elif action == 'Remove below reject':
                         nlevels = get_n_levels_before_fail([df[testname][i]])[0]
+                        if pad > 0:
+                            nlevels -= pad
+                            if nlevels < 0: nlevels = 0
                     elif action == 'Remove profile':
                         outcomes = check_for_fail([df[testname][i]])[0]
                     elif action == 'Remove rejected levels':
                         qcresults = unpack_qc_results([df[testname][i]])[0]
+                        if (pad > 0) or XBTbelow:
+                            qcresultsorig = qcresults.copy()
+                            for icons, qccons in enumerate(qcresultsorig):
+                                if qccons:
+                                    iconsstart = max(0, icons - pad)
+                                    iconsend   = min(len(qcresults), icons + pad + 1)
+                                    if XBTbelow:
+                                        if df['probe'][i] == 2:
+                                            iconsend = len(qcresults)
+                                    qcresults[iconsstart:iconsend] = True
                     else:
                         raise NameError('Unrecognised action: ' + action)
 
@@ -161,18 +181,17 @@ def db_to_df(table,
                         # has a fail and the action is to remove.
                         todrop.add(i)
                     elif (action != 'Remove profile'):
-                        for j in range(1, len(df.columns)):
+                        for j in range(1, len(df.columns) - 1):
                             # Retain only the levels that passed testname.
                             # Some QC tests may return only one value so check for this.
                             qc = unpack_qc(df.iloc[i, j])
-                            if len(qc) > 1:
-                                if action == 'Remove above reject':
-                                    qc = qc[nlevels:]
-                                elif action == 'Remove below reject':
-                                    qc = qc[:nlevels] 
-                                elif action == 'Remove rejected levels':
-                                    qc = qc[qcresults == False]            
-                                df.iat[i, j] = main.pack_array(qc)
+                            if action == 'Remove above reject':
+                                qc = qc[nlevels:]
+                            elif action == 'Remove below reject':
+                                qc = qc[:nlevels] 
+                            elif action == 'Remove rejected levels':
+                                qc = qc[qcresults == False]            
+                            df.iat[i, j] = main.pack_array(qc)
 
                 del df[testname] # No need to keep this any longer.
                 df.reset_index(inplace=True, drop=True)
@@ -181,7 +200,7 @@ def db_to_df(table,
         if len(todrop) > 0:
             df.drop(todrop, inplace=True)
         df.reset_index(inplace=True, drop=True)
-        testNames = df.columns[2:].values.tolist()
+        testNames = df.columns[2:-1].values.tolist()
         if applyparse:
             df[['Truth']] = df[['Truth']].apply(parse_truth)
             df[testNames] = df[testNames].apply(parse)
@@ -190,7 +209,8 @@ def db_to_df(table,
             df_final = df
         else:
             df_final = pandas.concat([df_final, df])
-
+    
+    del df_final['probe']
     return df_final.reset_index(drop=True)
     
 def retrieve_existing_qc_result(test, uid, table='iquod', db='iquod.db'):
