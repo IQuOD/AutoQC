@@ -1,0 +1,23 @@
+{
+  "title": "AutoQC: Automatic Quality Control analysis for the International Quality Controlled Ocean Database",
+  "creators": [
+    {
+      "name": "Good, Simon",
+      "affiliation": "Met Office, Exeter, U.K.",
+      "orcid": "0000-0001-9924-2445"
+    },
+    {
+      "name": "Mills, Bill",
+      "affiliation": "Independent",
+      "orcid": "0000-0002-5887-6270"
+    }
+  ],
+  "contributors": [
+    {
+      "type": "Researcher",
+      "name": "Castelao, Guilherme",
+      "affiliation": "Scripps Institution of Oceanography - UC San Diego",
+      "orcid": "0000-0002-6765-0708"
+    }
+  ]
+}
