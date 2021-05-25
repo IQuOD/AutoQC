@@ -376,6 +376,17 @@ def find_roc_ordered(table,
                                   n_to_extract = n_profiles_to_analyse,
                                   pad=2, 
                                   XBTbelow=True)
+
+            # Drop nondiscriminating tests i.e. those that flag all or none
+            # of the profiles.
+            nondiscrim = []
+            cols = list(df.columns)
+            for c in cols:
+                if len(pandas.unique(df[c])) == 1:
+                    nondiscrim.append(c)
+                    if verbose: print(c + ' is nondiscriminating and will be removed')
+            cols = [t for t in cols if t not in nondiscrim]
+            df = df[cols]
             testNames = df.columns[2:].values.tolist()
             
             # Convert to numpy structures and save copy if first iteration.
@@ -456,7 +467,7 @@ def find_roc_ordered(table,
         for itest, name in enumerate(allnames):
             if tn == name:
                 cumulative         = np.logical_or(cumulative, alltests[itest])
-                tpr, fpr, fnr, tnr = main.calcRates(cumulative, truth)      
+                tpr, fpr, fnr, tnr = main.calcRates(cumulative, alltruth)      
                 r_fprs.append(fpr)
                 r_tprs.append(tpr)
                 print('ROC point: ', tpr, fpr, tn)
