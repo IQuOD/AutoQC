@@ -28,7 +28,7 @@
         },
         {
             "scheme": "doi",
-            "identifier": "10.5281/zenodo.592262",
+            "identifier": "10.21105/joss.02063",
             "relation": "cites"
         }
     ]
