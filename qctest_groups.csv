@@ -57,4 +57,4 @@ Fuzzy logic,Optional,CoTeDe_Morello2014,
 XBT surface spikes,Optional,CSIRO_surface_spikes,Not a standard spike check; specific to XBTs
 Track check,Optional,EN_track_check,Check on position of successive profiles
 Maximum depth,Optional,ICDC_aqc_04_max_obs_depth,Defines maximum possible depth for instruments and flags data exceeding these
-Min max,Optional,minmax,
+Range,At least one from group,minmax,
