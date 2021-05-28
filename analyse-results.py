@@ -498,7 +498,7 @@ def find_roc_ordered(table,
 if __name__ == '__main__':
 
     # parse options
-    options, remainder = getopt.getopt(sys.argv[1:], 't:d:n:c:o:p:h:sl')
+    options, remainder = getopt.getopt(sys.argv[1:], 't:d:n:c:o:p:hsl')
     targetdb = 'iquod.db'
     dbtable = 'iquod'
     outfile = False
@@ -543,4 +543,3 @@ if __name__ == '__main__':
         find_roc_ordered(table=dbtable, targetdb=targetdb, n_profiles_to_analyse=samplesize, costratio=costratio, plot_roc=plotfile, write_roc=outfile, levelbased=levelbased)
     else:
         find_roc(table=dbtable, targetdb=targetdb, n_profiles_to_analyse=samplesize, costratio=costratio, plot_roc=plotfile, write_roc=outfile)
-
