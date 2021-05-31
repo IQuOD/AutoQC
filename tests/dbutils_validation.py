@@ -6,6 +6,7 @@ import qctests.EN_constant_value_check
 from util import main
 import util.testingProfile
 import numpy
+from util import dbutils
 from util.dbutils import retrieve_existing_qc_result
 
 #####  ---------------------------------------------------
@@ -128,5 +129,48 @@ class TestClass:
         
         assert retrieved_qc is None, 'None not returned if QC not available'
         
-
+    def test_get_n_levels_before_fail(self):
+        '''
+        Test that the correct number of levels before a reject is found.
+        '''
+        
+        qc = [main.pack_array(numpy.array([False, False, True, False])),
+              main.pack_array(numpy.array([False, False, False, False])),
+              main.pack_array(numpy.array([True, True, True, True]))]
+              
+        n = dbutils.get_n_levels_before_fail(qc)
+        
+        expected = [2, 4, 0]
+        
+        assert numpy.array_equal(n, expected), 'Number of levels returned was not as expected'
+         
+    def test_get_reversed_n_levels_before_fail(self):
+        '''
+        Test that the correct number of levels before a reject is found, counting from the bottom.
+        '''
+        
+        qc = [main.pack_array(numpy.array([False, False, True, False])),
+              main.pack_array(numpy.array([False, False, False, False])),
+              main.pack_array(numpy.array([True, True, True, True]))]
+              
+        n = dbutils.get_reversed_n_levels_before_fail(qc)
+        
+        expected = [-1, -4, 0]
+        
+        assert numpy.array_equal(n, expected), 'Number of levels returned was not as expected'
+         
+    def test_check_for_fail(self):
+        '''
+        Test that the correct number of levels before a reject is found, counting from the bottom.
+        '''
+        
+        qc = [main.pack_array(numpy.array([False, False, True, False])),
+              main.pack_array(numpy.array([False, False, False, False])),
+              main.pack_array(numpy.array([True, True, True, True]))]
+              
+        results = dbutils.check_for_fail(qc)
+        
+        expected = [True, False, True]
+        
+        assert numpy.array_equal(results, expected), 'Result not as expected'
         
