@@ -219,7 +219,7 @@ def db_to_df(table,
                     # Apply the result of the action.
                     if numpy.count_nonzero(applied == False) == 0:
                         # Completely remove a profile if it has no valid levels after applying the action.
-                        todrop.add(i)
+                        todrop.add(ip)
                     elif numpy.count_nonzero(applied == True) == 0:
                         # Nothing to do as there were no rejected levels.
                         pass
