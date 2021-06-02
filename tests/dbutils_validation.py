@@ -7,6 +7,7 @@ from util import main
 import util.testingProfile
 import numpy
 from util import dbutils
+from util.dbutils import qc_action
 from util.dbutils import retrieve_existing_qc_result
 
 #####  ---------------------------------------------------
@@ -174,3 +175,157 @@ class TestClass:
         
         assert numpy.array_equal(results, expected), 'Result not as expected'
         
+    def update_qc(self, uid, test, qc):
+        # Useful function to update the database with some QC results.
+        query = "UPDATE " + self.parameters['table'] + " SET " + test + "=? WHERE uid=" + str(uid) + ";"
+        main.dbinteract(query, [main.pack_array(qc)], targetdb=self.parameters['db'])
+        
+    def test_dbtodf_parsed(self):
+        '''
+        Basic test of functionality to create the dataframe and parse results.
+        '''
+        
+        # Define some QC results and check the parsing returns the expected result.
+        self.update_qc(8888, 'truth', numpy.ma.array([1, 1, 1, 1]))
+        self.update_qc(8888, 'en_track_check', numpy.ma.array([False, False, False, False]))
+        self.update_qc(8888, 'en_range_check', numpy.ma.array([True, False, False, False]))
+        df = dbutils.db_to_df('unit')
+        assert df['Truth'][0] == False, 'QC results incorrect.'
+        assert df['EN_track_check'][0] == False, 'QC results incorrect.'
+        assert df['EN_range_check'][0] == True, 'QC results incorrect.'
+        
+        self.update_qc(8888, 'truth', numpy.ma.array([1, 1, 1, 4]))
+        df = dbutils.db_to_df('unit')
+        assert df['Truth'][0] == True, 'QC results incorrect.'
+        
+        self.update_qc(8888, 'truth', numpy.ma.array([1, 1, 1, 3]))
+        df = dbutils.db_to_df('unit')
+        assert df['Truth'][0] == True, 'QC results incorrect.'
+        
+        self.update_qc(8888, 'truth', numpy.ma.array([1, 1, 1, 3], mask=[False, False, False, True]))
+        df = dbutils.db_to_df('unit')
+        assert df['Truth'][0] == False, 'QC results incorrect.'
+
+    def test_dbtodf_unparsed(self):
+        '''
+        Basic test of functionality to create the dataframe without parsing results.
+        '''
+        
+        # Define some QC results and check the parsing returns the expected result.
+        self.update_qc(8888, 'truth', numpy.ma.array([1, 2, 3, 4]))
+        self.update_qc(8888, 'en_track_check', numpy.ma.array([False, False, True, False]))
+        self.update_qc(8888, 'en_range_check', numpy.ma.array([True, False, False, False]))
+        df = dbutils.db_to_df('unit', applyparse=False)
+        assert numpy.array_equal(dbutils.unpack_qc(df['Truth'][0]), [1, 2, 3, 4]), 'QC results incorrect.'
+        assert numpy.array_equal(dbutils.unpack_qc(df['EN_track_check'][0]), [False, False, True, False]), 'QC results incorrect.'
+        assert numpy.array_equal(dbutils.unpack_qc(df['EN_range_check'][0]), [True, False, False, False]), 'QC results incorrect.'
+        
+    def test_qc_action_remove_above_reject(self):
+        '''
+        Check that qc_action correctly applies the actions.
+        '''
+        
+        result = qc_action('Remove above reject',
+                           main.pack_array(numpy.array([False, False, False, True, False, False])))
+        expected = [True, True, True, True, False, False]
+        assert numpy.array_equal(result, expected)
+
+        result = qc_action('Remove above reject',
+                           main.pack_array(numpy.array([True, False, False, False, False, False])))
+        expected = [True, False, False, False, False, False]
+        assert numpy.array_equal(result, expected)
+
+        result = qc_action('Remove above reject',
+                           main.pack_array(numpy.array([False, False, False, True, False, True])))
+        expected = [True, True, True, True, True, True]
+        assert numpy.array_equal(result, expected)
+
+        result = qc_action('Remove above reject',
+                           main.pack_array(numpy.array([False, False, False, False, False, False])))
+        expected = [False, False, False, False, False, False]
+        assert numpy.array_equal(result, expected)
+
+        result = qc_action('Remove above reject',
+                           main.pack_array(numpy.array([True, True, True, True, True, True])))
+        expected = [True, True, True, True, True, True]
+        assert numpy.array_equal(result, expected)
+
+    def test_qc_action_remove_below_reject(self):
+        '''
+        Check that qc_action correctly applies the actions.
+        '''
+        
+        result = qc_action('Remove below reject',
+                           main.pack_array(numpy.array([False, False, False, True, False, False])))
+        expected = [False, False, False, True, True, True]
+        assert numpy.array_equal(result, expected)
+
+        result = qc_action('Remove below reject',
+                           main.pack_array(numpy.array([True, False, False, True, False, False])))
+        expected = [True, True, True, True, True, True]
+        assert numpy.array_equal(result, expected)
+
+        result = qc_action('Remove below reject',
+                           main.pack_array(numpy.array([False, False, False, False, False, True])))
+        expected = [False, False, False, False, False, True]
+        assert numpy.array_equal(result, expected)
+
+        result = qc_action('Remove below reject',
+                           main.pack_array(numpy.array([False, False, False, False, False, False])))
+        expected = [False, False, False, False, False, False]
+        assert numpy.array_equal(result, expected)
+
+        result = qc_action('Remove below reject',
+                           main.pack_array(numpy.array([True, True, True, True, True, True])))
+        expected = [True, True, True, True, True, True]
+        assert numpy.array_equal(result, expected)
+                            
+    def test_qc_action_remove_rejected_levels(self):
+        '''
+        Check that qc_action correctly applies the actions.
+        '''
+        
+        result = qc_action('Remove rejected levels',
+                           main.pack_array(numpy.array([True, False, False, True, False, False])))
+        expected = [True, False, False, True, False, False]
+        assert numpy.array_equal(result, expected)
+
+    def test_qc_action_remove_profile(self):
+        '''
+        Check that qc_action correctly applies the actions.
+        '''
+        
+        result = qc_action('Remove profile',
+                           main.pack_array(numpy.array([True, False, False, True, False, False])))
+        expected = [True, True, True, True, True, True]
+        assert numpy.array_equal(result, expected)
+
+        result = qc_action('Remove profile',
+                           main.pack_array(numpy.array([False, False, False, False, False, False])))
+        expected = [False, False, False, False, False, False]
+        assert numpy.array_equal(result, expected)
+
+    def test_qc_action_pad(self):
+        '''
+        Check that qc_action correctly applies the actions with padding.
+        '''
+        
+        result = qc_action('Remove above reject',
+                           main.pack_array(numpy.array([False, False, False, True, False, False])),
+                           pad = 1)
+        expected = [True, True, True, True, True, False]
+        assert numpy.array_equal(result, expected)
+
+        result = qc_action('Remove below reject',
+                           main.pack_array(numpy.array([False, False, False, True, False, False])),
+                           pad = 2)
+        expected = [False, True, True, True, True, True]
+        assert numpy.array_equal(result, expected)
+
+        result = qc_action('Remove rejected levels',
+                           main.pack_array(numpy.array([True, False, False, False, False, True])),
+                           pad = 1)
+        expected = [True, True, False, False, True, True]
+        assert numpy.array_equal(result, expected)
+
+

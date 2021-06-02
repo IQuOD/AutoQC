@@ -39,7 +39,11 @@ def get_n_levels_before_fail(results):
     nlevels = []
     for result in results:
         n = 0
-        for qc in unpack_qc(result):
+        if type(result) is numpy.ndarray or type(result) is numpy.ma.core.MaskedArray or type(result) is list:
+            qcresult = result
+        else:
+            qcresult = unpack_qc(result)
+        for qc in qcresult:
             if qc == False:
                 n += 1
             else:
@@ -53,7 +57,11 @@ def get_reversed_n_levels_before_fail(results):
     nlevels = []
     for result in results:
         n = 0
-        for qc in unpack_qc(result)[::-1]:
+        if type(result) is numpy.ndarray or type(result) is numpy.ma.core.MaskedArray or type(result) is list:
+            qcresult = result
+        else:
+            qcresult = unpack_qc(result)
+        for qc in qcresult[::-1]:
             if qc == False:
                 n -= 1
             else:
@@ -68,7 +76,11 @@ def check_for_fail(results):
     fails = []
     for result in results:
         answer = False
-        for qc in unpack_qc(result):
+        if type(result) is numpy.ndarray or type(result) is numpy.ma.core.MaskedArray or type(result) is list:
+            qcresult = result
+        else:
+            qcresult = unpack_qc(result)
+        for qc in qcresult:
             if qc == True:
                 answer = True
                 break
@@ -79,6 +91,46 @@ def check_for_fail(results):
 def unpack_qc_results(results):
 
     return [unpack_qc(result) for result in results] 
+
+def qc_action(action, qc, pad=0):
+    '''
+    Applies action to the qc results with padding
+    '''
+    # Define results array.
+    result = unpack_qc(qc)
+
+    # Apply the action.
+    if action == 'Remove above reject':
+        nlevels = get_reversed_n_levels_before_fail([result])[0]
+        if nlevels == 0:
+            result[:] = True
+        else:
+            result[:nlevels] = True
+    elif action == 'Remove below reject':
+        nlevels = get_n_levels_before_fail([result])[0]
+        if nlevels == 0:
+            result[:] = True
+        else:
+            result[nlevels+1:] = True
+    elif action == 'Remove profile':
+        result[:] = check_for_fail([result])[0]
+    elif action == 'Remove rejected levels':
+        pass # Keep the original QC results.
+    else:
+        raise NameError('Unrecognised action: ' + action)
+        
+    # Add padding if required.
+    if (pad > 0):
+        resultorig = result.copy()
+        for ipad, qcpad in enumerate(resultorig):
+            if qcpad:
+                ipadstart = max(0, ipad - pad)
+                ipadend   = min(len(result), ipad + pad + 1)
+                result[ipadstart:ipadend] = True
+
+    # Return the result, which has True where levels should be removed
+    # and False where levels should be kept.
+    return result
 
 def db_to_df(table,
              filter_on_wire_break_test=False, 
@@ -117,99 +169,89 @@ def db_to_df(table,
 
     cur.execute(query)
     rawresults = cur.fetchall()
+    
+    # ensure XBT wire breaks handling is set up by adding it to the
+    # filter_on_tests['Remove below reject'] group
+    if filter_on_wire_break_test:
+        if 'Remove below reject' in filter_on_tests.keys():
+            if 'CSIRO_wire_break' not in filter_on_tests['Remove below reject']:
+                filter_on_tests['Remove below reject'].append('CSIRO_wire_break')
+        else:
+            filter_on_tests['Remove below reject'] = ['CSIRO_wire_break']
 
-    sub = 1000
+    # Loop over the profiles, 1000 profiles at a time.
+    sub  = 1000 # Number of profiles to process at a time.
+    nsub = math.ceil(len(rawresults)/sub) # Number of batches of 1000 profiles there will be.
     df_final = None
-    testNamesSave = testNames
-    for i in range(math.ceil(len(rawresults)/sub)):
-        df = pandas.DataFrame(rawresults[i*sub:(i+1)*sub]).astype('bytes')
-        df.columns = ['uid', 'Truth'] + testNamesSave + ['probe']
+    testNamesSave = testNames.copy()
+    for i in range(nsub):
+        # Define the start and end points of this batch of profiles and create a dataframe from them.
+        istart = i * sub
+        iend   = min((i + 1) * sub, len(rawresults))
+        df = pandas.DataFrame(rawresults[istart:iend]).astype('bytes')
+        df.columns = ['uid', 'Truth'] + testNamesSave + ['probe'] # Probe is needed for XBTbelow functionality.
         df = df.astype({'uid': 'int'})
         df = df.astype({'probe': 'float'})
-        if filter_on_wire_break_test:
-            nlevels = get_n_levels_before_fail(df['CSIRO_wire_break'])
-            del df['CSIRO_wire_break'] # No use for this now.
-            df.reset_index(inplace=True, drop=True)
-            testNames = df.columns[2:-1].values.tolist()
-            for i in range(len(df.index)):
-                for j in range(1, len(df.columns) - 1):
-                    qc = unpack_qc(df.iloc[i, j])
-                    df.iat[i, j] = main.pack_array(qc)
 
+        # todrop stores a set of profiles that are completely removed by any actions we apply.
         todrop = set()
         for action in filter_on_tests:
-            # Check if the action is relevant.
+            # Check if the action requires any processing.
             if action == 'Optional' or action == 'At least one from group': continue
 
-            # Initialise variables.
-            nlevels   = -1
-            outcomes  = False
-            qcresults = []
+            # Loop over the tests that will have this action applied.
             for testname in filter_on_tests[action]:
-                for i in range(0, len(df.index)):
-                    if action == 'Remove above reject':
-                        nlevels = get_reversed_n_levels_before_fail([df[testname][i]])[0]
-                        if pad > 0:
-                            nlevels += pad
-                            if nlevels > 0: nlevels = 0
-                    elif action == 'Remove below reject':
-                        nlevels = get_n_levels_before_fail([df[testname][i]])[0]
-                        if pad > 0:
-                            nlevels -= pad
-                            if nlevels < 0: nlevels = 0
-                    elif action == 'Remove profile':
-                        outcomes = check_for_fail([df[testname][i]])[0]
-                    elif action == 'Remove rejected levels':
-                        qcresults = unpack_qc_results([df[testname][i]])[0]
-                        if (pad > 0) or XBTbelow:
-                            qcresultsorig = qcresults.copy()
-                            for icons, qccons in enumerate(qcresultsorig):
-                                if qccons:
-                                    iconsstart = max(0, icons - pad)
-                                    iconsend   = min(len(qcresults), icons + pad + 1)
-                                    if XBTbelow:
-                                        if df['probe'][i] == 2:
-                                            iconsend = len(qcresults)
-                                    qcresults[iconsstart:iconsend] = True
-                    else:
-                        raise NameError('Unrecognised action: ' + action)
+            
+                # Loop over the profiles, a.        
+                for ip in range(len(df.index)):
 
-                    if (((action == 'Remove above reject' or action == 'Remove below reject') and nlevels == 0) or
-                        (action == 'Remove profile' and outcomes == True) or
-                        (action == 'Remove rejected levels' and numpy.count_nonzero(qcresults == False) == 0)):
-                        # Completely remove a profile if it has no valid levels or if it
-                        # has a fail and the action is to remove.
+                    # If XBTbelow is set, the Remove rejected levels action is replaced with
+                    # Remove below reject for XBT profiles.
+                    actiontoapply = action
+                    if XBTbelow and (df['probe'][ip] == 2) and (action == 'Remove rejected levels'):
+                        actiontoapply = 'Remove below reject'
+
+                    # Use the qc_action function to apply the action.
+                    applied = qc_action(actiontoapply,
+                                        df[testname][ip],  
+                                        pad)
+
+                    # Apply the result of the action.
+                    if numpy.count_nonzero(applied == False) == 0:
+                        # Completely remove a profile if it has no valid levels after applying the action.
                         todrop.add(i)
-                    elif (action != 'Remove profile'):
+                    elif numpy.count_nonzero(applied == True) == 0:
+                        # Nothing to do as there were no rejected levels.
+                        pass
+                    else:
                         for j in range(1, len(df.columns) - 1):
                             # Retain only the levels that passed testname.
-                            # Some QC tests may return only one value so check for this.
-                            qc = unpack_qc(df.iloc[i, j])
-                            if action == 'Remove above reject':
-                                qc = qc[nlevels:]
-                            elif action == 'Remove below reject':
-                                qc = qc[:nlevels] 
-                            elif action == 'Remove rejected levels':
-                                qc = qc[qcresults == False]            
-                            df.iat[i, j] = main.pack_array(qc)
+                            qc = unpack_qc(df.iloc[ip, j])
+                            qc = qc[applied == False]            
+                            df.iat[ip, j] = main.pack_array(qc)
 
                 del df[testname] # No need to keep this any longer.
                 df.reset_index(inplace=True, drop=True)
-                
+        
+        # Drop the profiles that no longer have any valid levels.        
         todrop = list(todrop)
         if len(todrop) > 0:
             df.drop(todrop, inplace=True)
         df.reset_index(inplace=True, drop=True)
         testNames = df.columns[2:-1].values.tolist()
+        
+        # Apply the parse if required.
         if applyparse:
             df[['Truth']] = df[['Truth']].apply(parse_truth)
             df[testNames] = df[testNames].apply(parse)
 
+        # Keep the results.
         if i == 0:
             df_final = df
         else:
             df_final = pandas.concat([df_final, df])
     
+    # Remove the probe column before returning.
     del df_final['probe']
     return df_final.reset_index(drop=True)
     
