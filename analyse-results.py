@@ -76,7 +76,8 @@ def find_roc(table,
              improve_threshold=1.0, 
              verbose=True, 
              plot_roc=True,
-             write_roc=True):
+             write_roc=True,
+             mark_training=False):
     '''
     Generates a ROC curve from the database data in table by maximising the gradient
     of the ROC curve. It will combine different tests together and invert the results
@@ -112,8 +113,7 @@ def find_roc(table,
                           filter_on_tests = groupdefinition,
                           n_to_extract = n_profiles_to_analyse,
                           pad=2, 
-                          XBTbelow=True,
-                          mark_training=False)
+                          XBTbelow=True)
 
     # Drop nondiscriminating tests
     nondiscrim = []
@@ -329,7 +329,8 @@ def find_roc_ordered(table,
                      verbose=True, 
                      plot_roc=True,
                      write_roc=True,
-                     levelbased=False):
+                     levelbased=False,
+                     mark_training=False):
     '''
     Finds optimal tests to include in a QC set.
     table - the database table to read;
@@ -346,6 +347,10 @@ def find_roc_ordered(table,
                  are flagged are removed so other problems in the profile can be
                  used to determine the best quality control checks to use.
     '''
+
+    # Check that the options make sense.
+    if levelbased:
+        assert mark_training == False, 'Cannot use mark_training with levelbased'
 
     # Define the order of tests.
     ordering = ['Location', 'Range', 'Climatology', 'Increasing depth', 'Constant values',
@@ -376,6 +381,15 @@ def find_roc_ordered(table,
                                   n_to_extract = n_profiles_to_analyse,
                                   pad=2, 
                                   XBTbelow=True)
+
+            # mark chosen profiles as part of the training set 
+            all_uids = main.dbinteract('SELECT uid from ' + table + ';', targetdb=targetdb)
+            if mark_training:
+            for uid in all_uids:
+                uid = uid[0]
+                is_training = int(uid in df['uid'].astype(int).to_numpy())
+                query = "UPDATE " + table + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
+                main.dbinteract(query, targetdb=targetdb)
 
             # Drop nondiscriminating tests i.e. those that flag all or none
             # of the profiles.
@@ -498,7 +512,7 @@ def find_roc_ordered(table,
 if __name__ == '__main__':
 
     # parse options
-    options, remainder = getopt.getopt(sys.argv[1:], 't:d:n:c:o:p:hsl')
+    options, remainder = getopt.getopt(sys.argv[1:], 't:d:n:c:o:p:hslm')
     targetdb = 'iquod.db'
     dbtable = 'iquod'
     outfile = False
@@ -507,6 +521,7 @@ if __name__ == '__main__':
     costratio = [5.0, 5.0]
     ordered = False
     levelbased = False
+    mark_training = False
     for opt, arg in options:
         if opt == '-d':
             dbtable = arg
@@ -524,6 +539,8 @@ if __name__ == '__main__':
             ordered = True
         if opt == '-l':
             levelbased = True
+        if opt == '-m':
+            mark_training = True
         if opt == '-h':
             print('usage:')
             print('-d <db table name to read from>')
@@ -532,6 +549,7 @@ if __name__ == '__main__':
             print('-c <cost ratio array>')
             print('-s Find QC tests in a predefined sequence')
             print('-l If -s, remove only QCed out levels not profiles on each step')
+            print('-m If -m, profiles used to generate the ROC will be marked')
             print('-o <filename to write json results out to>')
             print('-p <filename to write roc plot out to>')
             print('-h print this help message and quit')
@@ -540,6 +558,6 @@ if __name__ == '__main__':
         print('-h to print usage')
 
     if ordered:
-        find_roc_ordered(table=dbtable, targetdb=targetdb, n_profiles_to_analyse=samplesize, costratio=costratio, plot_roc=plotfile, write_roc=outfile, levelbased=levelbased)
+        find_roc_ordered(table=dbtable, targetdb=targetdb, n_profiles_to_analyse=samplesize, costratio=costratio, plot_roc=plotfile, write_roc=outfile, levelbased=levelbased, mark_training=mark_training)
     else:
-        find_roc(table=dbtable, targetdb=targetdb, n_profiles_to_analyse=samplesize, costratio=costratio, plot_roc=plotfile, write_roc=outfile)
+        find_roc(table=dbtable, targetdb=targetdb, n_profiles_to_analyse=samplesize, costratio=costratio, plot_roc=plotfile, write_roc=outfile, mark_training=mark_training)
