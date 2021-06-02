@@ -220,6 +220,116 @@ class TestClass:
         assert numpy.array_equal(dbutils.unpack_qc(df['EN_track_check'][0]), [False, False, True, False]), 'QC results incorrect.'
         assert numpy.array_equal(dbutils.unpack_qc(df['EN_range_check'][0]), [True, False, False, False]), 'QC results incorrect.'
         
+    def test_dbtodf_actions(self):
+        '''
+        Basic test of functionality to create the dataframe without parsing results.
+        '''
+        
+        # Define some QC results and check the parsing returns the expected result.
+        main.fakerow('unit', uid=9999, probe=1) # Second profile which is not an XBT.
+        testNames = main.importQC('qctests')
+        for uid in [8888, 9999]: 
+            self.update_qc(uid, 'truth', numpy.ma.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+            for tname in testNames:
+                self.update_qc(uid, tname, numpy.ma.array([False, True, False, True, False, True, False, True, False, True]))    
+            self.update_qc(uid, 'csiro_wire_break', numpy.ma.array([False, False, True, False, False, False, False, False, False, False]))
+        self.update_qc(9999, 'en_track_check', numpy.ma.array([False, False, False, False, False, False, False, False, False, False]))
+        self.update_qc(8888, 'en_spike_and_step_check', numpy.ma.array([True, False, False, False, False, False, False, False, False, False]))
+        self.update_qc(9999, 'en_spike_and_step_check', numpy.ma.array([False, False, False, False, False, False, False, False, False, False]))
+        
+        # Check the wire break and the remove below reject functionality and the padding.
+        df = dbutils.db_to_df('unit', applyparse=False, filter_on_wire_break_test=True)
+        assert numpy.array_equal(dbutils.unpack_qc(df['Truth'][0]), [1, 2]), 'QC results incorrect.'
+        assert numpy.array_equal(dbutils.unpack_qc(df['EN_range_check'][0]), [False, True]), 'QC results incorrect.'
+        assert 'CSIRO_wire_break' not in df.columns[1:].values.tolist(), 'Test not removed from df'
+
+        df = dbutils.db_to_df('unit', applyparse=False, filter_on_tests={'Remove below reject':['CSIRO_wire_break']})
+        assert numpy.array_equal(dbutils.unpack_qc(df['Truth'][0]), [1, 2]), 'QC results incorrect.'
+        assert numpy.array_equal(dbutils.unpack_qc(df['EN_range_check'][0]), [False, True]), 'QC results incorrect.'
+        assert 'CSIRO_wire_break' not in df.columns[1:].values.tolist(), 'Test not removed from df'
+
+        df = dbutils.db_to_df('unit', applyparse=False, filter_on_tests={'Remove below reject':['CSIRO_wire_break']}, pad=1)
+        assert numpy.array_equal(dbutils.unpack_qc(df['Truth'][0]), [1]), 'QC results incorrect.'
+        assert numpy.array_equal(dbutils.unpack_qc(df['EN_range_check'][0]), [False]), 'QC results incorrect.'
+        assert 'CSIRO_wire_break' not in df.columns[1:].values.tolist(), 'Test not removed from df'
+
+        df = dbutils.db_to_df('unit', applyparse=False, filter_on_tests={'Remove below reject':['CSIRO_wire_break']}, pad=2)
+        assert len(df) == 0, 'Profile not removed from df'
+
+        # Check removal above reject and padding.
+        df = dbutils.db_to_df('unit', applyparse=False, filter_on_tests={'Remove above reject':['CSIRO_wire_break']})
+        assert numpy.array_equal(dbutils.unpack_qc(df['Truth'][0]), [4, 5, 6, 7, 8, 9, 10]), 'QC results incorrect.'
+        assert numpy.array_equal(dbutils.unpack_qc(df['EN_range_check'][0]), [True, False, True, False, True, False, True]), 'QC results incorrect.'
+        assert 'CSIRO_wire_break' not in df.columns[1:].values.tolist(), 'Test not removed from df'
+
+        df = dbutils.db_to_df('unit', applyparse=False, filter_on_tests={'Remove above reject':['CSIRO_wire_break']}, pad=2)
+        assert numpy.array_equal(dbutils.unpack_qc(df['Truth'][0]), [6, 7, 8, 9, 10]), 'QC results incorrect.'
+        assert numpy.array_equal(dbutils.unpack_qc(df['EN_range_check'][0]), [True, False, True, False, True]), 'QC results incorrect.'
+        assert 'CSIRO_wire_break' not in df.columns[1:].values.tolist(), 'Test not removed from df'
+
+        # Check remove profile.
+        df = dbutils.db_to_df('unit', applyparse=False, filter_on_tests={'Remove profile':['EN_track_check']})
+        assert len(df) == 1, 'Only one profile should have been removed'
+        assert df['uid'][0] == 9999, 'Profile has wrong uid'   
+        assert 'EN_track_check' not in df.columns[1:].values.tolist(), 'Test not removed from df'
+        
+        # Check remove rejected levels.
+        df = dbutils.db_to_df('unit', applyparse=False, filter_on_tests={'Remove rejected levels':['CSIRO_wire_break']})
+        assert numpy.array_equal(dbutils.unpack_qc(df['Truth'][0]), [1, 2, 4, 5, 6, 7, 8, 9, 10]), 'QC results incorrect.'
+        assert numpy.array_equal(dbutils.unpack_qc(df['EN_range_check'][0]), [False, True, True, False, True, False, True, False, True]), 'QC results incorrect.'
+        assert 'CSIRO_wire_break' not in df.columns[1:].values.tolist(), 'Test not removed from df'
+
+        df = dbutils.db_to_df('unit', applyparse=False, filter_on_tests={'Remove rejected levels':['CSIRO_wire_break']}, pad=2)
+        assert numpy.array_equal(dbutils.unpack_qc(df['Truth'][0]), [6, 7, 8, 9, 10]), 'QC results incorrect.'
+        assert numpy.array_equal(dbutils.unpack_qc(df['EN_range_check'][0]), [True, False, True, False, True]), 'QC results incorrect.'
+        assert 'CSIRO_wire_break' not in df.columns[1:].values.tolist(), 'Test not removed from df'
+
+        # Check on XBTbelow.
+        df = dbutils.db_to_df('unit', applyparse=False, filter_on_tests={'Remove rejected levels':['CSIRO_wire_break']}, XBTbelow=True)
+        for i in range(2):
+            if df['uid'][i] == 8888:
+                # This is an XBT.
+                assert numpy.array_equal(dbutils.unpack_qc(df['Truth'][i]), [1, 2]), 'QC results incorrect.'
+                assert numpy.array_equal(dbutils.unpack_qc(df['EN_range_check'][i]), [False, True]), 'QC results incorrect.'
+            else:
+                # Not an XBT.
+                assert numpy.array_equal(dbutils.unpack_qc(df['Truth'][i]), [1, 2, 4, 5, 6, 7, 8, 9, 10]), 'QC results incorrect.'
+                assert numpy.array_equal(dbutils.unpack_qc(df['EN_range_check'][i]), [False, True, True, False, True, False, True, False, True]), 'QC results incorrect.'
+        assert 'CSIRO_wire_break' not in df.columns[1:].values.tolist(), 'Test not removed from df'
+
+        # Run a combination of two actions.
+        df = dbutils.db_to_df('unit', applyparse=False, filter_on_tests={'Remove below reject':['CSIRO_wire_break'], 'Remove rejected levels':['EN_track_check']})
+        for i in range(2):
+            if df['uid'][i] == 8888:
+                # EN_track_check is [False, True, False, True...].
+                assert numpy.array_equal(dbutils.unpack_qc(df['Truth'][i]), [1]), 'QC results incorrect.'
+                assert numpy.array_equal(dbutils.unpack_qc(df['EN_range_check'][i]), [False]), 'QC results incorrect.'
+            else:
+                # EN_track_check is all False.
+                assert numpy.array_equal(dbutils.unpack_qc(df['Truth'][i]), [1, 2]), 'QC results incorrect.'
+                assert numpy.array_equal(dbutils.unpack_qc(df['EN_range_check'][i]), [False, True]), 'QC results incorrect.'
+        assert 'EN_track_check' not in df.columns[1:].values.tolist(), 'Test not removed from df'        
+        assert 'CSIRO_wire_break' not in df.columns[1:].values.tolist(), 'Test not removed from df'
+
+        # Confirm the parsing is working still.
+        df = dbutils.db_to_df('unit', filter_on_tests={'Remove below reject':['CSIRO_wire_break'], 'Remove rejected levels':['EN_track_check']})
+        for i in range(2):
+            if df['uid'][i] == 8888:
+                # EN_track_check is [False, True, False, True...].
+                assert df['EN_range_check'][i] == False, 'QC results incorrect.'
+            else:
+                # EN_track_check is all False.
+                assert df['EN_range_check'][i] == True, 'QC results incorrect.'
+                
+        # As above with padding.
+        df = dbutils.db_to_df('unit', applyparse=False, filter_on_tests={'Remove below reject':['CSIRO_wire_break'], 'Remove rejected levels':['EN_spike_and_step_check']}, pad=1)
+        assert len(df) == 1, 'Profile not removed from df'
+        assert df['uid'][0] == 9999, 'Wrong profile removed from df'
+        assert numpy.array_equal(dbutils.unpack_qc(df['Truth'][0]), [1]), 'QC results incorrect.'
+        assert numpy.array_equal(dbutils.unpack_qc(df['EN_range_check'][0]), [False]), 'QC results incorrect.'
+        assert 'EN_spike_and_step_check' not in df.columns[1:].values.tolist(), 'Test not removed from df'        
+        assert 'CSIRO_wire_break' not in df.columns[1:].values.tolist(), 'Test not removed from df'
+                
     def test_qc_action_remove_above_reject(self):
         '''
         Check that qc_action correctly applies the actions.
