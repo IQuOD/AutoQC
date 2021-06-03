@@ -383,13 +383,13 @@ def find_roc_ordered(table,
                                   XBTbelow=True)
 
             # mark chosen profiles as part of the training set 
-            all_uids = main.dbinteract('SELECT uid from ' + table + ';', targetdb=targetdb)
             if mark_training:
-            for uid in all_uids:
-                uid = uid[0]
-                is_training = int(uid in df['uid'].astype(int).to_numpy())
-                query = "UPDATE " + table + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
-                main.dbinteract(query, targetdb=targetdb)
+                all_uids = main.dbinteract('SELECT uid from ' + table + ';', targetdb=targetdb)
+                for uid in all_uids:
+                    uid = uid[0]
+                    is_training = int(uid in df['uid'].astype(int).to_numpy())
+                    query = "UPDATE " + table + " SET training=" + str(is_training) + " WHERE uid=" + str(uid) + ";"
+                    main.dbinteract(query, targetdb=targetdb)
 
             # Drop nondiscriminating tests i.e. those that flag all or none
             # of the profiles.
