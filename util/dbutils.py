@@ -139,7 +139,8 @@ def db_to_df(table,
              applyparse=True,
              targetdb='iquod.db',
              pad=0, 
-             XBTbelow=False):
+             XBTbelow=False,
+             batchsize=1000):
 
     '''
     Reads the table from targetdb into a pandas dataframe.
@@ -180,7 +181,7 @@ def db_to_df(table,
             filter_on_tests['Remove below reject'] = ['CSIRO_wire_break']
 
     # Loop over the profiles, 1000 profiles at a time.
-    sub  = 1000 # Number of profiles to process at a time.
+    sub  = batchsize # Number of profiles to process at a time.
     nsub = math.ceil(len(rawresults)/sub) # Number of batches of 1000 profiles there will be.
     df_final = None
     testNamesSave = testNames.copy()
