@@ -162,7 +162,7 @@ class TestClass:
          
     def test_check_for_fail(self):
         '''
-        Test that the correct number of levels before a reject is found, counting from the bottom.
+        Test that any failures are successfully detected.
         '''
         
         qc = [main.pack_array(numpy.array([False, False, True, False])),
@@ -438,4 +438,27 @@ class TestClass:
         expected = [True, True, False, False, True, True]
         assert numpy.array_equal(result, expected)
 
+    def test_batchloop(self):
+        '''
+        Basic test of functionality to check that db_to_df results are invariant under batch size.
+        '''
 
+        self.update_qc(8888, 'truth', numpy.ma.array([1, 1, 1, 1]))
+        for i in range(11):
+            main.fakerow('unit', uid=i)
+            self.update_qc(i, 'truth', numpy.ma.array([1, 1, 1, 1]))
+
+        df1 = dbutils.db_to_df('unit', batchsize=1)
+        df2 = dbutils.db_to_df('unit', batchsize=2)
+        df3 = dbutils.db_to_df('unit', batchsize=3)
+        df4 = dbutils.db_to_df('unit', batchsize=4)
+        df6 = dbutils.db_to_df('unit', batchsize=6)
+        df11 = dbutils.db_to_df('unit', batchsize=11)
+        df12 = dbutils.db_to_df('unit', batchsize=12)
+
+        assert numpy.array_equal(df1, df2), 'db_to_df not invariant under batch size'
+        assert numpy.array_equal(df1, df3), 'db_to_df not invariant under batch size'
+        assert numpy.array_equal(df1, df4), 'db_to_df not invariant under batch size'
+        assert numpy.array_equal(df1, df6), 'db_to_df not invariant under batch size'
+        assert numpy.array_equal(df1, df11), 'db_to_df not invariant under batch size'
+        assert numpy.array_equal(df1, df12), 'db_to_df not invariant under batch size'
