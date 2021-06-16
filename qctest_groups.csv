@@ -1,7 +1,7 @@
 Test group,Rule,QC test,Comment
 Sensible lat/lon,Remove profile,Argo_impossible_location_test,Non controversial sanity check on location
 Sensible date,Remove profile,Argo_impossible_date_test,Non controversial sanity check on date
-Near surface XBT data,Remove rejected levels,CSIRO_depth,Standard reject of XBT data < 3.6 m
+Near surface XBT data,Remove above reject,CSIRO_depth,Standard reject of XBT data < 3.6 m
 Wire break,Remove below reject,CSIRO_wire_break,Expert opinion is that this is highly reliable at detecting XBT wire breaks
 Depth above surface,Remove rejected levels,ICDC_aqc_01_level_order,Flags depths less than zero (plus preprocessing for other ICDC checks)
 Range,At least one from group,AOML_gross,
@@ -57,3 +57,4 @@ Fuzzy logic,Optional,CoTeDe_Morello2014,
 XBT surface spikes,Optional,CSIRO_surface_spikes,Not a standard spike check; specific to XBTs
 Track check,Optional,EN_track_check,Check on position of successive profiles
 Maximum depth,Optional,ICDC_aqc_04_max_obs_depth,Defines maximum possible depth for instruments and flags data exceeding these
+Range,At least one from group,minmax,
