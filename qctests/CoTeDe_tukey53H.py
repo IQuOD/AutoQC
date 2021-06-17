@@ -4,7 +4,7 @@ import numpy
 def test(p, parameters):
     '''Run the tukey53H QC from the CoTeDe config.'''
 
-    config   = 'cotede'
+    config   = {"sea_water_temperature": "tukey53H": {"threshold": 4}}
     testname = 'tukey53H'
 
     qc = get_qc(p, config, testname)
