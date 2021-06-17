@@ -10,4 +10,3 @@ before_install:
 
 script:
 - docker container run -v $PWD:/AutoQC_latest iquod/autoqc:1.0-rc6 bash -c "cp /AutoQC/data/* /AutoQC_latest/data/.; cd /AutoQC_latest; /usr/local/bin/nosetests tests/*.py"
-
