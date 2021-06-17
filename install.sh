@@ -23,7 +23,7 @@ pip3 install Shapely==1.6.4.post2 \
             mkl==2019.0
 pip3 install gsw==3.0.3 \
             scikit-fuzzy==0.4.1 \
-            oceansdb==0.8.13 \
+            oceansdb==0.8.14 \
             cotede==0.23.6 \
             wodpy==1.6.2 \
             numpy==1.19.1 \
