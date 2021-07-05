@@ -149,8 +149,6 @@ def test_CoTeDe_tukey53H_norm():
     Make sure CoTeDe tukey53H norm is working as expected.
     '''
     import qctests.CoTeDe_tukey53H_norm
-    import qctests.CoTeDe_GTSPP_gradient
-    qc = qctests.CoTeDe_GTSPP_gradient.test(p, None)
     qc = qctests.CoTeDe_tukey53H_norm.test(p, None)
     assert np.array_equal(qc, expected_qc_tukey53H_norm), 'mismatch between qc results and expected values'
 
