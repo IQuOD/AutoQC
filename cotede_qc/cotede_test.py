@@ -39,31 +39,29 @@ def get_qc(p, config, test):
                    p.uid() is None):
         inputs = Wod4CoTeDe(p)
 
-        # If config is a dictionary, use it.
-        if not isinstance(config, dict):
-            try:
-                # Load config from CoTeDe
-                cfg = load_cfg(config)
+        # Load config from CoTeDe
+        cfg = load_cfg(config)
 
-                if test == config:
-                    # AutoQC runs only on TEMP, so clean the rest.
-                    for v in cfg['variables'].keys():
-                        if v != 'sea_water_temperature':
-                            del(cfg['variables'][v])
-                # If is a specific test,
-                elif test != config:
-                    # Load from TEMP,
-                    try:
-                        cfg = {'TEMP': {test: dict(cfg['variables']['sea_water_temperature'][test])}}
+        try:
+            if test == config:
+                # AutoQC runs only on TEMP, so clean the rest.
+                for v in cfg['variables'].keys():
+                    if v != 'sea_water_temperature':
+                        del(cfg['variables'][v])
+            # If is a specific test,
+            elif test != config:
+                # Load from TEMP,
+                try:
+                    cfg = {'TEMP': {test: dict(cfg['variables']['sea_water_temperature'][test])}}
 
-                    # otherwise load it from main.
-                    except:
-                        # The dummy configuration ensures that the results from
-                        # 'main' is copied into the results for var.
-                        cfg = {'common': {test: dict(cfg['common'][test])}, var: {'dummy': None}}
-            except:
-                with open('cotede_qc/qc_cfg/' + config + '.json') as f:
-                    cfg = json.load(f)
+                # otherwise load it from main.
+                except:
+                    # The dummy configuration ensures that the results from
+                    # 'main' is copied into the results for var.
+                    cfg = {'common': {test: dict(cfg['common'][test])}, var: {'dummy': None}}
+        except:
+            with open('cotede_qc/qc_cfg/' + config + '.json') as f:
+                cfg = json.load(f)
 
         pqc = ProfileQC(inputs, cfg=cfg)
 
