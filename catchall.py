@@ -39,10 +39,11 @@ def amend(combo, df):
     return df.assign(xx=decision).rename(index=str, columns={'xx': name})
 
 # parse command line options
-options, remainder = getopt.getopt(sys.argv[1:], 't:d:n:o:h')
+options, remainder = getopt.getopt(sys.argv[1:], 't:d:n:o:hm')
 targetdb = 'iquod.db'
 dbtable = 'iquod'
 outfile = 'htp.json'
+mark_training = False
 samplesize = None
 for opt, arg in options:
     if opt == '-d':
@@ -53,12 +54,15 @@ for opt, arg in options:
         samplesize = int(arg)
     if opt == '-o':
         outfile = arg
+    if opt == '-m':
+            mark_training = True
     if opt == '-h':
         print('usage:')
         print('-d <db table name to read from>')
         print('-t <name of db file>')
         print('-n <number of profiles to consider>')
         print('-o <filename to write json results out to>')
+        print('-m If -m, profiles used to generate these results will be marked in the database')
         print('-h print this help message and quit')
 if samplesize is None:
     print('please provide a sample size to consider with the -n flag')
@@ -74,8 +78,7 @@ df = dbutils.db_to_df(table=dbtable,
                       filter_on_tests = groupdefinition,
                       n_to_extract = samplesize,
                       pad=2, 
-                      XBTbelow=True,
-                      mark_training=False)
+                      XBTbelow=True)
 testNames = df.columns[2:].values.tolist()
 
 # declare some downstream constructs
