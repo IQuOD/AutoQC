@@ -3,7 +3,7 @@ Sensible lat/lon,Remove profile,Argo_impossible_location_test,Non controversial 
 Sensible date,Remove profile,Argo_impossible_date_test,Non controversial sanity check on date
 Near surface XBT data,Remove above reject,CSIRO_depth,Standard reject of XBT data < 3.6 m
 Wire break,Remove below reject,CSIRO_wire_break,Expert opinion is that this is highly reliable at detecting XBT wire breaks
-Depth above surface,Remove rejected levels,ICDC_aqc_01_level_order,Flags depths less than zero (plus preprocessing for other ICDC checks)
+Depth above surface,Remove above reject,ICDC_aqc_01_level_order,Flags depths less than zero (plus preprocessing for other ICDC checks)
 Range,At least one from group,AOML_gross,
 Range,At least one from group,Argo_global_range_check,
 Range,At least one from group,Argo_regional_range_test,
@@ -40,6 +40,7 @@ Density,At least one from group,CoTeDe_Argo_density_inversion,
 Density,At least one from group,EN_stability_check,
 Climatology,At least one from group,AOML_climatology_test,
 Climatology,At least one from group,CoTeDe_GTSPP_WOA_normbias,
+Spike or step,At least one from group,CoTeDe_tukey53H,
 Spike or step,At least one from group,CoTeDe_tukey53H_norm,
 Climatology,At least one from group,CoTeDe_WOA_normbias,
 Climatology,At least one from group,EN_background_check,
