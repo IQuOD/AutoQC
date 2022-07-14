@@ -50,7 +50,7 @@ def run_qc(p, parameters):
         if (isData[i] and isData[i-1] and isData[i-2]) == False:
             continue
 
-        delta_rho_k = mcdougallEOS(s[i], T[i], P[i]) - mcdougallEOS(s[i-1], T[i-1], P[i-1]) 
+        delta_rho_k = mcdougallEOS(s[i], T[i], P[i]) - mcdougallEOS(s[i-1], T[i-1], P[i]) 
         if delta_rho_k >= -0.03:
             continue;
 
