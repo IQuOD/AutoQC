@@ -50,11 +50,11 @@ def run_qc(p, parameters):
         if (isData[i] and isData[i-1] and isData[i-2]) == False:
             continue
 
-        delta_rho_k = mcdougallEOS(s[i], T[i], P[i]) - mcdougallEOS(s[i-1], T[i-1], P[i-1]) 
+        delta_rho_k = mcdougallEOS(s[i], T[i], P[i]) - mcdougallEOS(s[i-1], T[i-1], P[i]) 
         if delta_rho_k >= -0.03:
             continue;
 
-        delta_rho_k_prev = mcdougallEOS(s[i-1], T[i-1], P[i-1]) - mcdougallEOS(s[i-2], T[i-2], P[i-2])
+        delta_rho_k_prev = mcdougallEOS(s[i-1], T[i-1], P[i-1]) - mcdougallEOS(s[i-2], T[i-2], P[i-1])
 
         if abs(delta_rho_k_prev + delta_rho_k) < 0.25*abs(delta_rho_k_prev - delta_rho_k):
             qc[i-1] = True
@@ -62,7 +62,7 @@ def run_qc(p, parameters):
             if isData[i+1] == False:
                 continue
 
-            delta_rho_k_next = mcdougallEOS(s[i+1], T[i+1], P[i+1]) - mcdougallEOS(s[i], T[i], P[i])
+            delta_rho_k_next = mcdougallEOS(s[i+1], T[i+1], P[i+1]) - mcdougallEOS(s[i], T[i], P[i+1])
             if abs(delta_rho_k + delta_rho_k_next) < 0.25*abs(delta_rho_k - delta_rho_k_next):
                 qc[i] = True
             else:
@@ -72,7 +72,7 @@ def run_qc(p, parameters):
     #check bottom of profile
     i = p.n_levels()-1
     if isData[i] and isData[i-1]:
-        delta_rho_k = mcdougallEOS(s[i], T[i], P[i]) - mcdougallEOS(s[i-1], T[i-1], P[i-1])
+        delta_rho_k = mcdougallEOS(s[i], T[i], P[i]) - mcdougallEOS(s[i-1], T[i-1], P[i])
         if delta_rho_k < -0.03:
             qc[i] = True
 
