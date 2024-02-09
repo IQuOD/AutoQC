@@ -3,7 +3,7 @@ Implements the stability check described on pages 8-9 of
 http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 """
 
-import math, numpy, seawater
+import math, numpy, gsw
 import util.main as main
 from util.dbutils import retrieve_existing_qc_result
 
@@ -32,7 +32,7 @@ def run_qc(p, parameters):
     s = p.s()
     P = p.p()
     if numpy.ma.all(P.mask):
-        P = numpy.ma.masked_array([seawater.eos80.pres(a, p.latitude()) for a in p.z()], p.z().mask)
+        P = numpy.ma.masked_array([gsw.conversions.p_from_z(-1.0*a, p.latitude()) for a in p.z()], p.z().mask)
 
     # initialize qc as a bunch of falses;
     qc = numpy.zeros(p.n_levels(), dtype=bool)
