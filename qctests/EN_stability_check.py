@@ -33,7 +33,6 @@ def run_qc(p, parameters):
     P = p.p()
     if numpy.ma.all(P.mask):
         P = 0.9806652*p.z()
-    print(P)
 
     # initialize qc as a bunch of falses;
     qc = numpy.zeros(p.n_levels(), dtype=bool)
