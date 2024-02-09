@@ -72,4 +72,3 @@ class TestClass:
         qc = qctests.EN_stability_check.test(p, self.parameters)
         truth = numpy.ma.array([True, True, True, True], mask=False)
         assert numpy.array_equal(qc, truth), 'failed to flag unpadded stability example'
-
