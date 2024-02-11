@@ -6,7 +6,6 @@ def test(p, parameters):
     ## unpack profile data
     temp = p.t()
     temp_min, temp_max = extract_minmax(-obs_utils.depth_to_pressure(p.z(), p.latitude()), p.longitude(), p.latitude())
-    print(temp_min, temp_max)
 
     # true flag if temp is out of range
     qc = numpy.zeros(p.n_levels(), dtype=bool)

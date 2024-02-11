@@ -36,7 +36,7 @@ def depth_to_pressure_test():
 
     lat = 30.0
     depth = 10000
-    truePressure = 1.0300976068e+10
+    truePressure = 10300977189
 
     #two single value arrays
     assert np.round(1e6*outils.depth_to_pressure( np.array([depth]), np.array([lat]) )) == truePressure, 'failed to match expectation for 2 single-valued arrays'
