@@ -6,19 +6,20 @@ def test(p, parameters):
     ## unpack profile data
     temp = p.t()
     temp_min, temp_max = extract_minmax(-obs_utils.depth_to_pressure(p.z(), p.latitude()), p.longitude(), p.latitude())
+    print(temp_min, temp_max)
 
     # true flag if temp is out of range
     qc = numpy.zeros(p.n_levels(), dtype=bool)
     for i, k in enumerate(temp):
         # Only define a QC flag if all parameters are available.
-        if numpy.ma.is_masked(k) or numpy.isnan(temp_min[i]) or numpy.isnan(temp_max[i]): 
+        if numpy.ma.is_masked(k) or numpy.isnan(temp_min[i]) or numpy.isnan(temp_max[i]):
             continue
         qc[i] = (k<temp_min[i]) or (k>temp_max[i])
 
     return qc
 
 def extract_minmax(pres, longitude, latitude):
-    ## unpack minmax parameters
+    ## unpack minmax parameters, downloadable from https://www.seanoe.org/data/00660/77199/
     minmax_temp = xarray.open_dataset('data/TEMP_MIN_MAX.nc')
     minmax_grid = xarray.open_dataset('data/GRID_MIN_MAX.nc')
     info_DGG = scipy.io.loadmat('data/info_DGG4H6.mat')
