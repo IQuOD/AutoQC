@@ -52,6 +52,15 @@ class TestClass:
         truth = numpy.ma.array([False, True, True, False, False, False, False, False, False], mask=False)
         assert numpy.array_equal(qc, truth), 'failed to flag padded stability example'
 
+    def test_EN_stability_check_no_pressures(self):
+        '''
+        same as above but with pressures inferred from depth
+        '''
+
+        p = util.testingProfile.fakeProfile([13.5, 25.5, 20.4, 13.5, 13.5, 13.5, 13.5, 13.5, 13.5], [8000, 2000, 1000, 8000, 8000, 8000, 8000, 8000, 8000], salinities=[40, 35, 20, 40, 40, 40, 40, 40, 40], uid=8888, latitude=0)
+        qc = qctests.EN_stability_check.test(p, self.parameters)
+        truth = numpy.ma.array([False, True, True, False, False, False, False, False, False], mask=False)
+        assert numpy.array_equal(qc, truth), 'failed to flag padded stability example'
 
     def test_EN_stability_check_unpadded(self):
         '''

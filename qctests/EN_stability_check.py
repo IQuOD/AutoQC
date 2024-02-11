@@ -6,6 +6,7 @@ http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 import math, numpy
 import util.main as main
 from util.dbutils import retrieve_existing_qc_result
+from util import obs_utils
 
 def test(p, parameters):
     """ 
@@ -31,6 +32,8 @@ def run_qc(p, parameters):
     t = p.t()
     s = p.s()
     P = p.p()
+    if numpy.ma.all(P.mask):
+        P = obs_utils.depth_to_pressure(p.z(), p.latitude())
 
     # initialize qc as a bunch of falses;
     qc = numpy.zeros(p.n_levels(), dtype=bool)
