@@ -3,7 +3,7 @@ Implements the stability check described on pages 8-9 of
 http://www.metoffice.gov.uk/hadobs/en3/OQCpaper.pdf
 """
 
-import math, numpy, gsw
+import math, numpy
 import util.main as main
 from util.dbutils import retrieve_existing_qc_result
 from util import obs_utils
